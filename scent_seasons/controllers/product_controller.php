@@ -3,10 +3,9 @@ session_start();
 require '../config/database.php';
 require '../includes/functions.php';
 
-// 只有管理员能访问此逻辑
+// 只有管理员能访问
 require_admin();
 
-// 获取要执行的动作 (add, update, delete)
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -19,16 +18,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stock = intval($_POST['stock']);
         $description = clean_input($_POST['description']);
 
-        // 图片上传逻辑
         $image_path = 'default_product.jpg';
         if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
             $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
             $new_name = uniqid('prod_') . '.' . $ext;
             $target = "../images/products/" . $new_name;
-
-            // 自动创建文件夹
             if (!is_dir("../images/products/")) mkdir("../images/products/", 0777, true);
-
             if (move_uploaded_file($_FILES['image']['tmp_name'], $target)) {
                 $image_path = $new_name;
             }
@@ -40,33 +35,70 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         log_activity($pdo, "Add Product", "Name: $name");
 
+        // [确认] 添加成功后跳回列表页
         header("Location: ../views/admin/products/index.php?msg=added");
         exit();
     }
 
-    // --- 2. 删除产品 (DELETE) ---
+    // --- 2. 软删除 (Soft Delete) ---
     elseif ($action == 'delete') {
         $id = intval($_POST['product_id']);
 
-        // 先删除旧图片 (可选优化)
-        $stmt = $pdo->prepare("SELECT image_path FROM products WHERE product_id = ?");
+        // 查名字做日志
+        $stmt = $pdo->prepare("SELECT name FROM products WHERE product_id = ?");
         $stmt->execute([$id]);
         $prod = $stmt->fetch();
+        $prod_name = $prod ? $prod['name'] : "Unknown";
+
+        // 更新状态为删除
+        $stmt = $pdo->prepare("UPDATE products SET is_deleted = 1 WHERE product_id = ?");
+        $stmt->execute([$id]);
+
+        log_activity($pdo, "Soft Delete Product", "Product ID: $id, Name: $prod_name");
+        header("Location: ../views/admin/products/index.php?msg=trashed");
+        exit();
+    }
+
+    // --- 3. 恢复 (RESTORE) ---
+    elseif ($action == 'restore') {
+        $id = intval($_POST['product_id']);
+
+        $stmt = $pdo->prepare("SELECT name FROM products WHERE product_id = ?");
+        $stmt->execute([$id]);
+        $prod = $stmt->fetch();
+        $prod_name = $prod ? $prod['name'] : "Unknown";
+
+        $stmt = $pdo->prepare("UPDATE products SET is_deleted = 0 WHERE product_id = ?");
+        $stmt->execute([$id]);
+
+        log_activity($pdo, "Restore Product", "Product ID: $id, Name: $prod_name");
+        header("Location: ../views/admin/products/index.php?status=trash&msg=restored");
+        exit();
+    }
+
+    // --- 4. 彻底删除 (PERMANENT DELETE) ---
+    elseif ($action == 'delete_permanent') {
+        $id = intval($_POST['product_id']);
+
+        $stmt = $pdo->prepare("SELECT image_path, name FROM products WHERE product_id = ?");
+        $stmt->execute([$id]);
+        $prod = $stmt->fetch();
+        $prod_name = $prod ? $prod['name'] : "Unknown";
+
         if ($prod && $prod['image_path'] != 'default_product.jpg') {
-            @unlink("../images/products/" . $prod['image_path']);
+            $file = "../images/products/" . $prod['image_path'];
+            if (file_exists($file)) unlink($file);
         }
 
         $stmt = $pdo->prepare("DELETE FROM products WHERE product_id = ?");
         $stmt->execute([$id]);
 
-        // [新增] 记录日志
-        log_activity($pdo, "Delete Product", "Product ID: $id");
-
-        header("Location: ../views/admin/products/index.php?msg=deleted");
+        log_activity($pdo, "Permanent Delete Product", "Product ID: $id, Name: $prod_name");
+        header("Location: ../views/admin/products/index.php?status=trash&msg=deleted_permanent");
         exit();
     }
 
-    // --- 3. 修改产品 (UPDATE) ---
+    // --- 5. 修改 (UPDATE) ---
     elseif ($action == 'update') {
         $id = intval($_POST['product_id']);
         $name = clean_input($_POST['name']);
@@ -75,31 +107,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stock = intval($_POST['stock']);
         $description = clean_input($_POST['description']);
 
-        // 1. 先获取旧图片名称，以防用户没上传新图
         $stmt = $pdo->prepare("SELECT image_path FROM products WHERE product_id = ?");
         $stmt->execute([$id]);
         $old_product = $stmt->fetch();
         $final_image = $old_product['image_path'];
 
-        // 2. 检查是否有上传新图片
         if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
             $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
             $new_name = uniqid('prod_') . '.' . $ext;
             $target = "../images/products/" . $new_name;
-
             if (move_uploaded_file($_FILES['image']['tmp_name'], $target)) {
-                $final_image = $new_name; // 使用新图片
-                // (可选) 这里可以加一行代码删除旧图片 unlink(...)
+                $final_image = $new_name;
             }
         }
 
-        // 3. 更新数据库
         $sql = "UPDATE products SET name=?, category_id=?, price=?, stock=?, description=?, image_path=? WHERE product_id=?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$name, $category_id, $price, $stock, $description, $final_image, $id]);
 
-        log_activity($pdo, "Update Product", "Product ID: $id");
-
+        log_activity($pdo, "Update Product", "Product ID: $id, Name: $name");
         header("Location: ../views/admin/products/index.php?msg=updated");
         exit();
     }

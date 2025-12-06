@@ -52,9 +52,9 @@ require $path . 'includes/header.php';
 
     <?php if (is_superadmin()): ?>
         <div class="card" style="border-top: 4px solid #8e44ad;">
-            <h3 style="color:#8e44ad;">System Access</h3>
-            <p>Create new admin accounts.</p>
-            <a href="users/create_admin.php" style="color:#8e44ad;">+ Create Admin &rarr;</a>
+            <h3 style="color:#8e44ad;">Admin Maintenance</h3>
+            <p>Manage system administrators.</p>
+            <a href="users/index.php" style="color:#8e44ad;">Manage Admins &rarr;</a>
         </div>
     <?php endif; ?>
 

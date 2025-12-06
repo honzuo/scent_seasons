@@ -4,78 +4,73 @@ require '../../../config/database.php';
 require '../../../includes/functions.php';
 require_admin();
 
-// 接收筛选参数
-$filter_user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
+// 处理搜索
+$search = isset($_GET['search']) ? clean_input($_GET['search']) : '';
 
-// 构建 SQL 查询
-$sql = "SELECT o.*, u.full_name, u.email 
-        FROM orders o 
-        JOIN users u ON o.user_id = u.user_id";
+// [修改点] 增加 AND p.is_deleted = 0
+$sql = "SELECT p.*, c.category_name 
+        FROM products p 
+        JOIN categories c ON p.category_id = c.category_id 
+        WHERE p.is_deleted = 0 AND p.name LIKE ?";
+$stmt = $pdo->prepare($sql);
+$stmt->execute(["%$search%"]);
+$products = $stmt->fetchAll();
 
-if ($filter_user_id > 0) {
-    $sql .= " WHERE o.user_id = ?";
-    $sql .= " ORDER BY o.order_date DESC";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$filter_user_id]);
-} else {
-    $sql .= " ORDER BY o.order_date DESC";
-    $stmt = $pdo->query($sql);
-}
-
-$orders = $stmt->fetchAll();
-
-// 动态设置标题
-$page_title = ($filter_user_id > 0) ? "Orders for User #$filter_user_id" : "Order Management";
-
-// --- 关键修复在这里 ---
-$path = "../../../"; // 必须是 3 层！
+$page_title = "Product Management";
+$path = "../../../";
 $extra_css = "admin.css";
 
 require $path . 'includes/header.php';
 ?>
 
-<div style="display:flex; justify-content:space-between; align-items:center;">
-    <h2>
-        <?php if ($filter_user_id > 0): ?>
-            Orders for User #<?php echo $filter_user_id; ?>
-        <?php else: ?>
-            All Customer Orders
-        <?php endif; ?>
-    </h2>
+<h2>Product List</h2>
 
-    <?php if ($filter_user_id > 0): ?>
-        <a href="index.php" class="btn-blue" style="font-size:0.8em;">Show All Orders</a>
-    <?php endif; ?>
+<div style="display:flex; justify-content:space-between; margin-bottom: 20px;">
+    <a href="create.php" class="btn-blue">+ Add New Product</a>
+
+    <form method="GET" action="">
+        <input type="text" name="search" placeholder="Search product..." value="<?php echo $search; ?>">
+        <button type="submit" class="btn-blue">Search</button>
+    </form>
 </div>
 
-<?php if (count($orders) > 0): ?>
-    <table class="table-list">
-        <thead>
+<table class="table-list">
+    <thead>
+        <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($products as $p): ?>
             <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Date</th>
-                <th>Total</th>
-                <th>Status</th>
+                <td>
+                    <?php if ($p['image_path']): ?>
+                        <img src="../../../images/products/<?php echo $p['image_path']; ?>" class="thumbnail">
+                    <?php else: ?>
+                        No Image
+                    <?php endif; ?>
+                </td>
+                <td><?php echo $p['name']; ?></td>
+                <td><?php echo $p['category_name']; ?></td>
+                <td>$<?php echo $p['price']; ?></td>
+                <td><?php echo $p['stock']; ?></td>
+                <td>
+                    <a href="edit.php?id=<?php echo $p['product_id']; ?>" class="btn-blue" style="font-size:0.8em;">Edit</a>
+
+                    <form action="../../../controllers/product_controller.php" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="product_id" value="<?php echo $p['product_id']; ?>">
+                        <button type="submit" class="btn-red" style="font-size:0.8em;">Delete</button>
+                    </form>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($orders as $o): ?>
-                <tr>
-                    <td>#<?php echo $o['order_id']; ?></td>
-                    <td>
-                        <?php echo $o['full_name']; ?><br>
-                        <small style="color:gray;"><?php echo $o['email']; ?></small>
-                    </td>
-                    <td><?php echo $o['order_date']; ?></td>
-                    <td>$<?php echo $o['total_amount']; ?></td>
-                    <td><?php echo ucfirst($o['status']); ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-<?php else: ?>
-    <p style="color: gray; margin-top: 20px;">No orders found.</p>
-<?php endif; ?>
+        <?php endforeach; ?>
+    </tbody>
+</table>
 
 <?php require $path . 'includes/footer.php'; ?>
