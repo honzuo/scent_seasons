@@ -8,33 +8,25 @@ require_admin();
 
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
-// --- 删除会员 ---
-if ($action == 'delete') {
+// --- 封禁/解封用户 (Block / Unblock) ---
+if ($action == 'toggle_block') {
     $user_id = intval($_POST['user_id']);
+    $block_status = intval($_POST['is_blocked']); // 1 = 要封禁, 0 = 要解封
 
-    // 防止删除自己 (虽然逻辑上只会列出 role='member'，但加个保险)
+    // 防止封禁自己 (虽然只有 admin 能进这里，但逻辑上要严谨)
     if ($user_id == $_SESSION['user_id']) {
-        die("Cannot delete yourself.");
+        die("Cannot block yourself.");
     }
 
-    // 1. 获取用户头像 (为了删文件)
-    $stmt = $pdo->prepare("SELECT profile_photo FROM users WHERE user_id = ?");
-    $stmt->execute([$user_id]);
-    $user = $stmt->fetch();
-    
-    // 2. 如果头像不是默认的，就从文件夹删掉
-    if ($user && $user['profile_photo'] != 'default.jpg') {
-        $file_path = "../images/uploads/" . $user['profile_photo'];
-        if (file_exists($file_path)) {
-            unlink($file_path);
-        }
-    }
+    // 更新状态
+    $stmt = $pdo->prepare("UPDATE users SET is_blocked = ? WHERE user_id = ?");
+    $stmt->execute([$block_status, $user_id]);
 
-    // 3. 从数据库删除 (因为我们在建表时设置了 ON DELETE CASCADE，用户的订单和购物车也会自动删除)
-    $stmt = $pdo->prepare("DELETE FROM users WHERE user_id = ?");
-    $stmt->execute([$user_id]);
-
-    header("Location: ../views/admin/members/index.php?msg=deleted");
+    $msg = ($block_status == 1) ? "blocked" : "unblocked";
+    header("Location: ../views/admin/members/index.php?msg=$msg");
     exit();
 }
+
+// (原来的 delete 逻辑你可以选择保留作为彻底删除，或者直接删掉代码)
+// 如果你彻底不想让管理员删除用户，就把下面的 delete 代码删掉即可。
 ?>

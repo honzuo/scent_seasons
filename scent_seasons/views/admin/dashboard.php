@@ -43,6 +43,15 @@ require $path . 'includes/header.php';
         <p>Moderating user reviews.</p>
         <a href="reviews/index.php">Go to Reviews &rarr;</a>
     </div>
+
+    <?php if (is_superadmin()): ?>
+        <div class="card" style="border-top: 4px solid #8e44ad;">
+            <h3 style="color:#8e44ad;">System Access</h3>
+            <p>Create new admin accounts.</p>
+            <a href="users/create_admin.php" style="color:#8e44ad;">+ Create Admin &rarr;</a>
+        </div>
+    <?php endif; ?>
+
 </div>
 
 <?php require $path . 'includes/footer.php'; ?>

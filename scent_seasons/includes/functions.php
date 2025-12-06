@@ -1,28 +1,31 @@
 <?php
 // includes/functions.php
 
-// 1. 数据清洗函数 (防止 XSS 攻击)
 function clean_input($data)
 {
-    $data = trim($data);            // 去除前后空格
-    $data = stripslashes($data);    // 去除反斜杠
-    $data = htmlspecialchars($data); // 转义 HTML 特殊字符
+    $data = trim($data);
+    $data = stripslashes($data);
+    // $data = htmlspecialchars($data); // 防止存入数据库时转义单引号
     return $data;
 }
 
-// 2. 检查用户是否已登录
 function is_logged_in()
 {
     return isset($_SESSION['user_id']);
 }
 
-// 3. 检查是否是管理员
-function is_admin()
+// 检查是否是 Superadmin (最高权限)
+function is_superadmin()
 {
-    return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+    return isset($_SESSION['role']) && $_SESSION['role'] === 'superadmin';
 }
 
-// 4. 显示错误信息的 Helper (用于在表单旁边显示红字)
+// 检查是否是管理层 (Admin 或 Superadmin 都可以)
+function is_admin()
+{
+    return isset($_SESSION['role']) && ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'superadmin');
+}
+
 function display_error($errors, $field)
 {
     if (isset($errors[$field])) {
@@ -30,12 +33,20 @@ function display_error($errors, $field)
     }
 }
 
-// 5. 强制检查管理员权限 (如果不通过直接踢回登录页)
+// 强制检查管理层权限
 function require_admin()
 {
-    if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-        header("Location: ../../public/login.php?error=unauthorized");
+    if (!is_admin()) {
+        header("Location: ../../views/public/login.php?error=unauthorized");
         exit();
+    }
+}
+
+// [新增] 强制检查超级管理员权限
+function require_superadmin()
+{
+    if (!is_superadmin()) {
+        die("Access Denied: Only Superadmin can access this page.");
     }
 }
 ?>

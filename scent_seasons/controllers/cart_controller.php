@@ -34,7 +34,9 @@ if ($action == 'add') {
             $insert->execute([$user_id, $product_id, $quantity]);
         }
     }
-    header("Location: " . $_SERVER['HTTP_REFERER']);
+
+    // --- 修改点：添加成功后，直接跳转到购物车页面 ---
+    header("Location: ../views/member/cart.php");
     exit();
 }
 
@@ -66,4 +68,4 @@ if ($action == 'update') {
     header("Location: ../views/member/cart.php");
     exit();
 }
-?> 
+?>

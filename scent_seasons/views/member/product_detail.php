@@ -115,6 +115,18 @@ require $path . 'includes/header.php';
                         </div>
                         <div class="star-yellow"><?php echo render_stars($r['rating']); ?></div>
                         <p class="review-text"><?php echo nl2br(htmlspecialchars($r['comment'])); ?></p>
+
+                        <?php if (!empty($r['admin_reply'])): ?>
+                            <div class="admin-reply-box">
+                                <div class="reply-header">
+                                    <span style="font-weight:bold; color:#2c3e50;">Store Response</span>
+                                    <span style="font-size:0.8em; color:#999;">
+                                        <?php echo $r['reply_at'] ? date('M d, Y', strtotime($r['reply_at'])) : ''; ?>
+                                    </span>
+                                </div>
+                                <p><?php echo nl2br(htmlspecialchars($r['admin_reply'])); ?></p>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
