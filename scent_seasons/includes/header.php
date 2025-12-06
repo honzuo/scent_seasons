@@ -43,9 +43,6 @@ if (isset($_SESSION['user_id'])) {
         <a href="<?php echo $home_link; ?>" class="logo">Scent Seasons</a>
 
         <ul>
-            <li><a href="<?php echo $path; ?>views/member/home.php">Home</a></li>
-            <li><a href="<?php echo $path; ?>views/member/shop.php">Shop</a></li>
-
             <?php if (isset($_SESSION['user_id'])): ?>
 
                 <?php if ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'superadmin'): ?>
@@ -53,6 +50,8 @@ if (isset($_SESSION['user_id'])) {
                     <li><a href="<?php echo $path; ?>views/admin/products/index.php">Products</a></li>
                     <li><a href="<?php echo $path; ?>views/admin/orders/index.php">Orders</a></li>
                 <?php else: ?>
+                    <li><a href="<?php echo $path; ?>views/member/home.php">Home</a></li>
+                    <li><a href="<?php echo $path; ?>views/member/shop.php">Shop</a></li>
                     <li>
                         <a href="<?php echo $path; ?>views/member/cart.php">
                             Cart (<?php echo $cart_count; ?>)

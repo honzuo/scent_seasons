@@ -17,9 +17,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (!empty($name)) {
             $stmt = $pdo->prepare("INSERT INTO categories (category_name) VALUES (?)");
             $stmt->execute([$name]);
+
+            log_activity($pdo, "Add Category", "Name: $name");
             header("Location: ../views/admin/categories/index.php?msg=added");
         } else {
-            header("Location: ../views/admin/categories/create.php?error=empty");
+            // 失败时带上 open_create=1 让弹窗自动重开
+            header("Location: ../views/admin/categories/index.php?error=empty&open_create=1");
         }
         exit();
     }
@@ -32,9 +35,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (!empty($name)) {
             $stmt = $pdo->prepare("UPDATE categories SET category_name = ? WHERE category_id = ?");
             $stmt->execute([$name, $id]);
+
+            log_activity($pdo, "Update Category", "ID: $id, Name: $name");
             header("Location: ../views/admin/categories/index.php?msg=updated");
         } else {
-            header("Location: ../views/admin/categories/edit.php?id=$id&error=empty");
+            header("Location: ../views/admin/categories/index.php?error=empty");
         }
         exit();
     }
@@ -43,13 +48,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     elseif ($action == 'delete') {
         $id = intval($_POST['category_id']);
 
+        // 获取名字写日志
+        $stmt = $pdo->prepare("SELECT category_name FROM categories WHERE category_id = ?");
+        $stmt->execute([$id]);
+        $cat = $stmt->fetch();
+        $cat_name = $cat ? $cat['category_name'] : 'Unknown';
+
         try {
             $stmt = $pdo->prepare("DELETE FROM categories WHERE category_id = ?");
             $stmt->execute([$id]);
+
+            log_activity($pdo, "Delete Category", "ID: $id, Name: $cat_name");
             header("Location: ../views/admin/categories/index.php?msg=deleted");
         } catch (PDOException $e) {
-            // 如果分类下有产品，是删不掉的 (外键约束)
-            // 跳转回去并显示错误
+            // 如果分类下有产品，外键约束会报错
             header("Location: ../views/admin/categories/index.php?error=in_use");
         }
         exit();

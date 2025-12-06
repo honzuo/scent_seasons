@@ -22,7 +22,7 @@ require $path . 'includes/header.php';
 <h2>Admin Maintenance</h2>
 
 <div style="display:flex; justify-content:space-between; margin-bottom: 20px;">
-    <button onclick="openModal()" class="btn-blue" style="cursor:pointer;">+ Create New Admin</button>
+    <button onclick="openCreateAdminModal()" class="btn-blue" style="cursor:pointer;">+ Create New Admin</button>
 
     <form method="GET" action="">
         <input type="text" name="search" placeholder="Search admin..." value="<?php echo $search; ?>">
@@ -30,8 +30,17 @@ require $path . 'includes/header.php';
     </form>
 </div>
 
-<?php if (isset($_GET['msg']) && $_GET['msg'] == 'created'): ?>
-    <p style="color:green; font-weight:bold; background:#e8f5e9; padding:10px; border-radius:4px;">New Admin created successfully!</p>
+<?php if (isset($_GET['msg'])): ?>
+    <p style="padding:10px; border-radius:4px; font-weight:bold; margin-bottom:20px;
+        <?php echo ($_GET['msg'] == 'deleted') ? 'background:#ffebee; color:red;' : 'background:#e8f5e9; color:green;'; ?>">
+        <?php
+        if ($_GET['msg'] == 'created') echo "New Admin created successfully!";
+        elseif ($_GET['msg'] == 'updated') echo "Admin details updated successfully.";
+        elseif ($_GET['msg'] == 'blocked') echo "Admin has been blocked.";
+        elseif ($_GET['msg'] == 'unblocked') echo "Admin has been unblocked.";
+        elseif ($_GET['msg'] == 'deleted') echo "Admin deleted successfully.";
+        ?>
+    </p>
 <?php endif; ?>
 
 <?php if (isset($_GET['error'])): ?>
@@ -73,7 +82,15 @@ require $path . 'includes/header.php';
                     <?php endif; ?>
                 </td>
                 <td>
-                    <a href="edit.php?id=<?php echo $a['user_id']; ?>" class="btn-blue" style="padding:5px 10px; font-size:0.8em;">Edit</a>
+                    <button type="button"
+                        class="btn-blue"
+                        style="padding:5px 10px; font-size:0.8em; cursor:pointer;"
+                        data-id="<?php echo $a['user_id']; ?>"
+                        data-fullname="<?php echo htmlspecialchars($a['full_name']); ?>"
+                        data-email="<?php echo htmlspecialchars($a['email']); ?>"
+                        onclick="openEditAdminModal(this)">
+                        Edit
+                    </button>
 
                     <form action="../../../controllers/admin_user_controller.php" method="POST" style="display:inline;">
                         <input type="hidden" name="action" value="toggle_block">
@@ -105,7 +122,7 @@ require $path . 'includes/header.php';
 
 
 <div id="createAdminModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;">
-    <div style="background:white; padding:30px; border-radius:8px; width:400px; position:relative;">
+    <div style="background:white; padding:30px; border-radius:8px; width:400px;">
         <h3 style="margin-top:0;">Create New Admin</h3>
         <p style="color:gray; font-size:0.9em; margin-bottom:20px;">Enter details for the new administrator.</p>
 
@@ -114,17 +131,17 @@ require $path . 'includes/header.php';
 
             <div class="form-group">
                 <label>Full Name:</label>
-                <input type="text" name="full_name" required style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;">
+                <input type="text" name="full_name" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
             </div>
 
             <div class="form-group">
                 <label>Email:</label>
-                <input type="email" name="email" required style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;">
+                <input type="email" name="email" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
             </div>
 
             <div class="form-group">
                 <label>Password:</label>
-                <input type="password" name="password" required style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;">
+                <input type="password" name="password" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
             </div>
 
             <div class="form-group">
@@ -133,36 +150,87 @@ require $path . 'includes/header.php';
             </div>
 
             <div style="text-align:right;">
-                <button type="button" onclick="closeModal()" class="btn-blue" style="background:gray; margin-right:10px;">Cancel</button>
+                <button type="button" onclick="closeCreateAdminModal()" class="btn-blue" style="background:gray; margin-right:10px;">Cancel</button>
                 <button type="submit" class="btn-blue">Create</button>
             </div>
         </form>
     </div>
 </div>
 
+<div id="editAdminModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;">
+    <div style="background:white; padding:30px; border-radius:8px; width:400px;">
+        <h3 style="margin-top:0;">Edit Admin</h3>
+
+        <form action="../../../controllers/admin_user_controller.php" method="POST">
+            <input type="hidden" name="action" value="update_admin">
+            <input type="hidden" name="user_id" id="edit_user_id">
+
+            <div class="form-group">
+                <label>Full Name:</label>
+                <input type="text" name="full_name" id="edit_full_name" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+            </div>
+
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" name="email" id="edit_email" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+            </div>
+
+            <div class="form-group">
+                <label>Reset Password (Optional):</label>
+                <input type="password" name="password" placeholder="Leave empty to keep current" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                <small style="color:gray; font-size:0.8em;">Only fill if you want to change password.</small>
+            </div>
+
+            <div style="text-align:right; margin-top:20px;">
+                <button type="button" onclick="closeEditAdminModal()" class="btn-blue" style="background:gray; margin-right:10px;">Cancel</button>
+                <button type="submit" class="btn-blue">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-    // 打开弹窗函数
-    function openModal() {
+    // --- Create Modal Functions ---
+    function openCreateAdminModal() {
         document.getElementById('createAdminModal').style.display = 'flex';
     }
 
-    // 关闭弹窗函数
-    function closeModal() {
+    function closeCreateAdminModal() {
         document.getElementById('createAdminModal').style.display = 'none';
     }
 
-    // 点击弹窗外部背景也可以关闭
-    window.onclick = function(event) {
-        let modal = document.getElementById('createAdminModal');
-        if (event.target == modal) {
-            closeModal();
-        }
+    // --- Edit Modal Functions ---
+    function openEditAdminModal(btn) {
+        let id = btn.getAttribute('data-id');
+        let fullname = btn.getAttribute('data-fullname');
+        let email = btn.getAttribute('data-email');
+
+        // 填充表单
+        document.getElementById('edit_user_id').value = id;
+        document.getElementById('edit_full_name').value = fullname;
+        document.getElementById('edit_email').value = email;
+
+        document.getElementById('editAdminModal').style.display = 'flex';
     }
 
-    // 如果URL里有 open_modal=1 (说明刚才提交出错了)，自动重新打开弹窗
+    function closeEditAdminModal() {
+        document.getElementById('editAdminModal').style.display = 'none';
+    }
+
+    // --- Close on Outside Click ---
+    window.onclick = function(event) {
+        let createModal = document.getElementById('createAdminModal');
+        let editModal = document.getElementById('editAdminModal');
+
+        if (event.target == createModal) closeCreateAdminModal();
+        if (event.target == editModal) closeEditAdminModal();
+    }
+
+    // --- Auto Open on Error ---
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('error')) {
-        openModal();
+        // 默认打开创建弹窗，如果是编辑出错通常会跳回列表，简单处理即可
+        openCreateAdminModal();
     }
 </script>
 

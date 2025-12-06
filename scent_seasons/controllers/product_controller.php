@@ -34,8 +34,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute([$name, $category_id, $price, $stock, $description, $image_path]);
 
         log_activity($pdo, "Add Product", "Name: $name");
-
-        // [确认] 添加成功后跳回列表页
         header("Location: ../views/admin/products/index.php?msg=added");
         exit();
     }
@@ -44,13 +42,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     elseif ($action == 'delete') {
         $id = intval($_POST['product_id']);
 
-        // 查名字做日志
         $stmt = $pdo->prepare("SELECT name FROM products WHERE product_id = ?");
         $stmt->execute([$id]);
         $prod = $stmt->fetch();
         $prod_name = $prod ? $prod['name'] : "Unknown";
 
-        // 更新状态为删除
+        // 标记为已删除
         $stmt = $pdo->prepare("UPDATE products SET is_deleted = 1 WHERE product_id = ?");
         $stmt->execute([$id]);
 
@@ -68,11 +65,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $prod = $stmt->fetch();
         $prod_name = $prod ? $prod['name'] : "Unknown";
 
+        // 恢复为正常状态
         $stmt = $pdo->prepare("UPDATE products SET is_deleted = 0 WHERE product_id = ?");
         $stmt->execute([$id]);
 
         log_activity($pdo, "Restore Product", "Product ID: $id, Name: $prod_name");
-        header("Location: ../views/admin/products/index.php?status=trash&msg=restored");
+
+        // [关键] 恢复后带上 open_trash=1，自动重新打开回收站弹窗
+        header("Location: ../views/admin/products/index.php?msg=restored&open_trash=1");
         exit();
     }
 
@@ -94,11 +94,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute([$id]);
 
         log_activity($pdo, "Permanent Delete Product", "Product ID: $id, Name: $prod_name");
-        header("Location: ../views/admin/products/index.php?status=trash&msg=deleted_permanent");
+
+        // [关键] 彻底删除后带上 open_trash=1
+        header("Location: ../views/admin/products/index.php?msg=deleted_permanent&open_trash=1");
         exit();
     }
 
-    // --- 5. 修改 (UPDATE) ---
+    // --- 5. 修改产品 (UPDATE) ---
     elseif ($action == 'update') {
         $id = intval($_POST['product_id']);
         $name = clean_input($_POST['name']);
@@ -130,3 +132,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 }
+?>
