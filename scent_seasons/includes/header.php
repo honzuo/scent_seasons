@@ -36,7 +36,7 @@ if (isset($_SESSION['user_id'])) {
         <?php
         $home_link = $path . "index.php"; // 默认游客去首页
         if (isset($_SESSION['role'])) {
-            if ($_SESSION['role'] == 'admin') $home_link = $path . "views/admin/dashboard.php";
+            if ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'superadmin') $home_link = $path . "views/admin/dashboard.php";
             if ($_SESSION['role'] == 'member') $home_link = $path . "views/member/home.php";
         }
         ?>
@@ -44,7 +44,7 @@ if (isset($_SESSION['user_id'])) {
 
         <ul>
             <?php if (isset($_SESSION['user_id'])): ?>
-                <?php if ($_SESSION['role'] == 'admin'): ?>
+                <?php if ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'superadmin'): ?>
                     <li><a href="<?php echo $path; ?>views/admin/dashboard.php">Dashboard</a></li>
                     <li><a href="<?php echo $path; ?>views/admin/products/index.php">Products</a></li>
                     <li><a href="<?php echo $path; ?>views/admin/orders/index.php">Orders</a></li>

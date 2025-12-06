@@ -49,4 +49,17 @@ function require_superadmin()
         die("Access Denied: Only Superadmin can access this page.");
     }
 }
-?>
+
+// [新增] 记录操作日志
+// 注意：因为 functions.php 里没有 $pdo，调用时必须把 $pdo 传进来
+function log_activity($pdo, $action, $details = "")
+{
+    if (isset($_SESSION['user_id'])) {
+        $user_id = $_SESSION['user_id'];
+        $ip = $_SERVER['REMOTE_ADDR']; // 获取用户 IP
+
+        $sql = "INSERT INTO activity_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$user_id, $action, $details, $ip]);
+    }
+}

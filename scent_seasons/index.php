@@ -31,7 +31,7 @@ require $path . 'includes/header.php';
     <?php else: ?>
         <p>Welcome back, <strong><?php echo $_SESSION['user_name'] ?? 'User'; ?></strong>!</p>
         <div style="margin-top: 20px;">
-            <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin'): ?>
+            <?php if (isset($_SESSION['role']) && ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'superadmin')): ?>
                 <a href="views/admin/dashboard.php" class="btn-blue">Go to Dashboard</a>
             <?php else: ?>
                 <a href="views/member/home.php" class="btn-green">Go to Shop</a>

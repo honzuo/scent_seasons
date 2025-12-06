@@ -38,6 +38,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$name, $category_id, $price, $stock, $description, $image_path]);
 
+        log_activity($pdo, "Add Product", "Name: $name");
+
         header("Location: ../views/admin/products/index.php?msg=added");
         exit();
     }
@@ -56,6 +58,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $stmt = $pdo->prepare("DELETE FROM products WHERE product_id = ?");
         $stmt->execute([$id]);
+
+        // [新增] 记录日志
+        log_activity($pdo, "Delete Product", "Product ID: $id");
 
         header("Location: ../views/admin/products/index.php?msg=deleted");
         exit();
@@ -93,9 +98,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$name, $category_id, $price, $stock, $description, $final_image, $id]);
 
+        log_activity($pdo, "Update Product", "Product ID: $id");
+
         header("Location: ../views/admin/products/index.php?msg=updated");
         exit();
     }
 }
-
-?>

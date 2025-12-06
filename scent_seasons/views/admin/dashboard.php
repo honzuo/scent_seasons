@@ -44,6 +44,12 @@ require $path . 'includes/header.php';
         <a href="reviews/index.php">Go to Reviews &rarr;</a>
     </div>
 
+    <div class="card">
+        <h3>Activity Logs</h3>
+        <p>Track system activities.</p>
+        <a href="logs/index.php">View Logs &rarr;</a>
+    </div>
+
     <?php if (is_superadmin()): ?>
         <div class="card" style="border-top: 4px solid #8e44ad;">
             <h3 style="color:#8e44ad;">System Access</h3>

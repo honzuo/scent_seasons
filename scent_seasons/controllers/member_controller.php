@@ -22,6 +22,9 @@ if ($action == 'toggle_block') {
     $stmt = $pdo->prepare("UPDATE users SET is_blocked = ? WHERE user_id = ?");
     $stmt->execute([$block_status, $user_id]);
 
+    $action_name = ($block_status == 1) ? "Block User" : "Unblock User";
+    log_activity($pdo, $action_name, "User ID: $user_id");
+
     $msg = ($block_status == 1) ? "blocked" : "unblocked";
     header("Location: ../views/admin/members/index.php?msg=$msg");
     exit();
@@ -29,4 +32,3 @@ if ($action == 'toggle_block') {
 
 // (原来的 delete 逻辑你可以选择保留作为彻底删除，或者直接删掉代码)
 // 如果你彻底不想让管理员删除用户，就把下面的 delete 代码删掉即可。
-?>
