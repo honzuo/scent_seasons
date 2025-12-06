@@ -2,22 +2,18 @@
 
 /* --- Home Page Banner --- */
 .hero-banner {
-    /* [修改] 使用网络图片作为临时 Banner，这样你不用下载图片也能看到效果 */
+    /* 使用 Unsplash 图片作为 Banner */
     background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1595867359301-b3b42b66bc91?q=80&w=2000&auto=format&fit=crop');
-
     background-color: #2c3e50;
-    /* 图片加载失败时的备用色 */
     background-size: cover;
     background-position: center;
     height: 500px;
-    /*稍微调高一点，更大气*/
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     text-align: center;
     border-radius: 0 0 8px 8px;
-    /* 下方圆角 */
     margin-bottom: 40px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -27,14 +23,12 @@
     margin-bottom: 15px;
     text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
     font-weight: 700;
-    letter-spacing: 1px;
 }
 
 .hero-content p {
     font-size: 1.4em;
     margin-bottom: 30px;
     text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
-    font-weight: 300;
 }
 
 .btn-hero {
@@ -90,7 +84,7 @@
     font-size: 0.9em;
 }
 
-/* --- Shop Layout (保留之前的样式) --- */
+/* --- Shop Layout --- */
 .shop-layout {
     display: flex;
     gap: 20px;
@@ -99,10 +93,33 @@
 
 .sidebar {
     width: 200px;
-    padding: 10px;
+    padding: 15px;
     background: #fff;
     border-radius: 8px;
     align-self: flex-start;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar li {
+    margin-bottom: 10px;
+}
+
+.sidebar a {
+    color: #333;
+    text-decoration: none;
+    display: block;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.sidebar a:hover {
+    background-color: #f5f5f5;
 }
 
 .product-grid {
@@ -112,13 +129,13 @@
     gap: 20px;
 }
 
-/* 商品卡片 */
 .product-card {
     background: white;
     border: 1px solid #eee;
     border-radius: 8px;
     overflow: hidden;
     transition: transform 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .product-card:hover {
@@ -165,7 +182,8 @@
     background: white;
     padding: 40px;
     border-radius: 8px;
-    margin-top: 50px;
+    margin-top: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .detail-img {
@@ -184,6 +202,8 @@
 .detail-price {
     color: #e67e22;
     margin: 10px 0;
+    font-size: 1.5em;
+    font-weight: bold;
 }
 
 .qty-input {
@@ -192,7 +212,37 @@
     margin-left: 10px;
 }
 
-/* 购物车表格 */
+/* 个人资料页 Profile */
+.profile-grid {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.profile-card {
+    flex: 1;
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    height: fit-content;
+}
+
+.profile-avatar-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #eee;
+}
+
+/* 购物车表格 & 订单表格 */
 .table-list {
     width: 100%;
     border-collapse: collapse;
@@ -208,7 +258,7 @@
 }
 
 .table-list th {
-    background-color: #f2f2f2;
+    background-color: #f8f9fa;
 }
 
 .cart-total {
@@ -216,14 +266,16 @@
     font-size: 1.5em;
     margin-top: 20px;
     font-weight: bold;
+    color: #2c3e50;
 }
 
-/* Reviews & Reply */
+/* Reviews */
 .reviews-container {
     margin-top: 30px;
     background: white;
     padding: 30px;
     border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .review-summary {
@@ -267,7 +319,6 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
 }
 
 .review-content {
@@ -295,14 +346,6 @@
     line-height: 1.5;
 }
 
-.review-form-box {
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-    margin-top: 30px;
-    border: 1px solid #eee;
-}
-
 .admin-reply-box {
     margin-top: 15px;
     background-color: #f8f9fa;
@@ -312,15 +355,84 @@
     font-size: 0.95em;
 }
 
-.admin-reply-box .reply-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
+/* Write Review Page */
+.review-form-box {
+    background: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.admin-reply-box p {
-    margin: 0;
-    color: #555;
+.product-snippet {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.product-snippet img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* Order Detail Styles */
+.order-detail-box {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.order-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.text-green-bold {
+    color: green;
+    font-weight: bold;
+}
+
+.text-red-bold {
+    color: red;
+    font-weight: bold;
+}
+
+.text-orange-bold {
+    color: orange;
+    font-weight: bold;
+}
+
+.text-total {
+    text-align: right;
+    margin-top: 30px;
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.btn-review {
+    display: inline-block;
+    background-color: #3498db;
+    color: white;
+    padding: 8px 15px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.tag-reviewed {
+    color: #999;
+    font-size: 0.9em;
+    background: #f5f5f5;
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
 }
