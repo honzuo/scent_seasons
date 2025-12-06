@@ -32,49 +32,43 @@ $sql = "SELECT oi.*, p.name, p.image_path
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$order_id]);
 $items = $stmt->fetchAll();
+
+$page_title = "Shop - Scent Seasons";
+$path = "../../";
+$extra_css = "shop.css"; // 引用 shop.css
+
+require $path . 'includes/header.php';
 ?>
 
-<!DOCTYPE html>
-<html>
+<h2>Order Details #<?php echo $order_id; ?></h2>
+<p><strong>Date:</strong> <?php echo $order['order_date']; ?></p>
+<p><strong>Status:</strong> <?php echo ucfirst($order['status']); ?></p>
 
-<head>
-    <title>Order Details #<?php echo $order_id; ?></title>
-    <link rel="stylesheet" href="../../css/style.css">
-</head>
+<table style="width:100%; border-collapse:collapse; margin-top:20px;">
+    <thead>
+        <tr style="background:#eee;">
+            <th style="padding:10px; border:1px solid #ddd;">Product</th>
+            <th style="padding:10px; border:1px solid #ddd;">Quantity</th>
+            <th style="padding:10px; border:1px solid #ddd;">Price Each</th>
+            <th style="padding:10px; border:1px solid #ddd;">Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($items as $item): ?>
+            <tr>
+                <td style="padding:10px; border:1px solid #ddd;">
+                    <img src="../../images/products/<?php echo $item['image_path']; ?>" style="width:50px; vertical-align:middle;">
+                    <?php echo $item['name']; ?>
+                </td>
+                <td style="padding:10px; border:1px solid #ddd;"><?php echo $item['quantity']; ?></td>
+                <td style="padding:10px; border:1px solid #ddd;">$<?php echo $item['price_each']; ?></td>
+                <td style="padding:10px; border:1px solid #ddd;">$<?php echo number_format($item['quantity'] * $item['price_each'], 2); ?></td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
 
-<body>
-    <div class="container">
-        <h2>Order Details #<?php echo $order_id; ?></h2>
-        <p><strong>Date:</strong> <?php echo $order['order_date']; ?></p>
-        <p><strong>Status:</strong> <?php echo ucfirst($order['status']); ?></p>
+<h3 style="text-align:right;">Total Paid: $<?php echo $order['total_amount']; ?></h3>
+<a href="orders.php">Back to My Orders</a>
 
-        <table style="width:100%; border-collapse:collapse; margin-top:20px;">
-            <thead>
-                <tr style="background:#eee;">
-                    <th style="padding:10px; border:1px solid #ddd;">Product</th>
-                    <th style="padding:10px; border:1px solid #ddd;">Quantity</th>
-                    <th style="padding:10px; border:1px solid #ddd;">Price Each</th>
-                    <th style="padding:10px; border:1px solid #ddd;">Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($items as $item): ?>
-                    <tr>
-                        <td style="padding:10px; border:1px solid #ddd;">
-                            <img src="../../images/products/<?php echo $item['image_path']; ?>" style="width:50px; vertical-align:middle;">
-                            <?php echo $item['name']; ?>
-                        </td>
-                        <td style="padding:10px; border:1px solid #ddd;"><?php echo $item['quantity']; ?></td>
-                        <td style="padding:10px; border:1px solid #ddd;">$<?php echo $item['price_each']; ?></td>
-                        <td style="padding:10px; border:1px solid #ddd;">$<?php echo number_format($item['quantity'] * $item['price_each'], 2); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-
-        <h3 style="text-align:right;">Total Paid: $<?php echo $order['total_amount']; ?></h3>
-        <a href="orders.php">Back to My Orders</a>
-    </div>
-</body>
-
-</html>
+<?php require $path . 'includes/footer.php'; ?>
