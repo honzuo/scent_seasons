@@ -12,7 +12,7 @@ $sql = "SELECT o.*, u.full_name, u.email
 $orders = $pdo->query($sql)->fetchAll();
 
 $page_title = "Order Management";
-$path = "../../"; // 注意这里是三层！
+$path = "../../../"; // 注意这里是三层！
 $extra_css = "admin.css"; // 引用 admin.css
 ?>
 
