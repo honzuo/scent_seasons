@@ -1,5 +1,7 @@
 /* css/admin.css - 后台管理样式 */
 
+/* ... (保留之前所有的样式: 仪表盘, 表格, 模态框, 状态标签, 搜索栏, 订单, 产品, 评论等) ... */
+
 /* 仪表盘卡片 */
 .dashboard-grid {
     display: grid;
@@ -70,10 +72,9 @@
     border-radius: 50%;
 }
 
-/* 模态框样式 (Modals) - 将分散在各页面的弹窗样式统一 */
+/* 模态框样式 */
 .modal-overlay {
     display: none;
-    /* 默认隐藏 */
     position: fixed;
     top: 0;
     left: 0;
@@ -93,7 +94,6 @@
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* 模态框尺寸变体 */
 .modal-box.small {
     width: 400px;
 }
@@ -147,7 +147,7 @@
     justify-content: center;
 }
 
-/* 状态标签 (Badges) */
+/* 状态标签 */
 .badge {
     padding: 3px 8px;
     border-radius: 4px;
@@ -171,21 +171,275 @@
     font-weight: bold;
 }
 
-/* 仅文字颜色 */
 .bg-red-light {
     background-color: #fff5f5;
-}
-
-/* 用于封禁用户的行背景 */
-
-/* 评论星星 */
-.stars-gold {
-    color: #f1c40f;
-    letter-spacing: 2px;
 }
 
 /* Search Bar */
 .search-form {
     display: flex;
     gap: 5px;
+}
+
+/* 文本颜色工具类 */
+.text-gray {
+    color: gray;
+}
+
+.text-link-gray {
+    color: #666;
+    text-decoration: none;
+}
+
+.text-muted {
+    color: #999;
+}
+
+.text-green-bold {
+    color: green;
+    font-weight: bold;
+}
+
+.text-red-bold {
+    color: red;
+    font-weight: bold;
+}
+
+.text-orange-bold {
+    color: orange;
+    font-weight: bold;
+}
+
+.text-dark-bold {
+    color: black;
+    font-weight: bold;
+}
+
+/* --- Members Page Specifics --- */
+.btn-expand {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2em;
+    color: black;
+    transition: color 0.2s;
+}
+
+.btn-expand.expanded {
+    color: red;
+}
+
+.detail-row {
+    display: none;
+    background-color: #f9f9f9;
+}
+
+.detail-cell {
+    padding: 15px 20px !important;
+}
+
+.detail-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+/* Nested Table */
+.nested-table {
+    width: 100%;
+    border: 1px solid #eee;
+    background: white;
+    border-collapse: collapse;
+}
+
+.nested-table th {
+    background: #eee;
+    font-size: 0.9em;
+    padding: 5px;
+    border: 1px solid #eee;
+    text-align: left;
+}
+
+.nested-table td {
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9em;
+}
+
+.product-flex {
+    display: flex;
+    align-items: center;
+}
+
+.product-thumb-small {
+    width: 30px;
+    height: 30px;
+    object-fit: cover;
+    margin-right: 10px;
+    border-radius: 3px;
+}
+
+/* --- Logs Page Specifics --- */
+.logs-filter-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.logs-filter-label {
+    font-weight: bold;
+}
+
+.logs-filter-select {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    width: auto;
+}
+
+.text-superadmin {
+    color: #8e44ad;
+    font-weight: bold;
+}
+
+.cell-time {
+    font-size: 0.9em;
+    color: #666;
+    white-space: nowrap;
+}
+
+.text-muted-small {
+    font-size: 0.8em;
+    color: #999;
+}
+
+.text-action-bold {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.text-danger {
+    color: red;
+}
+
+.empty-logs-cell {
+    text-align: center;
+    padding: 20px;
+    color: gray;
+}
+
+/* --- Orders Page Specifics --- */
+.order-items-container {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.status-box {
+    background: #f0f8ff;
+    padding: 15px;
+    border-radius: 4px;
+    border: 1px solid #b6d4fe;
+}
+
+.status-box h4 {
+    margin-top: 0;
+    color: #0d6efd;
+}
+
+.status-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.status-select {
+    flex: 1;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+/* --- Products Page Specifics --- */
+.btn-orange {
+    background: #e67e22;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.btn-darkred {
+    background: darkred;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8em;
+}
+
+.text-preview-info {
+    font-weight: normal;
+    color: gray;
+    font-size: 0.9em;
+}
+
+.input-file-custom {
+    background: #f9f9f9;
+    border: 1px dashed #ccc;
+}
+
+/* --- Reviews Page Specifics --- */
+.stars-gold {
+    color: #f1c40f;
+    letter-spacing: 1px;
+}
+
+.align-top {
+    vertical-align: top !important;
+}
+
+.col-reply {
+    width: 35%;
+}
+
+.comment-italic {
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.reply-textarea {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9em;
+    resize: vertical;
+}
+
+.reply-actions {
+    margin-top: 5px;
+    text-align: right;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 0.8em;
+}
+
+.last-reply-info {
+    font-size: 0.8em;
+    color: #999;
+    margin-top: 3px;
+}
+
+/* --- Admin Users Page Specifics (New) --- */
+.form-inline {
+    display: inline;
 }

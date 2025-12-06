@@ -22,14 +22,12 @@ if ($filter_user_id > 0) {
 }
 $orders = $stmt->fetchAll();
 
-// 3. [新增] 预加载所有订单详情 (Items) 用于弹窗
-// 联表查询产品信息
+// 3. 预加载所有订单详情 (Items) 用于弹窗
 $stmt_items = $pdo->query("SELECT oi.*, p.name, p.image_path 
                            FROM order_items oi 
                            JOIN products p ON oi.product_id = p.product_id");
 $all_items_raw = $stmt_items->fetchAll();
 
-// 按 order_id 分组整理数据
 $items_by_order = [];
 foreach ($all_items_raw as $item) {
     $items_by_order[$item['order_id']][] = $item;
@@ -42,7 +40,7 @@ $extra_css = "admin.css";
 require $path . 'includes/header.php';
 ?>
 
-<div style="display:flex; justify-content:space-between; align-items:center;">
+<div class="flex-between mb-20">
     <h2>
         <?php if ($filter_user_id > 0): ?>
             Orders for User #<?php echo $filter_user_id; ?>
@@ -57,7 +55,7 @@ require $path . 'includes/header.php';
 </div>
 
 <?php if (isset($_GET['msg']) && $_GET['msg'] == 'updated'): ?>
-    <p style="color:green; font-weight:bold; background:#e8f5e9; padding:10px;">Order status updated.</p>
+    <div class="alert alert-success">Order status updated.</div>
 <?php endif; ?>
 
 <?php if (count($orders) > 0): ?>
@@ -78,23 +76,23 @@ require $path . 'includes/header.php';
                     <td>#<?php echo $o['order_id']; ?></td>
                     <td>
                         <strong><?php echo $o['full_name']; ?></strong><br>
-                        <small style="color:gray;"><?php echo $o['email']; ?></small>
+                        <small class="text-gray"><?php echo $o['email']; ?></small>
                     </td>
                     <td><?php echo date('Y-m-d H:i', strtotime($o['order_date'])); ?></td>
                     <td>$<?php echo $o['total_amount']; ?></td>
                     <td>
                         <?php
                         $s = strtolower($o['status']);
-                        if ($s == 'completed') echo '<span style="color:green;font-weight:bold;">Completed</span>';
-                        elseif ($s == 'cancelled') echo '<span style="color:red;font-weight:bold;">Cancelled</span>';
-                        else echo '<span style="color:orange;font-weight:bold;">Pending</span>';
+                        if ($s == 'completed') echo '<span class="text-green-bold">Completed</span>';
+                        elseif ($s == 'cancelled') echo '<span class="text-red-bold">Cancelled</span>';
+                        else echo '<span class="text-orange-bold">Pending</span>';
                         ?>
                     </td>
                     <td>
                         <button type="button"
                             onclick="openOrderModal(<?php echo $o['order_id']; ?>, '<?php echo $o['status']; ?>')"
                             class="btn-blue"
-                            style="padding:5px 10px; font-size:0.8em; cursor:pointer;">
+                            style="padding:5px 10px; font-size:0.8em;">
                             Manage
                         </button>
                     </td>
@@ -103,33 +101,32 @@ require $path . 'includes/header.php';
         </tbody>
     </table>
 <?php else: ?>
-    <p style="color: gray; margin-top: 20px;">No orders found.</p>
+    <p class="text-gray mt-20">No orders found.</p>
 <?php endif; ?>
 
 
-<div id="manageOrderModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1500;">
-    <div style="background:white; padding:30px; border-radius:8px; width:600px; max-height:90vh; overflow-y:auto; position:relative;">
+<div id="manageOrderModal" class="modal-overlay">
+    <div class="modal-box medium">
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:10px;">
-            <h3 style="margin:0;" id="modalTitle">Manage Order</h3>
-            <button onclick="closeOrderModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer;">&times;</button>
+        <div class="modal-header">
+            <h3 id="modalTitle">Manage Order</h3>
+            <button onclick="closeOrderModal()" class="modal-close-btn">&times;</button>
         </div>
 
-        <div style="margin-bottom:20px;">
-            <h4 style="margin-top:0; color:#555;">Order Items:</h4>
-            <div id="orderItemsContent" style="background:#f9f9f9; padding:10px; border-radius:4px;">
-            </div>
+        <div class="mb-20">
+            <h4 class="mt-0" style="color:#555;">Order Items:</h4>
+            <div id="orderItemsContent" class="order-items-container"></div>
         </div>
 
-        <div style="background:#f0f8ff; padding:15px; border-radius:4px; border:1px solid #b6d4fe;">
-            <h4 style="margin-top:0; color:#0d6efd;">Update Status</h4>
+        <div class="status-box">
+            <h4>Update Status</h4>
             <form action="../../../controllers/order_controller.php" method="POST">
                 <input type="hidden" name="action" value="update_status">
                 <input type="hidden" name="order_id" id="form_order_id">
                 <input type="hidden" name="filter_user_id" value="<?php echo $filter_user_id; ?>">
 
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <select name="status" id="form_status" style="flex:1; padding:8px; border-radius:4px; border:1px solid #ccc;">
+                <div class="status-form">
+                    <select name="status" id="form_status" class="status-select">
                         <option value="pending">Pending</option>
                         <option value="completed">Completed</option>
                         <option value="cancelled">Cancelled</option>
@@ -150,7 +147,7 @@ require $path . 'includes/header.php';
         // 1. 设置标题和表单
         document.getElementById('modalTitle').innerText = "Manage Order #" + orderId;
         document.getElementById('form_order_id').value = orderId;
-        document.getElementById('form_status').value = currentStatus.toLowerCase(); // 选中当前状态
+        document.getElementById('form_status').value = currentStatus.toLowerCase();
 
         // 2. 渲染商品列表
         const contentDiv = document.getElementById('orderItemsContent');
@@ -159,19 +156,19 @@ require $path . 'includes/header.php';
         if (items.length === 0) {
             contentDiv.innerHTML = '<p>No items found.</p>';
         } else {
-            let html = '<table style="width:100%; border-collapse:collapse;">';
-            html += '<tr style="border-bottom:1px solid #ddd; text-align:left;"><th style="padding:5px;">Product</th><th style="padding:5px;">Qty</th><th style="padding:5px;">Subtotal</th></tr>';
+            let html = '<table class="nested-table">';
+            html += '<tr><th>Product</th><th>Qty</th><th>Subtotal</th></tr>';
 
             items.forEach(item => {
                 let subtotal = (item.quantity * item.price_each).toFixed(2);
                 html += `
-                    <tr style="border-bottom:1px solid #eee;">
-                        <td style="padding:8px; display:flex; align-items:center;">
-                            <img src="../../../images/products/${item.image_path}" style="width:30px; height:30px; object-fit:cover; margin-right:10px;">
+                    <tr>
+                        <td class="product-flex">
+                            <img src="../../../images/products/${item.image_path}" class="product-thumb-small">
                             ${item.name}
                         </td>
-                        <td style="padding:8px;">${item.quantity}</td>
-                        <td style="padding:8px;">$${subtotal}</td>
+                        <td>${item.quantity}</td>
+                        <td>$${subtotal}</td>
                     </tr>
                 `;
             });

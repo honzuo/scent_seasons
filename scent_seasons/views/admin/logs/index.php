@@ -48,13 +48,13 @@ $extra_css = "admin.css";
 require $path . 'includes/header.php';
 ?>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+<div class="flex-between mb-20">
     <h2>Activity Logs</h2>
 
     <?php if (is_superadmin()): ?>
-        <form method="GET" action="" style="display: flex; gap: 10px; align-items: center;">
-            <label style="font-weight: bold;">Filter by:</label>
-            <select name="filter_user_id" onchange="this.form.submit()" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+        <form method="GET" action="" class="logs-filter-form">
+            <label class="logs-filter-label">Filter by:</label>
+            <select name="filter_user_id" onchange="this.form.submit()" class="logs-filter-select">
                 <option value="all" <?php echo ($filter_user_id == 'all') ? 'selected' : ''; ?>>--- View All Activities ---</option>
 
                 <?php foreach ($admins_list as $admin): ?>
@@ -69,12 +69,12 @@ require $path . 'includes/header.php';
     <?php endif; ?>
 </div>
 
-<p style="color:gray; margin-bottom: 20px;">
+<p class="text-gray mb-20">
     <?php if (is_superadmin()): ?>
         <?php if ($filter_user_id == 'all'): ?>
-            <span style="color:#8e44ad; font-weight:bold;">[Superadmin View]</span> Viewing <strong>EVERYONE'S</strong> activities.
+            <span class="text-superadmin">[Superadmin View]</span> Viewing <strong>EVERYONE'S</strong> activities.
         <?php else: ?>
-            <span style="color:#8e44ad; font-weight:bold;">[Superadmin View]</span> Viewing filtered activities.
+            <span class="text-superadmin">[Superadmin View]</span> Viewing filtered activities.
         <?php endif; ?>
     <?php else: ?>
         Viewing <strong>YOUR</strong> activities only.
@@ -97,7 +97,7 @@ require $path . 'includes/header.php';
         <?php if (count($logs) > 0): ?>
             <?php foreach ($logs as $log): ?>
                 <tr>
-                    <td style="font-size:0.9em; color:#666; white-space:nowrap;">
+                    <td class="cell-time">
                         <?php echo date('Y-m-d H:i', strtotime($log['created_at'])); ?>
                     </td>
 
@@ -105,23 +105,23 @@ require $path . 'includes/header.php';
                         <td>
                             <?php if (isset($log['full_name'])): ?>
                                 <strong><?php echo htmlspecialchars($log['full_name']); ?></strong><br>
-                                <span style="font-size:0.8em; color:#999;">(<?php echo ucfirst($log['role']); ?>)</span>
+                                <span class="text-muted-small">(<?php echo ucfirst($log['role']); ?>)</span>
                             <?php else: ?>
-                                <span style="color:red;">(User Deleted)</span>
+                                <span class="text-danger">(User Deleted)</span>
                             <?php endif; ?>
                         </td>
                     <?php endif; ?>
 
                     <td>
-                        <span style="font-weight:bold; color:#2c3e50;"><?php echo htmlspecialchars($log['action']); ?></span>
+                        <span class="text-action-bold"><?php echo htmlspecialchars($log['action']); ?></span>
                     </td>
                     <td><?php echo htmlspecialchars($log['details']); ?></td>
-                    <td style="font-size:0.9em; color:#999;"><?php echo $log['ip_address']; ?></td>
+                    <td class="text-muted-small"><?php echo $log['ip_address']; ?></td>
                 </tr>
             <?php endforeach; ?>
         <?php else: ?>
             <tr>
-                <td colspan="<?php echo is_superadmin() ? 5 : 4; ?>" style="text-align:center; padding:20px; color:gray;">
+                <td colspan="<?php echo is_superadmin() ? 5 : 4; ?>" class="empty-logs-cell">
                     No logs found for this selection.
                 </td>
             </tr>
