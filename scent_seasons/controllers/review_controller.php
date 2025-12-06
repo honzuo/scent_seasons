@@ -26,19 +26,38 @@ if ($action == 'delete') {
 }
 
 // --- 2. 用户提交评价 (CREATE) ---
-// (原有逻辑，只有 POST 且不是 delete 时执行)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $action != 'delete') {
     $user_id = $_SESSION['user_id'];
     $product_id = intval($_POST['product_id']);
     $rating = intval($_POST['rating']);
     $comment = clean_input($_POST['comment']);
 
+    // 1. 基础验证
     if ($rating < 1 || $rating > 5) {
         die("Invalid rating.");
     }
-
     if (empty($comment)) {
         die("Comment cannot be empty.");
+    }
+
+    // 2. [安全检查] 再次确认该用户是否购买过且订单已完成
+    $sql_check = "SELECT COUNT(*) FROM orders o 
+                  JOIN order_items oi ON o.order_id = oi.order_id 
+                  WHERE o.user_id = ? AND oi.product_id = ? AND o.status = 'completed'";
+    $stmt = $pdo->prepare($sql_check);
+    $stmt->execute([$user_id, $product_id]);
+
+    if ($stmt->fetchColumn() == 0) {
+        die("Error: Unauthorized review attempt.");
+    }
+
+    // 3. [安全检查] 防止重复评价
+    $sql_exist = "SELECT COUNT(*) FROM reviews WHERE user_id = ? AND product_id = ?";
+    $stmt = $pdo->prepare($sql_exist);
+    $stmt->execute([$user_id, $product_id]);
+
+    if ($stmt->fetchColumn() > 0) {
+        die("Error: You have already reviewed this product.");
     }
 
     try {
@@ -46,9 +65,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $action != 'delete') {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$user_id, $product_id, $rating, $comment]);
 
+        // 成功后跳回产品详情页
         header("Location: ../views/member/product_detail.php?id=$product_id&msg=review_added");
         exit();
     } catch (PDOException $e) {
         die("Error: " . $e->getMessage());
     }
 }
+?>

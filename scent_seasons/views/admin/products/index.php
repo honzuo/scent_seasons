@@ -23,16 +23,16 @@ require $path . 'includes/header.php';
 
 <h2>Product List</h2>
 
-<div style="display:flex; justify-content:space-between;">
+<div style="display:flex; justify-content:space-between; margin-bottom: 20px;">
     <a href="create.php" class="btn-blue">+ Add New Product</a>
 
     <form method="GET" action="">
         <input type="text" name="search" placeholder="Search product..." value="<?php echo $search; ?>">
-        <button type="submit">Search</button>
+        <button type="submit" class="btn-blue">Search</button>
     </form>
 </div>
 
-<table>
+<table class="table-list">
     <thead>
         <tr>
             <th>Image</th>
@@ -58,12 +58,12 @@ require $path . 'includes/header.php';
                 <td>$<?php echo $p['price']; ?></td>
                 <td><?php echo $p['stock']; ?></td>
                 <td>
-                    <a href="edit.php?id=<?php echo $p['product_id']; ?>" class="btn-blue">Edit</a>
+                    <a href="edit.php?id=<?php echo $p['product_id']; ?>" class="btn-blue" style="font-size:0.8em;">Edit</a>
 
                     <form action="../../../controllers/product_controller.php" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure?');">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="product_id" value="<?php echo $p['product_id']; ?>">
-                        <button type="submit" class="btn-red">Delete</button>
+                        <button type="submit" class="btn-red" style="font-size:0.8em;">Delete</button>
                     </form>
                 </td>
             </tr>

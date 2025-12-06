@@ -122,35 +122,6 @@ require $path . 'includes/header.php';
             <p>No reviews yet. Be the first to review this perfume!</p>
         <?php endif; ?>
     </div>
-
-    <?php if (is_logged_in()): ?>
-        <div class="review-form-box">
-            <h3>Write a Review</h3>
-            <form action="../../controllers/review_controller.php" method="POST">
-                <input type="hidden" name="product_id" value="<?php echo $id; ?>">
-
-                <div class="form-group">
-                    <label>Rating:</label>
-                    <select name="rating" required style="width:150px;">
-                        <option value="5">★★★★★ (5)</option>
-                        <option value="4">★★★★☆ (4)</option>
-                        <option value="3">★★★☆☆ (3)</option>
-                        <option value="2">★★☆☆☆ (2)</option>
-                        <option value="1">★☆☆☆☆ (1)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Your Review:</label>
-                    <textarea name="comment" rows="3" required placeholder="Tell us what you think about this scent..."></textarea>
-                </div>
-
-                <button type="submit" class="btn-blue">Submit Review</button>
-            </form>
-        </div>
-    <?php else: ?>
-        <p style="margin-top:20px;">Please <a href="../public/login.php">login</a> to write a review.</p>
-    <?php endif; ?>
 </div>
 
 <?php require $path . 'includes/footer.php'; ?>
