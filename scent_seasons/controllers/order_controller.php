@@ -3,7 +3,6 @@ session_start();
 require '../config/database.php';
 require '../includes/functions.php';
 
-// 必须登录才能结账
 if (!is_logged_in()) {
     header("Location: ../views/public/login.php");
     exit();
@@ -13,67 +12,79 @@ $action = isset($_POST['action']) ? $_POST['action'] : '';
 
 if ($action == 'checkout') {
     $user_id = $_SESSION['user_id'];
-    $cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
 
-    if (empty($cart)) {
-        header("Location: ../views/member/home.php");
+    // 获取前端传来的选中的商品 ID 数组
+    $selected_ids = isset($_POST['selected_items']) ? $_POST['selected_items'] : [];
+
+    // 安全检查：如果没选东西，踢回去
+    if (empty($selected_ids) || !is_array($selected_ids)) {
+        header("Location: ../views/member/cart.php");
         exit();
     }
 
     try {
-        // 1. 开启事务 (Transaction) - 保证数据要么全写入，要么全不写入
+        // 1. 构建动态 SQL 查询选中的商品
+        // 我们需要生成类似 (?, ?, ?) 的占位符
+        $placeholders = implode(',', array_fill(0, count($selected_ids), '?'));
+
+        $sql = "SELECT c.quantity, p.product_id, p.price, p.stock 
+                FROM cart c 
+                JOIN products p ON c.product_id = p.product_id 
+                WHERE c.user_id = ? AND c.product_id IN ($placeholders)";
+
+        // 准备参数：第一个是 user_id，后面跟着所有的 product_id
+        $params = array_merge([$user_id], $selected_ids);
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $cart_items = $stmt->fetchAll();
+
+        if (empty($cart_items)) {
+            die("Error: No items found for checkout.");
+        }
+
+        // 2. 开启事务
         $pdo->beginTransaction();
 
-        // 2. 重新计算总价 (安全起见，不要只信前端传来的数据)
+        // 3. 计算这些选中商品的总价
         $total_amount = 0;
-        $product_ids = array_keys($cart);
-        // 这一步在实际项目中很关键，防止用户篡改价格
-        // 但为了作业简单，我们这里简化处理，假设库存充足，直接从数据库读价格算总账
-
-        // 3. 创建订单主记录 (Insert into orders)
-        // 注意：总价我们稍后更新，先插个 0 或者在下面算出总价再插
-        // 这里为了简单，我们先算出总价
-        foreach ($cart as $pid => $qty) {
-            $stmt = $pdo->prepare("SELECT price FROM products WHERE product_id = ?");
-            $stmt->execute([$pid]);
-            $p = $stmt->fetch();
-            $total_amount += ($p['price'] * $qty);
+        foreach ($cart_items as $item) {
+            $total_amount += ($item['price'] * $item['quantity']);
         }
 
+        // 4. 创建订单
         $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_amount, status, order_date) VALUES (?, ?, 'pending', NOW())");
         $stmt->execute([$user_id, $total_amount]);
-        $order_id = $pdo->lastInsertId(); // 获取刚生成的订单号
+        $order_id = $pdo->lastInsertId();
 
-        // 4. 创建订单详情 (Insert into order_items) & 扣减库存
-        foreach ($cart as $pid => $qty) {
-            // 获取当前价格 (防止以后涨价影响历史订单)
-            $stmt = $pdo->prepare("SELECT price FROM products WHERE product_id = ?");
-            $stmt->execute([$pid]);
-            $product = $stmt->fetch();
+        // 5. 插入订单详情并扣减库存
+        $sql_item = "INSERT INTO order_items (order_id, product_id, quantity, price_each) VALUES (?, ?, ?, ?)";
+        $stmt_item = $pdo->prepare($sql_item);
 
-            // 插入详情
-            $sql_item = "INSERT INTO order_items (order_id, product_id, quantity, price_each) VALUES (?, ?, ?, ?)";
-            $stmt_item = $pdo->prepare($sql_item);
-            $stmt_item->execute([$order_id, $pid, $qty, $product['price']]);
+        $sql_stock = "UPDATE products SET stock = stock - ? WHERE product_id = ?";
+        $stmt_stock = $pdo->prepare($sql_stock);
 
-            // 扣减库存 (Stock Handling)
-            $stmt_stock = $pdo->prepare("UPDATE products SET stock = stock - ? WHERE product_id = ?");
-            $stmt_stock->execute([$qty, $pid]);
+        foreach ($cart_items as $item) {
+            // 插入 Order Item
+            $stmt_item->execute([$order_id, $item['product_id'], $item['quantity'], $item['price']]);
+
+            // 扣减库存
+            $stmt_stock->execute([$item['quantity'], $item['product_id']]);
         }
 
-        // 5. 提交事务
+        // 6. 关键修改：只从购物车删除“已结算”的商品
+        // (未勾选的商品要保留在 cart 表里)
+        $sql_delete = "DELETE FROM cart WHERE user_id = ? AND product_id IN ($placeholders)";
+        $stmt_delete = $pdo->prepare($sql_delete);
+        $stmt_delete->execute($params); // 参数也是 user_id + selected_ids
+
+        // 7. 提交事务
         $pdo->commit();
 
-        // 6. 清空购物车
-        unset($_SESSION['cart']);
-
-        // 7. 跳转到订单成功页或列表页
         header("Location: ../views/member/orders.php?msg=success");
         exit();
     } catch (Exception $e) {
-        // 如果出错，回滚所有操作
         $pdo->rollBack();
         die("Order failed: " . $e->getMessage());
     }
 }
-?>

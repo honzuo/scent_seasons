@@ -8,8 +8,13 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!isset($path)) $path = "./";
 if (!isset($page_title)) $page_title = "Scent Seasons";
 
-// 3. 计算购物车数量 (防止报错)
-$cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
+$cart_count = 0;
+if (isset($_SESSION['user_id'])) {
+    require_once __DIR__ . '/../config/database.php'; // 确保连接数据库
+    $stmt = $pdo->prepare("SELECT SUM(quantity) FROM cart WHERE user_id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $cart_count = $stmt->fetchColumn() ?: 0;
+}
 ?>
 <!DOCTYPE html>
 <html>

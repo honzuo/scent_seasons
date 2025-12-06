@@ -23,13 +23,25 @@ require $path . 'includes/header.php';
     <div class="card">
         <h3>Members</h3>
         <p>View registered members.</p>
-        <a href="#">Go to Members &rarr;</a>
+        <a href="members/index.php">Go to Members &rarr;</a>
     </div>
 
     <div class="card">
         <h3>Orders</h3>
         <p>View customer orders.</p>
         <a href="orders/index.php">Go to Orders &rarr;</a>
+    </div>
+
+    <div class="card">
+        <h3>Categories</h3>
+        <p>Manage product categories.</p>
+        <a href="categories/index.php">Go to Categories &rarr;</a>
+    </div>
+
+    <div class="card">
+        <h3>Reviews</h3>
+        <p>Moderating user reviews.</p>
+        <a href="reviews/index.php">Go to Reviews &rarr;</a>
     </div>
 </div>
 
