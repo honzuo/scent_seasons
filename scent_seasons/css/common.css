@@ -1,4 +1,7 @@
 /* css/common.css - 全局通用样式 */
+
+/* ... (保留之前的样式: 导航栏, 容器, 表单, 按钮, 辅助类等) ... */
+
 * {
     box-sizing: border-box;
     font-family: 'Segoe UI', sans-serif;
@@ -54,7 +57,7 @@ nav ul li a:hover {
     padding: 20px;
 }
 
-/* 页脚样式 (Refactored from inline) */
+/* 页脚样式 */
 .site-footer {
     text-align: center;
     padding: 30px 0;
@@ -136,14 +139,16 @@ button {
     opacity: 0.7;
 }
 
+/* 错误消息 (Refactored to handle PHP helper output) */
 .error-msg {
     color: red;
-    font-size: 0.9rem;
+    font-size: 0.8em;
+    /* 对应之前的 0.8em */
     margin-top: 5px;
     display: block;
 }
 
-/* 通用布局辅助类 (Helper Classes) */
+/* 通用布局辅助类 */
 .flex-between {
     display: flex;
     justify-content: space-between;
@@ -185,7 +190,7 @@ button {
     width: 100%;
 }
 
-/* 提示框样式 (Alerts) */
+/* 提示框样式 */
 .alert {
     padding: 10px;
     border-radius: 4px;
@@ -206,4 +211,27 @@ button {
 .alert-info {
     background: #e3f2fd;
     color: #0d47a1;
+}
+
+/* --- Auth Pages (Login / Register) Specifics --- */
+.auth-box {
+    max-width: 450px;
+    margin: 40px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.auth-box h2 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+.input-file-simple {
+    background: #f9f9f9;
+    border: 1px dashed #ccc;
+    padding: 5px;
 }

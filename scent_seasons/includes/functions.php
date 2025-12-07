@@ -29,7 +29,8 @@ function is_admin()
 function display_error($errors, $field)
 {
     if (isset($errors[$field])) {
-        echo '<span class="error-msg" style="color:red; font-size:0.8em;">' . $errors[$field] . '</span>';
+        // [修改] 移除了内联 style，样式现在由 common.css 中的 .error-msg 类控制
+        echo '<span class="error-msg">' . $errors[$field] . '</span>';
     }
 }
 
@@ -51,7 +52,6 @@ function require_superadmin()
 }
 
 // [新增] 记录操作日志
-// 注意：因为 functions.php 里没有 $pdo，调用时必须把 $pdo 传进来
 function log_activity($pdo, $action, $details = "")
 {
     if (isset($_SESSION['user_id'])) {
@@ -63,3 +63,4 @@ function log_activity($pdo, $action, $details = "")
         $stmt->execute([$user_id, $action, $details, $ip]);
     }
 }
+?>
