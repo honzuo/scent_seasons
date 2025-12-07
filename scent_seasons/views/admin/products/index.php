@@ -38,13 +38,13 @@ require $path . 'includes/header.php';
 <div class="flex-between mb-20">
     <h2>Product List</h2>
 
-    <button onclick="openRecycleBinModal()" class="btn-orange">
+    <button id="btn-open-recycle" class="btn-orange">
         View Recycle Bin (<?php echo count($deleted_products); ?>)
     </button>
 </div>
 
 <div class="flex-between mb-20">
-    <button onclick="openCreateModal()" class="btn-blue">+ Add New Product</button>
+    <button id="btn-open-create" class="btn-blue">+ Add New Product</button>
 
     <form method="GET" action="" class="search-form">
         <input type="text" name="search" placeholder="Search product..." value="<?php echo $search; ?>">
@@ -92,19 +92,22 @@ require $path . 'includes/header.php';
                     <td><?php echo $p['stock']; ?></td>
                     <td>
                         <button type="button"
-                            class="btn-blue"
+                            class="btn-blue js-open-edit"
                             data-id="<?php echo $p['product_id']; ?>"
                             data-name="<?php echo htmlspecialchars($p['name']); ?>"
                             data-cat="<?php echo $p['category_id']; ?>"
                             data-price="<?php echo $p['price']; ?>"
                             data-stock="<?php echo $p['stock']; ?>"
                             data-desc="<?php echo htmlspecialchars($p['description']); ?>"
-                            data-img="<?php echo $p['image_path']; ?>"
-                            onclick="openEditModal(this)">
+                            data-img="<?php echo $p['image_path']; ?>">
                             Edit
                         </button>
 
-                        <button type="button" onclick="openTrashConfirmModal(<?php echo $p['product_id']; ?>)" class="btn-red">Trash</button>
+                        <button type="button"
+                            class="btn-red js-open-trash"
+                            data-id="<?php echo $p['product_id']; ?>">
+                            Trash
+                        </button>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -163,7 +166,7 @@ require $path . 'includes/header.php';
             </div>
 
             <div class="modal-actions">
-                <button type="button" onclick="closeCreateModal()" class="btn-disabled">Cancel</button>
+                <button type="button" class="btn-disabled js-close-modal">Cancel</button>
                 <button type="submit" class="btn-green">Save Product</button>
             </div>
         </form>
@@ -218,7 +221,7 @@ require $path . 'includes/header.php';
             </div>
 
             <div class="modal-actions">
-                <button type="button" onclick="closeEditModal()" class="btn-disabled">Cancel</button>
+                <button type="button" class="btn-disabled js-close-modal">Cancel</button>
                 <button type="submit" class="btn-blue">Update Product</button>
             </div>
         </form>
@@ -238,7 +241,7 @@ require $path . 'includes/header.php';
             <input type="hidden" name="product_id" id="trash_confirm_id" value="">
 
             <div class="modal-actions center">
-                <button type="button" onclick="closeTrashConfirmModal()" class="btn-disabled">Cancel</button>
+                <button type="button" class="btn-disabled js-close-modal">Cancel</button>
                 <button type="submit" class="btn-red">Confirm Trash</button>
             </div>
         </form>
@@ -249,7 +252,7 @@ require $path . 'includes/header.php';
     <div class="modal-box large">
         <div class="modal-header">
             <h3>Recycle Bin (<?php echo count($deleted_products); ?> items)</h3>
-            <button onclick="closeRecycleBinModal()" class="modal-close-btn">&times;</button>
+            <button class="modal-close-btn js-close-modal">&times;</button>
         </div>
 
         <?php if (count($deleted_products) == 0): ?>
@@ -294,83 +297,82 @@ require $path . 'includes/header.php';
         <?php endif; ?>
 
         <div class="modal-actions">
-            <button onclick="closeRecycleBinModal()" class="btn-disabled">Close</button>
+            <button class="btn-disabled js-close-modal">Close</button>
         </div>
     </div>
 </div>
 
 <script>
-    // --- Create Modal Functions ---
-    function openCreateModal() {
-        document.getElementById('createProductModal').style.display = 'flex';
-    }
+    $(document).ready(function() {
+        // --- 1. 打开模态框逻辑 ---
 
-    function closeCreateModal() {
-        document.getElementById('createProductModal').style.display = 'none';
-    }
+        // 打开 "Add New Product"
+        $('#btn-open-create').on('click', function() {
+            $('#createProductModal').css('display', 'flex');
+        });
 
-    // --- Trash Confirm Modal Functions ---
-    function openTrashConfirmModal(id) {
-        document.getElementById('trash_confirm_id').value = id;
-        document.getElementById('trashConfirmModal').style.display = 'flex';
-    }
+        // 打开 "Recycle Bin"
+        $('#btn-open-recycle').on('click', function() {
+            $('#recycleBinModal').css('display', 'flex');
+        });
 
-    function closeTrashConfirmModal() {
-        document.getElementById('trashConfirmModal').style.display = 'none';
-    }
+        // 打开 "Edit" (使用事件委托，兼容未来可能动态添加的行)
+        $(document).on('click', '.js-open-edit', function() {
+            // 从按钮的 data-* 属性中获取数据
+            let btn = $(this);
+            let id = btn.data('id');
+            let name = btn.data('name');
+            let cat = btn.data('cat');
+            let price = btn.data('price');
+            let stock = btn.data('stock');
+            let desc = btn.data('desc');
+            let img = btn.data('img');
 
-    // --- Edit Modal Functions ---
-    function openEditModal(btn) {
-        // 读取 data-* 属性
-        let id = btn.getAttribute('data-id');
-        let name = btn.getAttribute('data-name');
-        let cat = btn.getAttribute('data-cat');
-        let price = btn.getAttribute('data-price');
-        let stock = btn.getAttribute('data-stock');
-        let desc = btn.getAttribute('data-desc');
-        let img = btn.getAttribute('data-img');
+            // 填充表单
+            $('#edit_product_id').val(id);
+            $('#edit_name').val(name);
+            $('#edit_category_id').val(cat);
+            $('#edit_price').val(price);
+            $('#edit_stock').val(stock);
+            $('#edit_description').val(desc);
 
-        // 填充表单
-        document.getElementById('edit_product_id').value = id;
-        document.getElementById('edit_name').value = name;
-        document.getElementById('edit_category_id').value = cat;
-        document.getElementById('edit_price').value = price;
-        document.getElementById('edit_stock').value = stock;
-        document.getElementById('edit_description').value = desc;
-        document.getElementById('edit_current_img_name').innerText = img ? "(" + img + ")" : "(No Image)";
+            let imgText = img ? "(" + img + ")" : "(No Image)";
+            $('#edit_current_img_name').text(imgText);
 
-        document.getElementById('editProductModal').style.display = 'flex';
-    }
+            // 显示模态框
+            $('#editProductModal').css('display', 'flex');
+        });
 
-    function closeEditModal() {
-        document.getElementById('editProductModal').style.display = 'none';
-    }
+        // 打开 "Trash Confirm"
+        $(document).on('click', '.js-open-trash', function() {
+            let id = $(this).data('id'); // 获取 data-id
+            $('#trash_confirm_id').val(id);
+            $('#trashConfirmModal').css('display', 'flex');
+        });
 
-    // --- Recycle Bin Modal Functions ---
-    function openRecycleBinModal() {
-        document.getElementById('recycleBinModal').style.display = 'flex';
-    }
+        // --- 2. 关闭模态框逻辑 ---
 
-    function closeRecycleBinModal() {
-        document.getElementById('recycleBinModal').style.display = 'none';
-    }
+        // 点击所有带 js-close-modal 类的按钮（Cancel/Close/X）
+        $(document).on('click', '.js-close-modal', function() {
+            // 找到最近的父级 .modal-overlay 并隐藏
+            $(this).closest('.modal-overlay').css('display', 'none');
+        });
 
-    // --- Auto Open Trash Modal (after redirect) ---
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('open_trash')) {
-        openRecycleBinModal();
-    }
-
-    // --- Close Modals on Outside Click ---
-    window.onclick = function(event) {
-        let modals = ['createProductModal', 'editProductModal', 'trashConfirmModal', 'recycleBinModal'];
-        modals.forEach(function(id) {
-            let m = document.getElementById(id);
-            if (event.target == m) {
-                m.style.display = 'none';
+        // 点击模态框外部区域关闭
+        $(window).on('click', function(event) {
+            // 检查点击的目标是否是模态框背景层 (modal-overlay)
+            if ($(event.target).hasClass('modal-overlay')) {
+                $(event.target).css('display', 'none');
             }
         });
-    }
+
+        // --- 3. 自动打开逻辑 (处理 URL 参数) ---
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('open_trash')) {
+            $('#recycleBinModal').css('display', 'flex');
+        }
+    });
 </script>
 
 <?php require $path . 'includes/footer.php'; ?>
