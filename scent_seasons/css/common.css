@@ -397,3 +397,52 @@ button:active,
         margin: 24px 16px;
     }
 }
+
+/* 修复 Cart 页面表格样式缺失的问题 (来自 admin.css) */
+.table-list {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 24px;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.table-list th,
+.table-list td {
+    padding: 16px 20px;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid #f5f5f7;
+}
+
+.table-list th {
+    background-color: #fafafa;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6e6e73;
+}
+
+.table-list tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* css/common.css 末尾添加 */
+
+/* 通用缩略图样式 (修复订单详情页图片过大问题) */
+.thumbnail {
+    width: 60px;
+    /* 限制宽度 */
+    height: 60px;
+    /* 限制高度 */
+    object-fit: cover;
+    /* 保持比例裁剪，防止变形 */
+    border-radius: 8px;
+    /* 圆角 */
+    display: inline-block;
+    vertical-align: middle;
+}

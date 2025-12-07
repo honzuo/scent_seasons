@@ -45,10 +45,10 @@ require $path . 'includes/header.php';
     <div class="sidebar">
         <h3>Categories</h3>
         <ul style="list-style:none; padding:0; display:block;">
-            <li style="margin-bottom:10px;"><a href="home.php" style="color:#333;">All Scents</a></li>
+            <li style="margin-bottom:10px;"><a href="shop.php" style="color:#333;">All Scents</a></li>
             <?php foreach ($cats as $c): ?>
                 <li style="margin-bottom:10px;">
-                    <a href="home.php?cat=<?php echo $c['category_id']; ?>" style="color:#333;">
+                    <a href="shop.php?cat=<?php echo $c['category_id']; ?>" style="color:#333;">
                         <?php echo $c['category_name']; ?>
                     </a>
                 </li>

@@ -29,25 +29,31 @@ require $path . 'includes/header.php';
 <?php endif; ?>
 
 <?php if (count($orders) > 0): ?>
-    <table style="width:100%; border-collapse:collapse; margin-top:20px;">
+    <table class="table-list">
         <thead>
-            <tr style="background:#eee;">
-                <th style="padding:10px; border:1px solid #ddd;">Order ID</th>
-                <th style="padding:10px; border:1px solid #ddd;">Date</th>
-                <th style="padding:10px; border:1px solid #ddd;">Total</th>
-                <th style="padding:10px; border:1px solid #ddd;">Status</th>
-                <th style="padding:10px; border:1px solid #ddd;">Action</th>
+            <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($orders as $o): ?>
                 <tr>
-                    <td style="padding:10px; border:1px solid #ddd;">#<?php echo $o['order_id']; ?></td>
-                    <td style="padding:10px; border:1px solid #ddd;"><?php echo $o['order_date']; ?></td>
-                    <td style="padding:10px; border:1px solid #ddd;">$<?php echo $o['total_amount']; ?></td>
-                    <td style="padding:10px; border:1px solid #ddd;"><?php echo ucfirst($o['status']); ?></td>
-                    <td style="padding:10px; border:1px solid #ddd;">
-                        <a href="order_detail.php?id=<?php echo $o['order_id']; ?>" style="color:blue;">View Items</a>
+                    <td>#<?php echo $o['order_id']; ?></td>
+                    <td><?php echo $o['order_date']; ?></td>
+                    <td>$<?php echo $o['total_amount']; ?></td>
+                    <td>
+                        <?php
+                        $status = ucfirst($o['status']);
+                        if ($o['status'] == 'completed') echo "<span class='text-green-bold'>$status</span>";
+                        else echo $status;
+                        ?>
+                    </td>
+                    <td>
+                        <a href="order_detail.php?id=<?php echo $o['order_id']; ?>" class="btn-blue" style="padding:5px 12px; font-size:12px;">View Items</a>
                     </td>
                 </tr>
             <?php endforeach; ?>

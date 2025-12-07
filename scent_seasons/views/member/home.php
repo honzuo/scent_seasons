@@ -41,7 +41,7 @@ require $path . 'includes/header.php';
 <div class="container" style="margin-top: 50px;">
     <h2 style="text-align:center; margin-bottom: 30px;">Trending Now</h2>
 
-    <div class="product-grid">
+    <div class="product-grid" style="grid-template-columns: repeat(4, 1fr);">
         <?php foreach ($hot_products as $p): ?>
             <div class="product-card">
                 <a href="product_detail.php?id=<?php echo $p['product_id']; ?>">

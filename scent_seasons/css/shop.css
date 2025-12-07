@@ -136,7 +136,8 @@
 .product-grid {
     flex: 1;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    /* 将 240px 改为 210px，以便在 980px 宽度的容器中放下一行 4 个 */
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
     gap: 24px;
 }
 
