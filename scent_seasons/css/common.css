@@ -1,154 +1,295 @@
-/* css/common.css - 全局通用样式 */
+/* css/common.css - Apple-inspired Minimal Design */
 
-/* ... (保留之前的样式: 导航栏, 容器, 表单, 按钮, 辅助类等) ... */
-
+/* ========== RESET & BASE ========== */
 * {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', sans-serif;
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    background-color: #f9f9f9;
-    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background-color: #fbfbfd;
+    color: #1d1d1f;
+    line-height: 1.6;
+    font-size: 17px;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* 导航栏 */
+/* ========== NAVIGATION ========== */
 nav {
-    background-color: #2c3e50;
-    padding: 1rem;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+nav .nav-inner {
+    max-width: 980px;
+    margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 12px 22px;
+    height: 44px;
 }
 
 nav .logo {
-    color: white;
-    font-size: 1.5rem;
-    font-weight: bold;
+    color: #1d1d1f;
+    font-size: 21px;
+    font-weight: 600;
     text-decoration: none;
+    letter-spacing: -0.02em;
 }
 
 nav ul {
     list-style: none;
-    margin: 0;
-    padding: 0;
     display: flex;
-}
-
-nav ul li {
-    margin-left: 20px;
+    gap: 32px;
+    align-items: center;
 }
 
 nav ul li a {
-    color: white;
+    color: #1d1d1f;
     text-decoration: none;
+    font-size: 14px;
+    font-weight: 400;
+    transition: opacity 0.2s;
 }
 
 nav ul li a:hover {
-    text-decoration: underline;
+    opacity: 0.6;
 }
 
-/* 通用容器 */
+/* ========== CONTAINER ========== */
 .container {
-    max-width: 1200px;
+    max-width: 980px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 40px 22px;
 }
 
-/* 页脚样式 */
-.site-footer {
-    text-align: center;
-    padding: 30px 0;
-    color: #888;
-    font-size: 0.8em;
-    border-top: 1px solid #eee;
-    margin-top: 50px;
+/* ========== TYPOGRAPHY ========== */
+h1 {
+    font-size: 48px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+    margin-bottom: 12px;
 }
 
-/* 通用表单 */
+h2 {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.125;
+    margin-bottom: 20px;
+}
+
+h3 {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 16px;
+}
+
+h4 {
+    font-size: 19px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+p {
+    font-size: 17px;
+    line-height: 1.6;
+    color: #6e6e73;
+    margin-bottom: 16px;
+}
+
+/* ========== FORMS ========== */
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1d1d1f;
+    margin-bottom: 8px;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
     width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: 12px 16px;
+    border: 1px solid #d2d2d7;
+    border-radius: 12px;
     font-family: inherit;
+    font-size: 17px;
+    background: #fff;
+    transition: all 0.2s;
 }
 
-/* 按钮样式 */
-button {
-    cursor: pointer;
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #0071e3;
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+}
+
+/* ========== BUTTONS ========== */
+button,
+.btn-blue,
+.btn-green,
+.btn-red,
+.btn-orange,
+.btn-darkred {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
     padding: 10px 20px;
     border: none;
-    border-radius: 4px;
-    font-size: 1rem;
+    border-radius: 980px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+    white-space: nowrap;
 }
 
-.btn-red {
-    background: #e74c3c;
-    color: white;
-    padding: 5px 10px;
-    text-decoration: none;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9em;
+button:active,
+.btn-blue:active,
+.btn-green:active {
+    transform: scale(0.98);
 }
 
 .btn-blue {
-    background: #3498db;
-    color: white;
-    padding: 5px 10px;
-    text-decoration: none;
-    border-radius: 4px;
-    font-size: 0.9em;
-    border: none;
-    cursor: pointer;
+    background: #0071e3;
+    color: #fff;
+}
+
+.btn-blue:hover {
+    background: #0077ed;
 }
 
 .btn-green {
-    background: #27ae60;
-    color: white;
-    padding: 10px 20px;
-    text-decoration: none;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
+    background: #06c;
+    color: #fff;
+}
+
+.btn-green:hover {
+    background: #0077ed;
+}
+
+.btn-red {
+    background: #ff3b30;
+    color: #fff;
+}
+
+.btn-red:hover {
+    background: #ff4d42;
+}
+
+.btn-orange {
+    background: #ff9500;
+    color: #fff;
+}
+
+.btn-orange:hover {
+    background: #ffa724;
+}
+
+.btn-darkred {
+    background: #d70015;
+    color: #fff;
+}
+
+.btn-darkred:hover {
+    background: #e60019;
 }
 
 .btn-disabled {
-    background: gray;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 4px;
-    border: none;
+    background: #f5f5f7;
+    color: #86868b;
     cursor: not-allowed;
-    opacity: 0.7;
+    opacity: 0.6;
 }
 
-/* 错误消息 (Refactored to handle PHP helper output) */
+/* ========== ALERTS ========== */
+.alert {
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 400;
+    margin-bottom: 24px;
+}
+
+.alert-success {
+    background: #d1f2eb;
+    color: #00694c;
+    border: 1px solid #9de4cf;
+}
+
+.alert-error {
+    background: #ffe5e5;
+    color: #c41e3a;
+    border: 1px solid #ffb3b3;
+}
+
+.alert-info {
+    background: #e5f3ff;
+    color: #005299;
+    border: 1px solid #b3d9ff;
+}
+
+/* ========== ERROR MESSAGES ========== */
 .error-msg {
-    color: red;
-    font-size: 0.8em;
-    /* 对应之前的 0.8em */
-    margin-top: 5px;
+    color: #ff3b30;
+    font-size: 12px;
+    margin-top: 6px;
     display: block;
 }
 
-/* 通用布局辅助类 */
+/* ========== AUTH PAGES ========== */
+.auth-box {
+    max-width: 420px;
+    margin: 60px auto;
+    background: #fff;
+    padding: 48px;
+    border-radius: 18px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+}
+
+.auth-box h2 {
+    text-align: center;
+    margin-bottom: 32px;
+    font-size: 32px;
+}
+
+.input-file-simple {
+    background: #f5f5f7;
+    border: 1px dashed #d2d2d7;
+    padding: 12px;
+    border-radius: 12px;
+}
+
+/* ========== FOOTER ========== */
+.site-footer {
+    text-align: center;
+    padding: 40px 0;
+    color: #86868b;
+    font-size: 12px;
+    border-top: 1px solid #d2d2d7;
+    margin-top: 80px;
+    background: #f5f5f7;
+}
+
+/* ========== UTILITY CLASSES ========== */
 .flex-between {
     display: flex;
     justify-content: space-between;
@@ -190,48 +331,69 @@ button {
     width: 100%;
 }
 
-/* 提示框样式 */
-.alert {
-    padding: 10px;
-    border-radius: 4px;
-    font-weight: bold;
-    margin-bottom: 20px;
+/* ========== TEXT COLORS ========== */
+.text-gray {
+    color: #86868b;
 }
 
-.alert-success {
-    background: #e8f5e9;
-    color: green;
+.text-link-gray {
+    color: #6e6e73;
+    text-decoration: none;
 }
 
-.alert-error {
-    background: #ffebee;
-    color: red;
+.text-link-gray:hover {
+    color: #0071e3;
 }
 
-.alert-info {
-    background: #e3f2fd;
-    color: #0d47a1;
+.text-muted {
+    color: #86868b;
+    font-size: 14px;
 }
 
-/* --- Auth Pages (Login / Register) Specifics --- */
-.auth-box {
-    max-width: 450px;
-    margin: 40px auto;
-    background: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+.text-green-bold {
+    color: #30d158;
+    font-weight: 600;
 }
 
-.auth-box h2 {
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: #2c3e50;
+.text-red-bold {
+    color: #ff3b30;
+    font-weight: 600;
 }
 
-.input-file-simple {
-    background: #f9f9f9;
-    border: 1px dashed #ccc;
-    padding: 5px;
+.text-orange-bold {
+    color: #ff9500;
+    font-weight: 600;
+}
+
+.text-dark-bold {
+    color: #1d1d1f;
+    font-weight: 600;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+    nav ul {
+        gap: 16px;
+    }
+
+    nav ul li a {
+        font-size: 12px;
+    }
+
+    h1 {
+        font-size: 36px;
+    }
+
+    h2 {
+        font-size: 24px;
+    }
+
+    .container {
+        padding: 24px 16px;
+    }
+
+    .auth-box {
+        padding: 32px 24px;
+        margin: 24px 16px;
+    }
 }
