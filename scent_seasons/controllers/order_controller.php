@@ -81,9 +81,17 @@ if ($action == 'checkout') {
             $stmt_stock->execute([$item['quantity'], $item['product_id']]);
         }
 
+        // 从购物车删除已结账的商品
         $sql_delete = "DELETE FROM cart WHERE user_id = ? AND product_id IN ($placeholders)";
         $stmt_delete = $pdo->prepare($sql_delete);
         $stmt_delete->execute($params);
+
+        // ====== [新增功能] 从 Wishlist 中删除已购买的商品 ======
+        // 构建删除 wishlist 的 SQL
+        $sql_delete_wishlist = "DELETE FROM wishlist WHERE user_id = ? AND product_id IN ($placeholders)";
+        $stmt_delete_wishlist = $pdo->prepare($sql_delete_wishlist);
+        $stmt_delete_wishlist->execute($params); // 使用相同的参数 (user_id + product_ids)
+        // ======================================================
 
         $pdo->commit();
         header("Location: ../views/member/orders.php?msg=success");
