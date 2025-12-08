@@ -97,7 +97,8 @@ if ($action == 'checkout') {
         }
 
         // 插入订单 (如果是 PayPal 支付，直接标记为 completed)
-        $status = ($paypal_tx_id) ? 'completed' : 'pending';
+        // 插入订单 (即使是 PayPal 支付，初始状态也设为 pending，等待管理员处理)
+        $status = 'pending';
 
         // 注意：如果你没加 transaction_id 字段，把下面这行里的 transaction_id 删掉
         $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_amount, status, transaction_id, order_date) VALUES (?, ?, ?, ?, NOW())");
@@ -145,4 +146,3 @@ if ($action == 'checkout') {
         }
     }
 }
-?>
