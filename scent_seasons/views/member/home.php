@@ -4,11 +4,13 @@ require '../../config/database.php';
 require '../../includes/functions.php';
 
 // Get popular products based on total quantity sold
+// First check if there are any order_items, if not, just show random products
 $check_orders_sql = "SELECT COUNT(*) as count FROM order_items";
 $stmt = $pdo->query($check_orders_sql);
 $has_orders = $stmt->fetch()['count'] > 0;
 
 if ($has_orders) {
+    // If there are orders, get popular items based on sales
     $popular_sql = "SELECT p.product_id, p.name, p.price, p.image_path, p.description, p.category_id, p.stock, 
                             COALESCE(SUM(oi.quantity), 0) as total_sold 
                      FROM products p 
@@ -27,6 +29,7 @@ if ($has_orders) {
     $hot_products = [];
 }
 
+// Fallback: If no popular products found, show random products
 if (empty($hot_products)) {
     $fallback_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
     $stmt = $pdo->query($fallback_sql);
@@ -83,6 +86,7 @@ if (is_logged_in()) {
         $recommended_products = $stmt->fetchAll();
     }
 } else {
+    // [关键修改] 未登录用户：直接随机推荐，不要去查 user_id
     $random_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
     $stmt = $pdo->query($random_sql);
     $recommended_products = $stmt->fetchAll();
@@ -90,76 +94,42 @@ if (is_logged_in()) {
 
 $page_title = "Welcome - Scent Seasons";
 $path = "../../";
-$extra_css = "home.css"; // 改成 home.css
+$extra_css = "shop.css";
 
 require $path . 'includes/header.php';
 ?>
 <link rel="stylesheet" href="<?php echo $path; ?>css/memberchat.css">
 
-<!-- Hero Section 轮播图 - 纯图片展示 -->
-<div class="hero-section">
-    <div class="hero-slideshow">
-        <!-- Slide 1 -->
-        <div class="hero-slide active">
-            <img src="../../images/products/jennie.png" alt="Banner 1" class="hero-image">
-        </div>
-        
-        <!-- Slide 2 -->
-        <div class="hero-slide">
-            <img src="../../images/products/jennie1.png" alt="Banner 2" class="hero-image">
-        </div>
-        
-        <!-- Slide 3 -->
-        <div class="hero-slide">
-            <img src="../../images/banner/banner3.jpg" alt="Banner 3" class="hero-image">
-        </div>
-        
-        <!-- Slide 4 -->
-        <div class="hero-slide">
-            <img src="../../images/banner/banner4.jpg" alt="Banner 4" class="hero-image">
-        </div>
-        
-        <!-- Slide 5 -->
-        <div class="hero-slide">
-            <img src="../../images/banner/banner5.jpg" alt="Banner 5" class="hero-image">
-        </div>
+<div class="hero-banner">
+    <div class="hero-content">
+        <h1>Discover Your Signature Scent</h1>
+        <p>Experience the essence of luxury with our exclusive collection.</p>
+        <a href="shop.php" class="btn-hero">Shop Now</a>
     </div>
-    
-    <!-- Navigation Dots -->
-    <div class="hero-dots">
-        <span class="dot active" data-slide="0"></span>
-        <span class="dot" data-slide="1"></span>
-        <span class="dot" data-slide="2"></span>
-        <span class="dot" data-slide="3"></span>
-        <span class="dot" data-slide="4"></span>
-    </div>
-    
-    <!-- Navigation Arrows -->
-    <button class="hero-arrow hero-arrow-left" aria-label="Previous slide">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-    </button>
-    <button class="hero-arrow hero-arrow-right" aria-label="Next slide">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-    </button>
 </div>
 
-<!-- Shop Now Button - 放在轮播图下面 -->
-<div class="shop-now-section">
-    <a href="shop.php" class="shop-now-btn">Shop Now</a>
+<div class="features-section">
+    <div class="feature-item">
+        <h3>100% Authentic</h3>
+        <p>Guaranteed original fragrances.</p>
+    </div>
+    <div class="feature-item">
+        <h3>Fast Shipping</h3>
+        <p>Delivery within 3-5 days.</p>
+    </div>
+    <div class="feature-item">
+        <h3>Secure Payment</h3>
+        <p>100% secure checkout.</p>
+    </div>
 </div>
 
-<!-- Popular Items Section -->
-<div class="container" style="margin-top: 60px;">
-    <h2 class="section-title">Popular Items</h2>
+<div class="container" style="margin-top: 50px;">
+    <h2 style="text-align:center; margin-bottom: 30px;">Popular Items</h2>
 
     <?php if (empty($hot_products)): ?>
         <p style="text-align: center; color: #86868b;">No products available at the moment.</p>
     <?php else: ?>
-        <div class="product-grid">
+        <div class="product-grid" style="grid-template-columns: repeat(4, 1fr);">
             <?php foreach ($hot_products as $p): ?>
                 <div class="product-card">
                     <a href="product_detail.php?id=<?php echo $p['product_id']; ?>">
@@ -169,23 +139,24 @@ require $path . 'includes/header.php';
                     </a>
                     <div class="p-info">
                         <h4><?php echo htmlspecialchars($p['name']); ?></h4>
-                        <p class="p-price">RM <?php echo number_format($p['price'], 2); ?></p>
+                        <p class="p-price">$<?php echo number_format($p['price'], 2); ?></p>
                         <a href="product_detail.php?id=<?php echo $p['product_id']; ?>" class="btn-add">View Details</a>
                     </div>
                 </div>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
+
 </div>
 
-<!-- Recommended for You Section -->
-<div class="container" style="margin-top: 60px;">
-    <h2 class="section-title">Recommended for You</h2>
+<!-- Row 2: Recommended for You (Based on Purchase Habits) -->
+<div class="container" style="margin-top: 50px;">
+    <h2 style="text-align:center; margin-bottom: 30px;">Recommended for You</h2>
 
     <?php if (empty($recommended_products)): ?>
         <p style="text-align: center; color: #86868b;">No recommendations available at the moment.</p>
     <?php else: ?>
-        <div class="product-grid">
+        <div class="product-grid" style="grid-template-columns: repeat(4, 1fr);">
             <?php foreach ($recommended_products as $product): ?>
                 <div class="product-card">
                     <a href="product_detail.php?id=<?php echo $product['product_id']; ?>">
@@ -205,9 +176,8 @@ require $path . 'includes/header.php';
     <?php endif; ?>
 </div>
 
-<!-- View All Button -->
-<div class="container" style="text-align:center; margin-top:40px; margin-bottom: 60px;">
-    <a href="shop.php" class="btn-blue" style="padding: 14px 40px; font-size: 1.1em;">View All Products</a>
+<div class="container" style="text-align:center; margin-top:30px; margin-bottom: 50px;">
+    <a href="shop.php" class="btn-blue" style="padding: 12px 25px; font-size: 1.1em;">View All Products</a>
 </div>
 
 <?php require $path . 'includes/footer.php'; ?>
