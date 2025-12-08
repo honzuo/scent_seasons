@@ -1,5 +1,6 @@
 <?php
-// includes/header.php - Apple-inspired Navigation
+// includes/header.php - Router that includes the appropriate header based on user role
+// This ensures members cannot use admin header and vice versa
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -7,68 +8,19 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!isset($path)) $path = "./";
 if (!isset($page_title)) $page_title = "Scent Seasons";
 
-$cart_count = 0;
+// Load functions to determine user role
+require_once __DIR__ . '/functions.php';
+
+// Route to the appropriate header based on user role
 if (isset($_SESSION['user_id'])) {
-    require_once __DIR__ . '/../config/database.php';
-    $stmt = $pdo->prepare("SELECT SUM(quantity) FROM cart WHERE user_id = ?");
-    $stmt->execute([$_SESSION['user_id']]);
-    $cart_count = $stmt->fetchColumn() ?: 0;
+    if (is_admin()) {
+        // Admin users get admin header
+        require_once __DIR__ . '/header_admin.php';
+    } else {
+        // Member users get member header
+        require_once __DIR__ . '/header_member.php';
+    }
+} else {
+    // Non-logged-in users get public header
+    require_once __DIR__ . '/header_public.php';
 }
-?>
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $page_title; ?></title>
-    <link rel="stylesheet" href="<?php echo $path; ?>css/common.css">
-    <?php if (isset($extra_css)): ?>
-        <link rel="stylesheet" href="<?php echo $path; ?>css/<?php echo $extra_css; ?>">
-    <?php endif; ?>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-</head>
-
-<body>
-    <nav>
-        <div class="nav-inner">
-            <?php
-            $home_link = $path . "views/member/home.php";
-            if (isset($_SESSION['role'])) {
-                if ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'superadmin') {
-                    $home_link = $path . "views/admin/dashboard.php";
-                }
-            }
-            ?>
-            <a href="<?php echo $home_link; ?>" class="logo">Scent Seasons</a>
-
-            <ul>
-                <?php if (isset($_SESSION['user_id'])): ?>
-
-                    <?php if ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'superadmin'): ?>
-                        <li><a href="<?php echo $path; ?>views/admin/dashboard.php">Dashboard</a></li>
-                        <li><a href="<?php echo $path; ?>views/admin/products/index.php">Products</a></li>
-                        <li><a href="<?php echo $path; ?>views/admin/orders/index.php">Orders</a></li>
-                    <?php else: ?>
-                        <li><a href="<?php echo $path; ?>views/member/home.php">Home</a></li>
-                        <li><a href="<?php echo $path; ?>views/member/shop.php">Shop</a></li>
-                        <li>
-                            <a href="<?php echo $path; ?>views/member/cart.php">
-                                Cart (<?php echo $cart_count; ?>)
-                            </a>
-                        </li>
-                        <li><a href="<?php echo $path; ?>views/member/orders.php">Orders</a></li>
-                        <li><a href="<?php echo $path; ?>views/member/profile.php">Profile</a></li>
-                    <?php endif; ?>
-
-                    <li><a href="<?php echo $path; ?>logout.php">Logout</a></li>
-
-                <?php else: ?>
-                    <li><a href="<?php echo $path; ?>views/public/login.php">Login</a></li>
-                    <li><a href="<?php echo $path; ?>views/public/register.php">Register</a></li>
-                <?php endif; ?>
-            </ul>
-        </div>
-    </nav>
-
-    <div class="container">
