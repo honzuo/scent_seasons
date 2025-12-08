@@ -5,7 +5,6 @@ function clean_input($data)
 {
     $data = trim($data);
     $data = stripslashes($data);
-    // $data = htmlspecialchars($data); // 防止存入数据库时转义单引号
     return $data;
 }
 
@@ -14,13 +13,11 @@ function is_logged_in()
     return isset($_SESSION['user_id']);
 }
 
-// 检查是否是 Superadmin (最高权限)
 function is_superadmin()
 {
     return isset($_SESSION['role']) && $_SESSION['role'] === 'superadmin';
 }
 
-// 检查是否是管理层 (Admin 或 Superadmin 都可以)
 function is_admin()
 {
     return isset($_SESSION['role']) && ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'superadmin');
@@ -29,12 +26,10 @@ function is_admin()
 function display_error($errors, $field)
 {
     if (isset($errors[$field])) {
-        // [修改] 移除了内联 style，样式现在由 common.css 中的 .error-msg 类控制
         echo '<span class="error-msg">' . $errors[$field] . '</span>';
     }
 }
 
-// 强制检查管理层权限
 function require_admin()
 {
     if (!is_admin()) {
@@ -43,7 +38,6 @@ function require_admin()
     }
 }
 
-// [新增] 强制检查超级管理员权限
 function require_superadmin()
 {
     if (!is_superadmin()) {
@@ -51,16 +45,80 @@ function require_superadmin()
     }
 }
 
-// [新增] 记录操作日志
 function log_activity($pdo, $action, $details = "")
 {
     if (isset($_SESSION['user_id'])) {
         $user_id = $_SESSION['user_id'];
-        $ip = $_SERVER['REMOTE_ADDR']; // 获取用户 IP
+        $ip = $_SERVER['REMOTE_ADDR'];
 
         $sql = "INSERT INTO activity_logs (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$user_id, $action, $details, $ip]);
     }
 }
-?>
+
+// ========== 新增：密码强度验证函数 ==========
+
+/**
+ * 验证密码强度
+ * @param string $password 要验证的密码
+ * @return array ['valid' => bool, 'errors' => array]
+ */
+function validate_password_strength($password)
+{
+    $errors = [];
+
+    // 最小长度检查
+    if (strlen($password) < 8) {
+        $errors[] = "Password must be at least 8 characters long.";
+    }
+
+    // 大写字母检查
+    if (!preg_match('/[A-Z]/', $password)) {
+        $errors[] = "Password must contain at least one uppercase letter.";
+    }
+
+    // 小写字母检查
+    if (!preg_match('/[a-z]/', $password)) {
+        $errors[] = "Password must contain at least one lowercase letter.";
+    }
+
+    // 数字检查
+    if (!preg_match('/[0-9]/', $password)) {
+        $errors[] = "Password must contain at least one number.";
+    }
+
+    // 特殊字符检查
+    if (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) {
+        $errors[] = "Password must contain at least one special character (!@#$%^&*).";
+    }
+
+    return [
+        'valid' => empty($errors),
+        'errors' => $errors
+    ];
+}
+
+/**
+ * 获取密码强度等级
+ * @param string $password
+ * @return string 'weak', 'medium', 'strong'
+ */
+function get_password_strength($password)
+{
+    $strength = 0;
+
+    if (strlen($password) >= 8) $strength++;
+    if (preg_match('/[A-Z]/', $password)) $strength++;
+    if (preg_match('/[a-z]/', $password)) $strength++;
+    if (preg_match('/[0-9]/', $password)) $strength++;
+    if (preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) $strength++;
+
+    if ($strength <= 2) {
+        return 'weak';
+    } elseif ($strength <= 3) {
+        return 'medium';
+    } else {
+        return 'strong';
+    }
+}

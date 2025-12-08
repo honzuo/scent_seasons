@@ -2,42 +2,29 @@
 session_start();
 require '../../includes/functions.php';
 
-// 获取 Session 中的错误信息
+// 检查是否已验证OTP
+if (!isset($_SESSION['reset_verified']) || !$_SESSION['reset_verified']) {
+    header("Location: forgot_password.php");
+    exit();
+}
+
 $errors = isset($_SESSION['errors']) ? $_SESSION['errors'] : [];
-$old = isset($_SESSION['old_input']) ? $_SESSION['old_input'] : [];
-
-// 清除 Session 错误
 unset($_SESSION['errors']);
-unset($_SESSION['old_input']);
 
-// --- 设置 Header 参数 ---
-$page_title = "Register - Scent Seasons";
+$page_title = "Reset Password - Scent Seasons";
 $path = "../../";
-
 require $path . 'includes/header.php';
 ?>
 
 <div class="auth-box">
-    <h2>Member Registration</h2>
+    <h2>Reset Password</h2>
+    <p class="text-muted text-center">Enter your new password below.</p>
 
-    <form action="../../controllers/auth_register.php" method="POST" enctype="multipart/form-data" id="registerForm">
-
+    <form action="<?php echo $path; ?>controllers/auth_reset_password.php" method="POST">
         <div class="form-group">
-            <label>Full Name:</label>
-            <input type="text" name="full_name" value="<?php echo isset($old['full_name']) ? $old['full_name'] : ''; ?>" required>
-            <?php display_error($errors, 'name'); ?>
-        </div>
-
-        <div class="form-group">
-            <label>Email:</label>
-            <input type="email" name="email" value="<?php echo isset($old['email']) ? $old['email'] : ''; ?>" required>
-            <?php display_error($errors, 'email'); ?>
-        </div>
-
-        <div class="form-group">
-            <label>Password:</label>
+            <label>New Password:</label>
             <div class="password-wrapper">
-                <input type="password" name="password" class="validate-password" required>
+                <input type="password" name="password" class="validate-password" required autofocus>
                 <button type="button" class="toggle-password" aria-label="Show password" tabindex="-1">
                     <span class="eye-icon">👁️‍🗨️</span>
                 </button>
@@ -77,21 +64,13 @@ require $path . 'includes/header.php';
             <?php display_error($errors, 'confirm_password'); ?>
         </div>
 
-        <div class="form-group">
-            <label>Profile Photo:</label>
-            <input type="file" name="profile_photo" accept="image/*" class="input-file-simple">
-            <?php display_error($errors, 'photo'); ?>
-        </div>
-
         <div class="mt-20">
-            <button type="submit" class="btn-green w-100">Register</button>
-        </div>
-
-        <div class="text-center mt-10" style="font-size: 0.9em;">
-            Already have an account? <a href="login.php" style="color:#3498db;">Login here</a>
+            <button type="submit" class="btn-green w-100">Reset Password</button>
         </div>
     </form>
 </div>
 
+<!-- 重要：引入 JavaScript -->
 <script src="<?php echo $path; ?>js/password_validation.js"></script>
+
 <?php require $path . 'includes/footer.php'; ?>
