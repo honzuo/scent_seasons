@@ -1,7 +1,7 @@
 <?php
 session_start();
 require '../../config/database.php';
-require '../../includes/functions.php'; // 确保这里引用了 functions
+require '../../includes/functions.php';
 
 if (!isset($_GET['id'])) {
     header("Location: home.php");
@@ -18,7 +18,15 @@ if (!$product) {
     die("Product not found");
 }
 
-// 2. 获取该产品的所有评价 (联表查询用户头像和名字)
+// 2. 检查是否已在收藏夹（仅登录用户）
+$is_in_wishlist = false;
+if (is_logged_in()) {
+    $stmt_wish = $pdo->prepare("SELECT wishlist_id FROM wishlist WHERE user_id = ? AND product_id = ?");
+    $stmt_wish->execute([$_SESSION['user_id'], $id]);
+    $is_in_wishlist = ($stmt_wish->rowCount() > 0);
+}
+
+// 3. 获取该产品的所有评价
 $stmt_reviews = $pdo->prepare("SELECT r.*, u.full_name, u.profile_photo 
                                FROM reviews r 
                                JOIN users u ON r.user_id = u.user_id 
@@ -27,7 +35,7 @@ $stmt_reviews = $pdo->prepare("SELECT r.*, u.full_name, u.profile_photo
 $stmt_reviews->execute([$id]);
 $reviews = $stmt_reviews->fetchAll();
 
-// 3. 计算平均分
+// 4. 计算平均分
 $avg_rating = 0;
 $total_reviews = count($reviews);
 if ($total_reviews > 0) {
@@ -36,7 +44,6 @@ if ($total_reviews > 0) {
     $avg_rating = round($sum / $total_reviews, 1);
 }
 
-// 生成星星的辅助函数 (显示用)
 function render_stars($rating)
 {
     $stars = "";
@@ -54,6 +61,17 @@ $extra_css = "shop.css";
 require $path . 'includes/header.php';
 ?>
 
+<!-- Wishlist 消息提示 -->
+<?php if (isset($_GET['wishlist'])): ?>
+    <div class="alert <?php echo ($_GET['wishlist'] == 'added') ? 'alert-success' : 'alert-info'; ?>" style="margin-bottom: 20px;">
+        <?php
+        if ($_GET['wishlist'] == 'added') echo "✓ Added to your wishlist!";
+        elseif ($_GET['wishlist'] == 'removed') echo "Removed from your wishlist.";
+        elseif ($_GET['wishlist'] == 'exists') echo "This item is already in your wishlist.";
+        ?>
+    </div>
+<?php endif; ?>
+
 <div class="detail-container">
     <div class="detail-img">
         <img src="../../images/products/<?php echo $product['image_path']; ?>" style="width: 100%; border-radius: 8px;">
@@ -68,28 +86,73 @@ require $path . 'includes/header.php';
             <span style="color:#555; font-size:0.8em;">(<?php echo $total_reviews; ?> reviews)</span>
         </div>
 
-        <h2 style="color: #e67e22;">$<?php echo $product['price']; ?></h2>
+        <h2 style="color: #0071e3;">$<?php echo $product['price']; ?></h2>
         <p><?php echo nl2br($product['description']); ?></p>
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
 
-        <form action="../../controllers/cart_controller.php" method="POST">
-            <input type="hidden" name="action" value="add">
-            <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">
+        <!-- 库存充足：显示加入购物车 + 收藏按钮 -->
+        <?php if ($product['stock'] > 0): ?>
+            <form action="../../controllers/cart_controller.php" method="POST" style="display: inline-block;">
+                <input type="hidden" name="action" value="add">
+                <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">
 
-            <label>Quantity:</label>
-            <input type="number" name="quantity" value="1" min="1" max="<?php echo $product['stock']; ?>" class="qty-input">
-
-            <br><br>
-            <?php if ($product['stock'] > 0): ?>
+                <label>Quantity:</label>
+                <input type="number" name="quantity" value="1" min="1" max="<?php echo $product['stock']; ?>" class="qty-input">
+                <br><br>
                 <button type="submit" class="btn-green">Add to Cart</button>
-            <?php else: ?>
-                <button disabled class="btn-disabled">Out of Stock</button>
+            </form>
+
+            <!-- 收藏按钮（仅登录用户可见） -->
+            <?php if (is_logged_in()): ?>
+                <form action="../../controllers/wishlist_controller.php" method="POST" style="display: inline-block; margin-left: 12px;">
+                    <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">
+                    <input type="hidden" name="from" value="detail">
+
+                    <?php if ($is_in_wishlist): ?>
+                        <input type="hidden" name="action" value="remove">
+                        <button type="submit" class="btn-wishlist btn-wishlist-active">
+                            ♥ In Wishlist
+                        </button>
+                    <?php else: ?>
+                        <input type="hidden" name="action" value="add">
+                        <button type="submit" class="btn-wishlist">
+                            ♡ Add to Wishlist
+                        </button>
+                    <?php endif; ?>
+                </form>
             <?php endif; ?>
-        </form>
+
+            <!-- 缺货：只显示收藏按钮 -->
+        <?php else: ?>
+            <button disabled class="btn-disabled">Out of Stock</button>
+
+            <?php if (is_logged_in()): ?>
+                <form action="../../controllers/wishlist_controller.php" method="POST" style="display: inline-block; margin-left: 12px;">
+                    <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">
+                    <input type="hidden" name="from" value="detail">
+
+                    <?php if ($is_in_wishlist): ?>
+                        <input type="hidden" name="action" value="remove">
+                        <button type="submit" class="btn-wishlist btn-wishlist-active">
+                            ♥ In Wishlist
+                        </button>
+                    <?php else: ?>
+                        <input type="hidden" name="action" value="add">
+                        <button type="submit" class="btn-wishlist">
+                            ♡ Save for Later
+                        </button>
+                    <?php endif; ?>
+                </form>
+                <p style="margin-top: 12px; color: #86868b; font-size: 14px;">
+                    Add to wishlist to get notified when back in stock.
+                </p>
+            <?php endif; ?>
+        <?php endif; ?>
     </div>
 </div>
 
+<!-- 评价部分保持不变 -->
 <div class="reviews-container">
     <div class="review-summary">
         <div class="big-rating"><?php echo $avg_rating; ?></div>
