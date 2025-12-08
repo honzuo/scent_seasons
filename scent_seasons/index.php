@@ -13,8 +13,7 @@ if (isset($_SESSION['user_id'])) {
         header("Location: views/member/home.php");
     }
 } else {
-    // Non-logged-in users go to login page
-    header("Location: views/public/login.php");
+    // [修改] 未登录用户现在也直接去首页，而不是强制登录
+    header("Location: views/member/home.php");
 }
 exit();
-?>

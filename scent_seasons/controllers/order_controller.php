@@ -39,9 +39,10 @@ if ($action == 'update_status') {
 if ($action == 'checkout') {
     $user_id = $_SESSION['user_id'];
     $selected_ids = [];
-    $paypal_tx_id = null; // 用于存储 PayPal 交易号
+    $paypal_tx_id = null;
+    $address = ''; // 初始化地址变量
 
-    // A. 检查是否是 JSON 请求 (来自 PayPal JS SDK)
+    // A. 接收 JSON 数据
     $contentType = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
     if ($contentType === "application/json") {
         $content = trim(file_get_contents("php://input"));
@@ -49,26 +50,24 @@ if ($action == 'checkout') {
         if (is_array($decoded)) {
             $selected_ids = isset($decoded['selected_items']) ? $decoded['selected_items'] : [];
             $paypal_tx_id = isset($decoded['transaction_id']) ? $decoded['transaction_id'] : null;
+            // [新增] 接收地址
+            $address = isset($decoded['address']) ? clean_input($decoded['address']) : '';
         }
-    }
-    // B. 检查是否是普通表单 POST (兼容旧逻辑，如果有的话)
-    else {
-        $selected_ids = isset($_POST['selected_items']) ? $_POST['selected_items'] : [];
     }
 
-    // 如果没选商品，报错
-    if (empty($selected_ids) || !is_array($selected_ids)) {
-        if ($contentType === "application/json") {
-            echo json_encode(['success' => false, 'message' => 'No items selected']);
-            exit();
-        } else {
-            header("Location: ../views/member/cart.php");
-            exit();
-        }
+    // 验证部分
+    if (empty($selected_ids)) {
+        echo json_encode(['success' => false, 'message' => 'No items selected']);
+        exit();
+    }
+    // [新增] 验证地址
+    if (empty($address)) {
+        echo json_encode(['success' => false, 'message' => 'Shipping address is required']);
+        exit();
     }
 
     try {
-        // 构建 SQL 查询选中的商品
+        // ... (查询商品部分保持不变) ...
         $placeholders = implode(',', array_fill(0, count($selected_ids), '?'));
         $sql = "SELECT c.quantity, p.product_id, p.price, p.stock 
                 FROM cart c 
@@ -80,15 +79,10 @@ if ($action == 'checkout') {
         $cart_items = $stmt->fetchAll();
 
         if (empty($cart_items)) {
-            if ($contentType === "application/json") {
-                echo json_encode(['success' => false, 'message' => 'Error: No items found.']);
-                exit();
-            } else {
-                die("Error: No items found.");
-            }
+            echo json_encode(['success' => false, 'message' => 'Error: No items found.']);
+            exit();
         }
 
-        // 开启事务
         $pdo->beginTransaction();
 
         $total_amount = 0;
@@ -96,16 +90,15 @@ if ($action == 'checkout') {
             $total_amount += ($item['price'] * $item['quantity']);
         }
 
-        // 插入订单 (如果是 PayPal 支付，直接标记为 completed)
-        // 插入订单 (即使是 PayPal 支付，初始状态也设为 pending，等待管理员处理)
-        $status = 'pending';
+        $status = 'pending'; // 保持 Pending 状态
 
-        // 注意：如果你没加 transaction_id 字段，把下面这行里的 transaction_id 删掉
-        $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_amount, status, transaction_id, order_date) VALUES (?, ?, ?, ?, NOW())");
-        $stmt->execute([$user_id, $total_amount, $status, $paypal_tx_id]);
+        // [修改] 插入订单时带上 address
+        $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_amount, address, status, transaction_id, order_date) VALUES (?, ?, ?, ?, ?, NOW())");
+        $stmt->execute([$user_id, $total_amount, $address, $status, $paypal_tx_id]);
         $order_id = $pdo->lastInsertId();
 
-        // 插入订单详情 & 扣减库存
+        // ... (插入 items 和删除购物车的代码保持不变) ...
+        // 插入订单详情
         $sql_item = "INSERT INTO order_items (order_id, product_id, quantity, price_each) VALUES (?, ?, ?, ?)";
         $stmt_item = $pdo->prepare($sql_item);
         $sql_stock = "UPDATE products SET stock = stock - ? WHERE product_id = ?";
@@ -116,33 +109,22 @@ if ($action == 'checkout') {
             $stmt_stock->execute([$item['quantity'], $item['product_id']]);
         }
 
-        // 删除购物车
         $sql_delete = "DELETE FROM cart WHERE user_id = ? AND product_id IN ($placeholders)";
         $stmt_delete = $pdo->prepare($sql_delete);
         $stmt_delete->execute($params);
 
-        // 删除 Wishlist (如果存在)
+        // 删除 Wishlist
         $sql_delete_wishlist = "DELETE FROM wishlist WHERE user_id = ? AND product_id IN ($placeholders)";
         $stmt_delete_wishlist = $pdo->prepare($sql_delete_wishlist);
         $stmt_delete_wishlist->execute($params);
 
         $pdo->commit();
 
-        // 返回结果
-        if ($contentType === "application/json") {
-            echo json_encode(['success' => true, 'order_id' => $order_id]);
-            exit();
-        } else {
-            header("Location: ../views/member/orders.php?msg=success");
-            exit();
-        }
+        echo json_encode(['success' => true, 'order_id' => $order_id]);
+        exit();
     } catch (Exception $e) {
         $pdo->rollBack();
-        if ($contentType === "application/json") {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-            exit();
-        } else {
-            die("Order failed: " . $e->getMessage());
-        }
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        exit();
     }
 }
