@@ -15,11 +15,11 @@ $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 
 // 获取收藏夹商品
-$sql = "SELECT w.wishlist_id, w.added_at, p.* 
-        FROM wishlist w 
+// 获取收藏夹商品
+$sql = "SELECT w.wishlist_id, w.created_at as added_at, p.* FROM wishlist w 
         JOIN products p ON w.product_id = p.product_id 
         WHERE w.user_id = ? AND p.is_deleted = 0
-        ORDER BY w.create_at DESC";
+        ORDER BY w.created_at DESC"; // 已修正为 created_at
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$user_id]);
 $wishlist_items = $stmt->fetchAll();
