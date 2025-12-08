@@ -90,7 +90,8 @@ require $path . 'includes/header.php';
                     </td>
                     <td>
                         <button type="button"
-                            onclick="openOrderModal(<?php echo $o['order_id']; ?>, '<?php echo $o['status']; ?>', '<?php echo htmlspecialchars(addslashes($o['address'])); ?>')"
+                            data-address="<?php echo htmlspecialchars($o['address'] ?? ''); ?>"
+                            onclick="openOrderModal(<?php echo $o['order_id']; ?>, '<?php echo $o['status']; ?>', this.getAttribute('data-address'))"
                             class="btn-blue"
                             style="padding:5px 10px; font-size:0.8em;">
                             Manage
@@ -143,20 +144,34 @@ require $path . 'includes/header.php';
     // 传递商品数据给 JS
     const itemsData = <?php echo json_encode($items_by_order); ?>;
 
-    function openOrderModal(orderId, currentStatus) {
+    function openOrderModal(orderId, currentStatus, address) {
         // 1. 设置标题和表单
         document.getElementById('modalTitle').innerText = "Manage Order #" + orderId;
         document.getElementById('form_order_id').value = orderId;
         document.getElementById('form_status').value = currentStatus.toLowerCase();
-        const contentDiv = document.getElementById('orderItemsContent');
-        let oldAddr = document.getElementById('temp-addr');
-        if (oldAddr) oldAddr.remove(); // 防止重复
 
-        let addrDiv = document.createElement('div');
-        addrDiv.id = 'temp-addr';
-        addrDiv.style.marginBottom = '15px';
-        addrDiv.innerHTML = '<strong>Shipping Address:</strong><br>' + address;
-        contentDiv.parentNode.insertBefore(addrDiv, contentDiv);
+        // 2. 处理地址显示 (防止 XSS 并支持换行)
+        const contentDiv = document.getElementById('orderItemsContent');
+
+        // 移除旧的地址框 (防止重复添加)
+        let oldAddr = document.getElementById('temp-admin-address');
+        if (oldAddr) oldAddr.remove();
+
+        // 创建新的地址框
+        if (address && address.trim() !== "") {
+            // 将换行符 \n 转换为 <br>
+            let formattedAddress = address.replace(/\n/g, '<br>');
+
+            let addrDiv = document.createElement('div');
+            addrDiv.id = 'temp-admin-address';
+            addrDiv.style.cssText = 'background:#f9f9f9; padding:15px; margin-bottom:20px; border-radius:8px; font-size:14px; line-height:1.5;';
+            addrDiv.innerHTML = '<strong style="color:#333;">Shipping Address:</strong><br><span style="color:#555;">' + formattedAddress + '</span>';
+
+            // 插入到商品列表前面
+            contentDiv.parentNode.insertBefore(addrDiv, contentDiv);
+        }
+
+        // 3. 渲染商品列表 (保持原有逻辑)
         const items = itemsData[orderId] || [];
 
         if (items.length === 0) {
