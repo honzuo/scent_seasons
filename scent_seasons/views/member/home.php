@@ -91,6 +91,7 @@ $extra_css = "shop.css";
 
 require $path . 'includes/header.php';
 ?>
+<link rel="stylesheet" href="<?php echo $path; ?>css/memberchat.css">
 
 <div class="hero-banner">
     <div class="hero-content">
@@ -173,3 +174,104 @@ require $path . 'includes/header.php';
 </div>
 
 <?php require $path . 'includes/footer.php'; ?>
+
+<!-- Floating Chat -->
+<div class="chat-fab" id="chatFab" title="Chat with admin">💬</div>
+<div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+        <span>Support Chat</span>
+        <button id="chatClose" style="background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer;">×</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div style="text-align:center;color:#6e6e73;font-size:13px;">Say hello! The admin will reply soon.</div>
+    </div>
+    <div class="chat-input">
+        <textarea id="chatInput" placeholder="Type a message..."></textarea>
+        <button id="chatSend">Send</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    const fab = document.getElementById('chatFab');
+    const win = document.getElementById('chatWindow');
+    const closeBtn = document.getElementById('chatClose');
+    const msgBox = document.getElementById('chatMessages');
+    const input = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('chatSend');
+
+    let poller = null;
+
+    function toggleChat(open) {
+        win.style.display = open ? 'flex' : 'none';
+        if (open) {
+            fetchMessages();
+            if (poller) clearInterval(poller);
+            poller = setInterval(fetchMessages, 5000);
+        } else {
+            if (poller) clearInterval(poller);
+        }
+    }
+
+    function renderMessages(messages) {
+        msgBox.innerHTML = '';
+        if (!messages || messages.length === 0) {
+            msgBox.innerHTML = '<div style="text-align:center;color:#6e6e73;font-size:13px;">No messages yet.</div>';
+            return;
+        }
+        messages.forEach(function(m) {
+            const div = document.createElement('div');
+            div.className = 'bubble ' + (m.is_admin == 1 ? 'them' : 'me');
+            div.innerHTML = escapeHtml(m.message) + '<span class="time">' + m.created_at + '</span>';
+            msgBox.appendChild(div);
+        });
+        msgBox.scrollTop = msgBox.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.innerText = str;
+        return div.innerHTML;
+    }
+
+    function fetchMessages() {
+        fetch('../../controllers/chat_controller.php?action=fetch_member')
+            .then(r => r.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    renderMessages(res.messages);
+                }
+            }).catch(() => {});
+    }
+
+    function sendMessage() {
+        const text = input.value.trim();
+        if (!text) return;
+        sendBtn.disabled = true;
+        fetch('../../controllers/chat_controller.php?action=send_member', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'message=' + encodeURIComponent(text)
+        }).then(r => r.json())
+          .then(res => {
+            sendBtn.disabled = false;
+            if (res.status === 'success') {
+                input.value = '';
+                fetchMessages();
+            }
+        }).catch(() => { sendBtn.disabled = false; });
+    }
+
+    fab.addEventListener('click', function() { toggleChat(true); });
+    closeBtn.addEventListener('click', function() { toggleChat(false); });
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+})();
+</script>
