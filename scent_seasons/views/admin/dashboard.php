@@ -50,6 +50,18 @@ require $path . 'includes/header.php';
         <a href="logs/index.php">View Logs &rarr;</a>
     </div>
 
+    <div class="card" style="border-top: 4px solid #0c9ef5;">
+        <h3 style="color:#0c9ef5;">Chat</h3>
+        <p>Chat with members in real time.</p>
+        <a href="chat/index.php" style="color:#0c9ef5;">Open Chat &rarr;</a>
+    </div>
+
+    <div class="card" style="border-top: 4px solid #0071e3;">
+        <h3 style="color:#0071e3;">Reports</h3>
+        <p>Product performance & analytics.</p>
+        <a href="reports/index.php" style="color:#0071e3;">View Reports &rarr;</a>
+    </div>
+
     <?php if (is_superadmin()): ?>
         <div class="card" style="border-top: 4px solid #8e44ad;">
             <h3 style="color:#8e44ad;">Admin Maintenance</h3>

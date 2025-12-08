@@ -33,41 +33,51 @@ if (empty($hot_products)) {
     $hot_products = $stmt->fetchAll();
 }
 
-// Get personalized recommendations
+// --- 第二部分：获取推荐商品 (已修改，增加登录检查) ---
 $recommended_products = [];
-$user_id = $_SESSION['user_id'];
 
-$check_orders_sql = "SELECT COUNT(*) as order_count FROM orders WHERE user_id = ?";
-$stmt = $pdo->prepare($check_orders_sql);
-$stmt->execute([$user_id]);
-$order_check = $stmt->fetch();
-$has_order_history = $order_check['order_count'] > 0;
+// [关键修改] 先检查用户是否已登录
+if (is_logged_in()) {
+    $user_id = $_SESSION['user_id'];
 
-if ($has_order_history) {
-    $recommended_sql = "SELECT DISTINCT p.* 
-                        FROM products p 
-                        WHERE p.is_deleted = 0 
-                        AND p.category_id IN (
-                            SELECT DISTINCT p2.category_id 
-                            FROM order_items oi 
-                            JOIN orders o ON oi.order_id = o.order_id 
-                            JOIN products p2 ON oi.product_id = p2.product_id 
-                            WHERE o.user_id = ? 
-                            AND p2.category_id IS NOT NULL
-                        )
-                        AND p.product_id NOT IN (
-                            SELECT DISTINCT oi.product_id 
-                            FROM order_items oi 
-                            JOIN orders o ON oi.order_id = o.order_id 
-                            WHERE o.user_id = ?
-                        )
-                        ORDER BY RAND() 
-                        LIMIT 4";
-    $stmt = $pdo->prepare($recommended_sql);
-    $stmt->execute([$user_id, $user_id]);
-    $recommended_products = $stmt->fetchAll();
-    
-    if (empty($recommended_products)) {
+    // 检查是否有购买记录
+    $check_orders_sql = "SELECT COUNT(*) as order_count FROM orders WHERE user_id = ?";
+    $stmt = $pdo->prepare($check_orders_sql);
+    $stmt->execute([$user_id]);
+    $order_check = $stmt->fetch();
+    $has_order_history = $order_check['order_count'] > 0;
+
+    if ($has_order_history) {
+        // 有购买记录：根据购买过的分类推荐
+        $recommended_sql = "SELECT DISTINCT p.* FROM products p 
+                            WHERE p.is_deleted = 0 
+                            AND p.category_id IN (
+                                SELECT DISTINCT p2.category_id 
+                                FROM order_items oi 
+                                JOIN orders o ON oi.order_id = o.order_id 
+                                JOIN products p2 ON oi.product_id = p2.product_id 
+                                WHERE o.user_id = ? 
+                                AND p2.category_id IS NOT NULL
+                            )
+                            AND p.product_id NOT IN (
+                                SELECT DISTINCT oi.product_id 
+                                FROM order_items oi 
+                                JOIN orders o ON oi.order_id = o.order_id 
+                                WHERE o.user_id = ?
+                            )
+                            ORDER BY RAND() 
+                            LIMIT 4";
+        $stmt = $pdo->prepare($recommended_sql);
+        $stmt->execute([$user_id, $user_id]);
+        $recommended_products = $stmt->fetchAll();
+
+        if (empty($recommended_products)) {
+            $random_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
+            $stmt = $pdo->query($random_sql);
+            $recommended_products = $stmt->fetchAll();
+        }
+    } else {
+        // 登录了但没买过东西：随机推荐
         $random_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
         $stmt = $pdo->query($random_sql);
         $recommended_products = $stmt->fetchAll();
@@ -84,6 +94,7 @@ $extra_css = "home.css"; // 改成 home.css
 
 require $path . 'includes/header.php';
 ?>
+<link rel="stylesheet" href="<?php echo $path; ?>css/memberchat.css">
 
 <!-- Hero Section 轮播图 - 纯图片展示 -->
 <div class="hero-section">
@@ -151,15 +162,10 @@ require $path . 'includes/header.php';
         <div class="product-grid">
             <?php foreach ($hot_products as $p): ?>
                 <div class="product-card">
-                    <a href="product_detail.php?id=<?php echo $p['product_id']; ?>" class="product-image-link">
-                        <div class="product-image-wrapper">
-                            <img src="../../images/products/<?php echo htmlspecialchars($p['image_path']); ?>" 
-                                 alt="<?php echo htmlspecialchars($p['name']); ?>"
-                                 onerror="this.src='../../images/products/default_product.jpg'">
-                            <div class="product-overlay">
-                                <span class="quick-view">Quick View</span>
-                            </div>
-                        </div>
+                    <a href="product_detail.php?id=<?php echo $p['product_id']; ?>">
+                        <img src="../../images/products/<?php echo htmlspecialchars($p['image_path']); ?>"
+                            alt="<?php echo htmlspecialchars($p['name']); ?>"
+                            onerror="this.src='../../images/products/default_product.jpg'">
                     </a>
                     <div class="p-info">
                         <h4><?php echo htmlspecialchars($p['name']); ?></h4>
@@ -182,21 +188,16 @@ require $path . 'includes/header.php';
         <div class="product-grid">
             <?php foreach ($recommended_products as $product): ?>
                 <div class="product-card">
-                    <a href="product_detail.php?id=<?php echo $product['product_id']; ?>" class="product-image-link">
-                        <div class="product-image-wrapper">
-                            <img src="../../images/products/<?php echo htmlspecialchars($product['image_path']); ?>" 
-                                 alt="<?php echo htmlspecialchars($product['name']); ?>"
-                                 onerror="this.src='../../images/products/default_product.jpg'">
-                            <div class="product-overlay">
-                                <span class="quick-view">Quick View</span>
-                            </div>
-                        </div>
+                    <a href="product_detail.php?id=<?php echo $product['product_id']; ?>">
+                        <img src="../../images/products/<?php echo htmlspecialchars($product['image_path']); ?>"
+                            alt="<?php echo htmlspecialchars($product['name']); ?>"
+                            onerror="this.src='../../images/products/default_product.jpg'">
                     </a>
                     <div class="p-info">
                         <h4><?php echo htmlspecialchars($product['name']); ?></h4>
-                        <p class="p-price">RM <?php echo number_format($product['price'], 2); ?></p>
-                        <a href="product_detail.php?id=<?php echo $product['product_id']; ?>" 
-                           class="btn-add">View Details</a>
+                        <p class="p-price">$<?php echo number_format($product['price'], 2); ?></p>
+                        <a href="product_detail.php?id=<?php echo $product['product_id']; ?>"
+                            class="btn-add">View Details</a>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -209,7 +210,113 @@ require $path . 'includes/header.php';
     <a href="shop.php" class="btn-blue" style="padding: 14px 40px; font-size: 1.1em;">View All Products</a>
 </div>
 
-<!-- Hero Slider JavaScript -->
-<script src="../../js/hero-slider.js"></script>
-
 <?php require $path . 'includes/footer.php'; ?>
+
+<!-- Floating Chat -->
+<div class="chat-fab" id="chatFab" title="Chat with admin">💬</div>
+<div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+        <span>Support Chat</span>
+        <button id="chatClose" style="background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer;">×</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div style="text-align:center;color:#6e6e73;font-size:13px;">Say hello! The admin will reply soon.</div>
+    </div>
+    <div class="chat-input">
+        <textarea id="chatInput" placeholder="Type a message..."></textarea>
+        <button id="chatSend">Send</button>
+    </div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+
+        const fab = document.getElementById('chatFab');
+        const win = document.getElementById('chatWindow');
+        const closeBtn = document.getElementById('chatClose');
+        const msgBox = document.getElementById('chatMessages');
+        const input = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('chatSend');
+
+        let poller = null;
+
+        function toggleChat(open) {
+            win.style.display = open ? 'flex' : 'none';
+            if (open) {
+                fetchMessages();
+                if (poller) clearInterval(poller);
+                poller = setInterval(fetchMessages, 5000);
+            } else {
+                if (poller) clearInterval(poller);
+            }
+        }
+
+        function renderMessages(messages) {
+            msgBox.innerHTML = '';
+            if (!messages || messages.length === 0) {
+                msgBox.innerHTML = '<div style="text-align:center;color:#6e6e73;font-size:13px;">No messages yet.</div>';
+                return;
+            }
+            messages.forEach(function(m) {
+                const div = document.createElement('div');
+                div.className = 'bubble ' + (m.is_admin == 1 ? 'them' : 'me');
+                div.innerHTML = escapeHtml(m.message) + '<span class="time">' + m.created_at + '</span>';
+                msgBox.appendChild(div);
+            });
+            msgBox.scrollTop = msgBox.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.innerText = str;
+            return div.innerHTML;
+        }
+
+        function fetchMessages() {
+            fetch('../../controllers/chat_controller.php?action=fetch_member')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        renderMessages(res.messages);
+                    }
+                }).catch(() => {});
+        }
+
+        function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+            sendBtn.disabled = true;
+            fetch('../../controllers/chat_controller.php?action=send_member', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'message=' + encodeURIComponent(text)
+                }).then(r => r.json())
+                .then(res => {
+                    sendBtn.disabled = false;
+                    if (res.status === 'success') {
+                        input.value = '';
+                        fetchMessages();
+                    }
+                }).catch(() => {
+                    sendBtn.disabled = false;
+                });
+        }
+
+        fab.addEventListener('click', function() {
+            toggleChat(true);
+        });
+        closeBtn.addEventListener('click', function() {
+            toggleChat(false);
+        });
+        sendBtn.addEventListener('click', sendMessage);
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    })();
+</script>
