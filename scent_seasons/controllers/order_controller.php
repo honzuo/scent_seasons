@@ -12,20 +12,16 @@ $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
 // --- 1. [Admin] 更新订单状态 ---
 if ($action == 'update_status') {
-    require_admin(); // 必须是管理员
+    require_admin();
 
     $order_id = intval($_POST['order_id']);
     $status = clean_input($_POST['status']);
 
-    // 更新状态
     $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE order_id = ?");
     $stmt->execute([$status, $order_id]);
 
-    // 记录日志
     log_activity($pdo, "Update Order Status", "Order ID: $order_id to $status");
 
-    // 跳回订单列表
-    // 检查是否有筛选用户，如果有，跳回去时也带上
     $redirect = "../views/admin/orders/index.php?msg=updated";
     if (isset($_POST['filter_user_id']) && $_POST['filter_user_id'] > 0) {
         $redirect .= "&user_id=" . $_POST['filter_user_id'];
@@ -69,7 +65,7 @@ if ($action == 'checkout') {
     try {
         // ... (查询商品部分保持不变) ...
         $placeholders = implode(',', array_fill(0, count($selected_ids), '?'));
-        $sql = "SELECT c.quantity, p.product_id, p.price, p.stock 
+        $sql = "SELECT c.quantity, p.product_id, p.name, p.price, p.stock 
                 FROM cart c 
                 JOIN products p ON c.product_id = p.product_id 
                 WHERE c.user_id = ? AND c.product_id IN ($placeholders)";
@@ -89,7 +85,7 @@ if ($action == 'checkout') {
         foreach ($cart_items as $item) {
             $total_amount += ($item['price'] * $item['quantity']);
         }
-
+      
         $status = 'pending'; // 保持 Pending 状态
 
         // [修改] 插入订单时带上 address
@@ -119,12 +115,77 @@ if ($action == 'checkout') {
         $stmt_delete_wishlist->execute($params);
 
         $pdo->commit();
+        // ============================================
+        // 📧 发送收据邮件 (安全版本 - 失败不影响订单)
+        // ============================================
+        try {
+            // 检查 mailer.php 是否存在
+            if (file_exists(__DIR__ . '/../includes/mailer.php')) {
+                require_once __DIR__ . '/../includes/mailer.php';
+                
+                // 检查函数是否存在
+                if (function_exists('send_order_receipt')) {
+                    // 获取用户信息 (注意: users 表字段是 email 和 full_name)
+                    $stmt_user = $pdo->prepare("SELECT full_name, email FROM users WHERE user_id = ?");
+                    $stmt_user->execute([$user_id]);
+                    $user = $stmt_user->fetch();
 
-        echo json_encode(['success' => true, 'order_id' => $order_id]);
-        exit();
+                    if ($user && !empty($user['email'])) {
+                        // 准备订单数据
+                        $order_data = [
+                            'order_id' => $order_id,
+                            'order_date' => date('Y-m-d H:i:s'),
+                            'total_amount' => $total_amount,
+                            'status' => $status,
+                            'transaction_id' => $paypal_tx_id,
+                            'items' => []
+                        ];
+
+                        // 添加商品详情
+                        foreach ($cart_items as $item) {
+                            $order_data['items'][] = [
+                                'product_name' => $item['name'],
+                                'quantity' => $item['quantity'],
+                                'price_each' => $item['price']
+                            ];
+                        }
+
+                        // 发送邮件 (静默失败)
+                        $email_sent = send_order_receipt($user['email'], $user['full_name'], $order_data);
+                        
+                        if ($email_sent) {
+                            error_log("✅ Receipt email sent successfully for Order #$order_id to " . $user['email']);
+                        } else {
+                            error_log("⚠️ Receipt email failed for Order #$order_id (order still created successfully)");
+                        }
+                    } else {
+                        error_log("⚠️ Cannot send receipt: User email not found for user_id $user_id");
+                    }
+                }
+            }
+        } catch (Exception $email_error) {
+            // 邮件发送错误不影响订单创建
+            error_log("⚠️ Email error (order still created): " . $email_error->getMessage());
+        }
+        // ============================================
+
+        // 返回结果
+        if ($contentType === "application/json") {
+            echo json_encode(['success' => true, 'order_id' => $order_id]);
+            exit();
+        } else {
+            header("Location: ../views/member/orders.php?msg=success");
+            exit();
+        }
     } catch (Exception $e) {
         $pdo->rollBack();
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-        exit();
+        error_log("❌ Order creation failed: " . $e->getMessage());
+        
+        if ($contentType === "application/json") {
+            echo json_encode(['success' => false, 'message' => 'System error processing order.']);
+            exit();
+        } else {
+            die("Order failed: System error processing order.");
+        }
     }
 }
