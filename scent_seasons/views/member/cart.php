@@ -83,14 +83,11 @@ require $path . 'includes/header.php';
         Total Selected: $<span id="display-total">0.00</span>
     </div>
 
-    <div style="text-align: right; margin-top: 20px;">
-        <form action="../../controllers/order_controller.php" method="POST" id="checkout-form">
-            <input type="hidden" name="action" value="checkout">
-            <button type="submit" class="btn-green" id="btn-checkout" disabled style="opacity: 0.5; cursor: not-allowed;">
-                Checkout Selected Items
-            </button>
-        </form>
+    <div style="text-align: right; margin-top: 30px; display: flex; justify-content: flex-end;">
+        <div id="paypal-button-container" style="width: 300px;"></div>
     </div>
+
+    <script src="https://www.paypal.com/sdk/js?client-id=Ab91QiHAZkGW1YVrL_60iEZvAraUdaF-BCUFbrxdRw6zmaI3wZP0XlwZAoUQHe0FIE5cuYUZe4X4I0M6&currency=USD"></script>
 
     <script>
         $(document).ready(function() {
@@ -99,67 +96,106 @@ require $path . 'includes/header.php';
             function calculateTotal() {
                 let total = 0;
                 let count = 0;
-
                 $('.item-checkbox:checked').each(function() {
-                    // 读取 checkbox 上的 data-subtotal 属性
                     total += parseFloat($(this).data('subtotal'));
                     count++;
                 });
-
-                // 更新页面显示
                 $('#display-total').text(total.toFixed(2));
-
-                // 控制结账按钮状态 (没选东西时不能点)
-                if (count > 0) {
-                    $('#btn-checkout').prop('disabled', false).css('opacity', '1').css('cursor', 'pointer');
-                } else {
-                    $('#btn-checkout').prop('disabled', true).css('opacity', '0.5').css('cursor', 'not-allowed');
-                }
+                return total;
             }
 
-            // 2. 监听复选框变化
-            $('.item-checkbox').change(function() {
-                calculateTotal();
-
-                // 如果有个没选，全选框就取消勾选
-                if (!$(this).prop('checked')) {
+            // 监听复选框变化
+            $('.item-checkbox, #select-all').change(function() {
+                // 如果是全选
+                if (this.id === 'select-all') {
+                    $('.item-checkbox').prop('checked', $(this).prop('checked'));
+                } else if (!$(this).prop('checked')) {
                     $('#select-all').prop('checked', false);
                 }
-            });
-
-            // 3. 全选/全不选功能
-            $('#select-all').change(function() {
-                let isChecked = $(this).prop('checked');
-                $('.item-checkbox').prop('checked', isChecked);
                 calculateTotal();
             });
 
-            // 4. 提交表单时的拦截处理
-            $('#checkout-form').submit(function(e) {
-                // 获取所有选中的 ID
-                let selectedIds = [];
-                $('.item-checkbox:checked').each(function() {
-                    selectedIds.push($(this).val());
-                });
+            // 2. 初始化 PayPal 按钮
+            paypal.Buttons({
+                // 只有当有商品被选中且金额 > 0 时，才允许点击
+                onInit: function(data, actions) {
+                    // 初始禁用，除非有选中
+                    actions.disable();
 
-                if (selectedIds.length === 0) {
-                    alert("Please select at least one item to checkout.");
-                    e.preventDefault(); // 阻止提交
-                    return;
+                    // 监听 checkbox 变化来启用/禁用按钮
+                    $('.item-checkbox, #select-all').change(function() {
+                        if (calculateTotal() > 0) {
+                            actions.enable();
+                        } else {
+                            actions.disable();
+                        }
+                    });
+                },
+
+                // 点击按钮时触发：告诉 PayPal 收多少钱
+                createOrder: function(data, actions) {
+                    let amount = calculateTotal().toFixed(2);
+                    if (amount <= 0) {
+                        alert("Please select items to checkout.");
+                        return false;
+                    }
+
+                    return actions.order.create({
+                        purchase_units: [{
+                            amount: {
+                                value: amount
+                            }
+                        }]
+                    });
+                },
+
+                // 用户付款成功后触发
+                onApprove: function(data, actions) {
+                    // 1. 捕获资金（完成交易）
+                    return actions.order.capture().then(function(details) {
+
+                        console.log('Transaction completed by ' + details.payer.name.given_name);
+
+                        // 2. 收集选中的商品 ID
+                        let selectedIds = [];
+                        $('.item-checkbox:checked').each(function() {
+                            selectedIds.push($(this).val());
+                        });
+
+                        // 3. 用 AJAX 发送数据给 PHP 后端保存订单
+                        fetch('../../controllers/order_controller.php?action=checkout', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    selected_items: selectedIds,
+                                    transaction_id: details.id // PayPal 的交易号
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    // 成功！跳转到订单页
+                                    window.location.href = "../member/orders.php?msg=success";
+                                } else {
+                                    alert("Payment successful, but failed to save order: " + data.message);
+                                }
+                            })
+                            .catch((error) => {
+                                console.error('Error:', error);
+                                alert("System error processing order.");
+                            });
+                    });
+                },
+
+                // 用户取消或出错
+                onError: function(err) {
+                    console.log(err);
+                    alert("Something went wrong with PayPal.");
                 }
 
-                // 动态创建 hidden input 插入到表单里
-                // 格式: <input type="hidden" name="selected_items[]" value="1">
-                selectedIds.forEach(function(id) {
-                    $('<input>').attr({
-                        type: 'hidden',
-                        name: 'selected_items[]',
-                        value: id
-                    }).appendTo('#checkout-form');
-                });
-
-                // 现在让表单正常提交，selected_items[] 数组会被带过去
-            });
+            }).render('#paypal-button-container');
         });
     </script>
 
