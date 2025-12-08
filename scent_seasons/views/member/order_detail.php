@@ -38,6 +38,7 @@ require $path . 'includes/header.php';
     <div class="order-header">
         <h2 class="mt-0">Order #<?php echo $order_id; ?></h2>
         <p><strong>Date:</strong> <?php echo $order['order_date']; ?></p>
+        <p><strong>Shipping Address:</strong><br> <?php echo nl2br(htmlspecialchars($order['address'])); ?></p>
         <p>
             <strong>Status:</strong>
             <?php

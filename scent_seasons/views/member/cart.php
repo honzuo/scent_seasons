@@ -79,6 +79,13 @@ require $path . 'includes/header.php';
         </tbody>
     </table>
 
+    <div style="margin-top: 30px; background: #fafafa; padding: 20px; border-radius: 12px; border: 1px solid #eee;">
+        <h3 style="margin-top: 0;">Shipping Address</h3>
+        <div class="form-group">
+            <textarea id="shipping-address" rows="3" placeholder="Enter your full shipping address here..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;"></textarea>
+        </div>
+    </div>
+
     <div class="cart-total">
         Total Selected: $<span id="display-total">0.00</span>
     </div>
@@ -132,11 +139,24 @@ require $path . 'includes/header.php';
                     });
                 },
 
-                // 点击按钮时触发：告诉 PayPal 收多少钱
+                onClick: function(data, actions) {
+                    let address = $('#shipping-address').val().trim();
+                    if (address.length === 0) {
+                        alert("Please enter your shipping address.");
+                        return actions.reject(); // 阻止 PayPal 弹窗
+                    }
+                },
+
                 createOrder: function(data, actions) {
                     let amount = calculateTotal().toFixed(2);
                     if (amount <= 0) {
                         alert("Please select items to checkout.");
+                        return false;
+                    }
+
+                    // 再次检查地址（双重保险）
+                    let address = $('#shipping-address').val().trim();
+                    if (address.length === 0) {
                         return false;
                     }
 
@@ -149,20 +169,19 @@ require $path . 'includes/header.php';
                     });
                 },
 
-                // 用户付款成功后触发
+                // [修改] 付款成功后：把地址传给后台
                 onApprove: function(data, actions) {
-                    // 1. 捕获资金（完成交易）
                     return actions.order.capture().then(function(details) {
+                        console.log('Transaction completed');
 
-                        console.log('Transaction completed by ' + details.payer.name.given_name);
-
-                        // 2. 收集选中的商品 ID
                         let selectedIds = [];
                         $('.item-checkbox:checked').each(function() {
                             selectedIds.push($(this).val());
                         });
 
-                        // 3. 用 AJAX 发送数据给 PHP 后端保存订单
+                        // 获取地址
+                        let address = $('#shipping-address').val().trim();
+
                         fetch('../../controllers/order_controller.php?action=checkout', {
                                 method: 'POST',
                                 headers: {
@@ -170,16 +189,16 @@ require $path . 'includes/header.php';
                                 },
                                 body: JSON.stringify({
                                     selected_items: selectedIds,
-                                    transaction_id: details.id // PayPal 的交易号
+                                    transaction_id: details.id,
+                                    address: address // [新增] 传递地址
                                 })
                             })
                             .then(response => response.json())
                             .then(data => {
                                 if (data.success) {
-                                    // 成功！跳转到订单页
                                     window.location.href = "../member/orders.php?msg=success";
                                 } else {
-                                    alert("Payment successful, but failed to save order: " + data.message);
+                                    alert("Error saving order: " + data.message);
                                 }
                             })
                             .catch((error) => {

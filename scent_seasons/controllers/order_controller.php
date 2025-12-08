@@ -38,6 +38,8 @@ if ($action == 'update_status') {
 // --- 2. [Member] 结账 (Checkout & PayPal) ---
 if ($action == 'checkout') {
     $user_id = $_SESSION['user_id'];
+    // 在解析 JSON 的地方 (大约第 25 行)
+    $address = isset($decoded['address']) ? clean_input($decoded['address']) : '';
     $selected_ids = [];
     $paypal_tx_id = null; // 用于存储 PayPal 交易号
 
@@ -63,6 +65,14 @@ if ($action == 'checkout') {
             exit();
         } else {
             header("Location: ../views/member/cart.php");
+            exit();
+        }
+    }
+
+    // 在检查 selected_ids 之后 (大约第 40 行)
+    if (empty($address)) {
+        if ($contentType === "application/json") {
+            echo json_encode(['success' => false, 'message' => 'Shipping address is required']);
             exit();
         }
     }

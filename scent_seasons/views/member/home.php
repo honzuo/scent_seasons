@@ -36,50 +36,57 @@ if (empty($hot_products)) {
     $hot_products = $stmt->fetchAll();
 }
 
-// Row 2: Get personalized recommendations based on member's purchase habits
+// --- 第二部分：获取推荐商品 (已修改，增加登录检查) ---
 $recommended_products = [];
-$user_id = $_SESSION['user_id'];
 
-// First, check if user has any order history
-$check_orders_sql = "SELECT COUNT(*) as order_count FROM orders WHERE user_id = ?";
-$stmt = $pdo->prepare($check_orders_sql);
-$stmt->execute([$user_id]);
-$order_check = $stmt->fetch();
-$has_order_history = $order_check['order_count'] > 0;
+// [关键修改] 先检查用户是否已登录
+if (is_logged_in()) {
+    $user_id = $_SESSION['user_id'];
 
-if ($has_order_history) {
-    // User has order history: suggest products based on categories from their orders
-    $recommended_sql = "SELECT DISTINCT p.* 
-                        FROM products p 
-                        WHERE p.is_deleted = 0 
-                        AND p.category_id IN (
-                            SELECT DISTINCT p2.category_id 
-                            FROM order_items oi 
-                            JOIN orders o ON oi.order_id = o.order_id 
-                            JOIN products p2 ON oi.product_id = p2.product_id 
-                            WHERE o.user_id = ? 
-                            AND p2.category_id IS NOT NULL
-                        )
-                        AND p.product_id NOT IN (
-                            SELECT DISTINCT oi.product_id 
-                            FROM order_items oi 
-                            JOIN orders o ON oi.order_id = o.order_id 
-                            WHERE o.user_id = ?
-                        )
-                        ORDER BY RAND() 
-                        LIMIT 4";
-    $stmt = $pdo->prepare($recommended_sql);
-    $stmt->execute([$user_id, $user_id]);
-    $recommended_products = $stmt->fetchAll();
-    
-    // If no recommendations found (e.g., user bought all products in those categories), show random products
-    if (empty($recommended_products)) {
+    // 检查是否有购买记录
+    $check_orders_sql = "SELECT COUNT(*) as order_count FROM orders WHERE user_id = ?";
+    $stmt = $pdo->prepare($check_orders_sql);
+    $stmt->execute([$user_id]);
+    $order_check = $stmt->fetch();
+    $has_order_history = $order_check['order_count'] > 0;
+
+    if ($has_order_history) {
+        // 有购买记录：根据购买过的分类推荐
+        $recommended_sql = "SELECT DISTINCT p.* FROM products p 
+                            WHERE p.is_deleted = 0 
+                            AND p.category_id IN (
+                                SELECT DISTINCT p2.category_id 
+                                FROM order_items oi 
+                                JOIN orders o ON oi.order_id = o.order_id 
+                                JOIN products p2 ON oi.product_id = p2.product_id 
+                                WHERE o.user_id = ? 
+                                AND p2.category_id IS NOT NULL
+                            )
+                            AND p.product_id NOT IN (
+                                SELECT DISTINCT oi.product_id 
+                                FROM order_items oi 
+                                JOIN orders o ON oi.order_id = o.order_id 
+                                WHERE o.user_id = ?
+                            )
+                            ORDER BY RAND() 
+                            LIMIT 4";
+        $stmt = $pdo->prepare($recommended_sql);
+        $stmt->execute([$user_id, $user_id]);
+        $recommended_products = $stmt->fetchAll();
+
+        if (empty($recommended_products)) {
+            $random_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
+            $stmt = $pdo->query($random_sql);
+            $recommended_products = $stmt->fetchAll();
+        }
+    } else {
+        // 登录了但没买过东西：随机推荐
         $random_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
         $stmt = $pdo->query($random_sql);
         $recommended_products = $stmt->fetchAll();
     }
 } else {
-    // User has no order history: suggest random products
+    // [关键修改] 未登录用户：直接随机推荐，不要去查 user_id
     $random_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
     $stmt = $pdo->query($random_sql);
     $recommended_products = $stmt->fetchAll();
@@ -126,9 +133,9 @@ require $path . 'includes/header.php';
             <?php foreach ($hot_products as $p): ?>
                 <div class="product-card">
                     <a href="product_detail.php?id=<?php echo $p['product_id']; ?>">
-                        <img src="../../images/products/<?php echo htmlspecialchars($p['image_path']); ?>" 
-                             alt="<?php echo htmlspecialchars($p['name']); ?>"
-                             onerror="this.src='../../images/products/default_product.jpg'">
+                        <img src="../../images/products/<?php echo htmlspecialchars($p['image_path']); ?>"
+                            alt="<?php echo htmlspecialchars($p['name']); ?>"
+                            onerror="this.src='../../images/products/default_product.jpg'">
                     </a>
                     <div class="p-info">
                         <h4><?php echo htmlspecialchars($p['name']); ?></h4>
@@ -153,15 +160,15 @@ require $path . 'includes/header.php';
             <?php foreach ($recommended_products as $product): ?>
                 <div class="product-card">
                     <a href="product_detail.php?id=<?php echo $product['product_id']; ?>">
-                        <img src="../../images/products/<?php echo htmlspecialchars($product['image_path']); ?>" 
-                             alt="<?php echo htmlspecialchars($product['name']); ?>"
-                             onerror="this.src='../../images/products/default_product.jpg'">
+                        <img src="../../images/products/<?php echo htmlspecialchars($product['image_path']); ?>"
+                            alt="<?php echo htmlspecialchars($product['name']); ?>"
+                            onerror="this.src='../../images/products/default_product.jpg'">
                     </a>
                     <div class="p-info">
                         <h4><?php echo htmlspecialchars($product['name']); ?></h4>
                         <p class="p-price">$<?php echo number_format($product['price'], 2); ?></p>
-                        <a href="product_detail.php?id=<?php echo $product['product_id']; ?>" 
-                           class="btn-add">View Details</a>
+                        <a href="product_detail.php?id=<?php echo $product['product_id']; ?>"
+                            class="btn-add">View Details</a>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -192,86 +199,94 @@ require $path . 'includes/header.php';
 </div>
 
 <script>
-(function() {
-    'use strict';
+    (function() {
+        'use strict';
 
-    const fab = document.getElementById('chatFab');
-    const win = document.getElementById('chatWindow');
-    const closeBtn = document.getElementById('chatClose');
-    const msgBox = document.getElementById('chatMessages');
-    const input = document.getElementById('chatInput');
-    const sendBtn = document.getElementById('chatSend');
+        const fab = document.getElementById('chatFab');
+        const win = document.getElementById('chatWindow');
+        const closeBtn = document.getElementById('chatClose');
+        const msgBox = document.getElementById('chatMessages');
+        const input = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('chatSend');
 
-    let poller = null;
+        let poller = null;
 
-    function toggleChat(open) {
-        win.style.display = open ? 'flex' : 'none';
-        if (open) {
-            fetchMessages();
-            if (poller) clearInterval(poller);
-            poller = setInterval(fetchMessages, 5000);
-        } else {
-            if (poller) clearInterval(poller);
-        }
-    }
-
-    function renderMessages(messages) {
-        msgBox.innerHTML = '';
-        if (!messages || messages.length === 0) {
-            msgBox.innerHTML = '<div style="text-align:center;color:#6e6e73;font-size:13px;">No messages yet.</div>';
-            return;
-        }
-        messages.forEach(function(m) {
-            const div = document.createElement('div');
-            div.className = 'bubble ' + (m.is_admin == 1 ? 'them' : 'me');
-            div.innerHTML = escapeHtml(m.message) + '<span class="time">' + m.created_at + '</span>';
-            msgBox.appendChild(div);
-        });
-        msgBox.scrollTop = msgBox.scrollHeight;
-    }
-
-    function escapeHtml(str) {
-        const div = document.createElement('div');
-        div.innerText = str;
-        return div.innerHTML;
-    }
-
-    function fetchMessages() {
-        fetch('../../controllers/chat_controller.php?action=fetch_member')
-            .then(r => r.json())
-            .then(res => {
-                if (res.status === 'success') {
-                    renderMessages(res.messages);
-                }
-            }).catch(() => {});
-    }
-
-    function sendMessage() {
-        const text = input.value.trim();
-        if (!text) return;
-        sendBtn.disabled = true;
-        fetch('../../controllers/chat_controller.php?action=send_member', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'message=' + encodeURIComponent(text)
-        }).then(r => r.json())
-          .then(res => {
-            sendBtn.disabled = false;
-            if (res.status === 'success') {
-                input.value = '';
+        function toggleChat(open) {
+            win.style.display = open ? 'flex' : 'none';
+            if (open) {
                 fetchMessages();
+                if (poller) clearInterval(poller);
+                poller = setInterval(fetchMessages, 5000);
+            } else {
+                if (poller) clearInterval(poller);
             }
-        }).catch(() => { sendBtn.disabled = false; });
-    }
-
-    fab.addEventListener('click', function() { toggleChat(true); });
-    closeBtn.addEventListener('click', function() { toggleChat(false); });
-    sendBtn.addEventListener('click', sendMessage);
-    input.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
         }
-    });
-})();
+
+        function renderMessages(messages) {
+            msgBox.innerHTML = '';
+            if (!messages || messages.length === 0) {
+                msgBox.innerHTML = '<div style="text-align:center;color:#6e6e73;font-size:13px;">No messages yet.</div>';
+                return;
+            }
+            messages.forEach(function(m) {
+                const div = document.createElement('div');
+                div.className = 'bubble ' + (m.is_admin == 1 ? 'them' : 'me');
+                div.innerHTML = escapeHtml(m.message) + '<span class="time">' + m.created_at + '</span>';
+                msgBox.appendChild(div);
+            });
+            msgBox.scrollTop = msgBox.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.innerText = str;
+            return div.innerHTML;
+        }
+
+        function fetchMessages() {
+            fetch('../../controllers/chat_controller.php?action=fetch_member')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        renderMessages(res.messages);
+                    }
+                }).catch(() => {});
+        }
+
+        function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+            sendBtn.disabled = true;
+            fetch('../../controllers/chat_controller.php?action=send_member', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'message=' + encodeURIComponent(text)
+                }).then(r => r.json())
+                .then(res => {
+                    sendBtn.disabled = false;
+                    if (res.status === 'success') {
+                        input.value = '';
+                        fetchMessages();
+                    }
+                }).catch(() => {
+                    sendBtn.disabled = false;
+                });
+        }
+
+        fab.addEventListener('click', function() {
+            toggleChat(true);
+        });
+        closeBtn.addEventListener('click', function() {
+            toggleChat(false);
+        });
+        sendBtn.addEventListener('click', sendMessage);
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    })();
 </script>
