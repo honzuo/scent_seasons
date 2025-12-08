@@ -90,7 +90,7 @@ require $path . 'includes/header.php';
                     </td>
                     <td>
                         <button type="button"
-                            onclick="openOrderModal(<?php echo $o['order_id']; ?>, '<?php echo $o['status']; ?>')"
+                            onclick="openOrderModal(<?php echo $o['order_id']; ?>, '<?php echo $o['status']; ?>', '<?php echo htmlspecialchars(addslashes($o['address'])); ?>')"
                             class="btn-blue"
                             style="padding:5px 10px; font-size:0.8em;">
                             Manage
@@ -148,9 +148,15 @@ require $path . 'includes/header.php';
         document.getElementById('modalTitle').innerText = "Manage Order #" + orderId;
         document.getElementById('form_order_id').value = orderId;
         document.getElementById('form_status').value = currentStatus.toLowerCase();
-
-        // 2. 渲染商品列表
         const contentDiv = document.getElementById('orderItemsContent');
+        let oldAddr = document.getElementById('temp-addr');
+        if (oldAddr) oldAddr.remove(); // 防止重复
+
+        let addrDiv = document.createElement('div');
+        addrDiv.id = 'temp-addr';
+        addrDiv.style.marginBottom = '15px';
+        addrDiv.innerHTML = '<strong>Shipping Address:</strong><br>' + address;
+        contentDiv.parentNode.insertBefore(addrDiv, contentDiv);
         const items = itemsData[orderId] || [];
 
         if (items.length === 0) {

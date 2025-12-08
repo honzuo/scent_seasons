@@ -80,9 +80,10 @@ require $path . 'includes/header.php';
     </table>
 
     <div style="margin-top: 30px; background: #fafafa; padding: 20px; border-radius: 12px; border: 1px solid #eee;">
-        <h3 style="margin-top: 0;">Shipping Address</h3>
+        <h3 style="margin-top: 0; font-size: 18px;">Shipping Address</h3>
+        <p class="text-muted" style="font-size: 14px; margin-bottom: 10px;">Please enter your full delivery address.</p>
         <div class="form-group">
-            <textarea id="shipping-address" rows="3" placeholder="Enter your full shipping address here..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;"></textarea>
+            <textarea id="shipping-address" rows="3" placeholder="Street address, City, State, Zip Code..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #d2d2d7; font-family: inherit; font-size: 14px; resize: vertical;"></textarea>
         </div>
     </div>
 
@@ -113,7 +114,6 @@ require $path . 'includes/header.php';
 
             // 监听复选框变化
             $('.item-checkbox, #select-all').change(function() {
-                // 如果是全选
                 if (this.id === 'select-all') {
                     $('.item-checkbox').prop('checked', $(this).prop('checked'));
                 } else if (!$(this).prop('checked')) {
@@ -124,12 +124,9 @@ require $path . 'includes/header.php';
 
             // 2. 初始化 PayPal 按钮
             paypal.Buttons({
-                // 只有当有商品被选中且金额 > 0 时，才允许点击
+                // 初始化：只有金额 > 0 时才启用按钮
                 onInit: function(data, actions) {
-                    // 初始禁用，除非有选中
                     actions.disable();
-
-                    // 监听 checkbox 变化来启用/禁用按钮
                     $('.item-checkbox, #select-all').change(function() {
                         if (calculateTotal() > 0) {
                             actions.enable();
@@ -139,27 +136,18 @@ require $path . 'includes/header.php';
                     });
                 },
 
+                // [关键修改] 点击按钮时触发：检查地址是否已填
                 onClick: function(data, actions) {
                     let address = $('#shipping-address').val().trim();
                     if (address.length === 0) {
-                        alert("Please enter your shipping address.");
+                        alert("Please enter your shipping address before proceeding.");
                         return actions.reject(); // 阻止 PayPal 弹窗
                     }
                 },
 
+                // 创建订单
                 createOrder: function(data, actions) {
                     let amount = calculateTotal().toFixed(2);
-                    if (amount <= 0) {
-                        alert("Please select items to checkout.");
-                        return false;
-                    }
-
-                    // 再次检查地址（双重保险）
-                    let address = $('#shipping-address').val().trim();
-                    if (address.length === 0) {
-                        return false;
-                    }
-
                     return actions.order.create({
                         purchase_units: [{
                             amount: {
@@ -169,19 +157,21 @@ require $path . 'includes/header.php';
                     });
                 },
 
-                // [修改] 付款成功后：把地址传给后台
+                // 付款成功
                 onApprove: function(data, actions) {
                     return actions.order.capture().then(function(details) {
-                        console.log('Transaction completed');
+                        console.log('Transaction completed by ' + details.payer.name.given_name);
 
+                        // 收集数据
                         let selectedIds = [];
                         $('.item-checkbox:checked').each(function() {
                             selectedIds.push($(this).val());
                         });
 
-                        // 获取地址
+                        // [关键修改] 获取地址
                         let address = $('#shipping-address').val().trim();
 
+                        // 发送给后端
                         fetch('../../controllers/order_controller.php?action=checkout', {
                                 method: 'POST',
                                 headers: {
@@ -190,7 +180,7 @@ require $path . 'includes/header.php';
                                 body: JSON.stringify({
                                     selected_items: selectedIds,
                                     transaction_id: details.id,
-                                    address: address // [新增] 传递地址
+                                    address: address // 带上地址
                                 })
                             })
                             .then(response => response.json())
@@ -198,7 +188,7 @@ require $path . 'includes/header.php';
                                 if (data.success) {
                                     window.location.href = "../member/orders.php?msg=success";
                                 } else {
-                                    alert("Error saving order: " + data.message);
+                                    alert("Payment successful, but failed to save order: " + data.message);
                                 }
                             })
                             .catch((error) => {
@@ -208,7 +198,6 @@ require $path . 'includes/header.php';
                     });
                 },
 
-                // 用户取消或出错
                 onError: function(err) {
                     console.log(err);
                     alert("Something went wrong with PayPal.");
