@@ -4,7 +4,6 @@ require '../config/database.php';
 require '../includes/functions.php';
 
 $errors = [];
-$success = "";
 
 // 只有 POST 请求才处理
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -15,15 +14,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
-    // 2. 服务器端验证 (Server-side Validation) [cite: 57]
-    if (empty($name)) $errors['name'] = "Name is required.";
-    if (empty($email)) $errors['email'] = "Email is required.";
-    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = "Invalid email format.";
+    // 2. 服务器端验证
+    if (empty($name)) {
+        $errors['name'] = "Name is required.";
+    }
+    
+    if (empty($email)) {
+        $errors['email'] = "Email is required.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors['email'] = "Invalid email format.";
+    }
 
-    if (empty($password)) $errors['password'] = "Password is required.";
-    elseif (strlen($password) < 6) $errors['password'] = "Password must be at least 6 chars.";
+    // 密码验证
+    if (empty($password)) {
+        $errors['password'] = "Password is required.";
+    } else {
+        // 使用强密码验证
+        $validation = validate_password_strength($password);
+        if (!$validation['valid']) {
+            $errors['password'] = implode(' ', $validation['errors']);
+        }
+    }
 
-    if ($password !== $confirm_password) $errors['confirm_password'] = "Passwords do not match.";
+    if ($password !== $confirm_password) {
+        $errors['confirm_password'] = "Passwords do not match.";
+    }
 
     // 检查邮箱是否已存在
     $stmt = $pdo->prepare("SELECT user_id FROM users WHERE email = ?");
@@ -32,15 +47,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors['email'] = "Email already registered.";
     }
 
-    // 3. 处理头像上传 (Profile Photo Upload) [cite: 78]
-    $photo_name = 'default.jpg'; // 默认头像
+    // 3. 处理头像上传
+    $photo_name = 'default.jpg';
     if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] == 0) {
         $allowed = ['jpg', 'jpeg', 'png', 'gif'];
         $filename = $_FILES['profile_photo']['name'];
         $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
         if (in_array($ext, $allowed)) {
-            // 生成唯一文件名，防止重名覆盖
             $new_name = uniqid('user_') . "." . $ext;
             $destination = "../images/uploads/" . $new_name;
 
@@ -56,7 +70,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // 4. 如果没有错误，写入数据库
     if (empty($errors)) {
-        // 密码加密 (Password Hashing) [cite: 78]
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
         $sql = "INSERT INTO users (full_name, email, password, role, profile_photo) VALUES (?, ?, ?, 'member', ?)";
@@ -74,9 +87,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         // 如果有错误，把错误信息存入 Session 传回页面显示
         $_SESSION['errors'] = $errors;
-        $_SESSION['old_input'] = $_POST; // 保留用户输入
+        $_SESSION['old_input'] = $_POST;
         header("Location: ../views/public/register.php");
         exit();
     }
 }
-?>

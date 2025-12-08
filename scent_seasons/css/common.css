@@ -446,3 +446,263 @@ button:active,
     display: inline-block;
     vertical-align: middle;
 }
+
+
+.otp-input {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: 8px;
+    font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+    padding: 16px !important;
+}
+
+.otp-input:focus {
+    letter-spacing: 8px;
+}
+
+/* 改进登录页面的链接样式 */
+.auth-links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    font-size: 14px;
+}
+
+.forgot-password-link {
+    color: #0071e3;
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.forgot-password-link:hover {
+    opacity: 0.7;
+}
+
+/* 验证码页面的说明文字 */
+.auth-box .text-muted {
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.auth-box .text-muted strong {
+    color: #1d1d1f;
+    font-weight: 600;
+}
+
+/* 重新发送链接样式 */
+.resend-link {
+    display: inline-block;
+    margin-top: 16px;
+    color: #0071e3;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.resend-link:hover {
+    opacity: 0.7;
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+    .otp-input {
+        font-size: 24px;
+        letter-spacing: 4px;
+    }
+    
+    .auth-links {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+}
+
+.password-wrapper {
+    position: relative;
+    display: block;
+}
+
+.password-wrapper input {
+    padding-right: 45px !important; /* 为眼睛图标留出空间 */
+    width: 100%;
+}
+
+/* 眼睛图标按钮 */
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    color: #86868b;
+    font-size: 18px;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    line-height: 1;
+}
+
+.toggle-password:hover {
+    color: #0071e3;
+}
+
+.toggle-password:focus {
+    outline: 2px solid #0071e3;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.eye-icon {
+    display: block;
+    user-select: none;
+}
+
+/* ========== 密码强度指示器 ========== */
+.password-strength-container {
+    margin-top: 12px;
+    margin-bottom: 0;
+}
+
+.password-strength-bar {
+    height: 4px;
+    background: #f5f5f7;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.password-strength-fill {
+    height: 100%;
+    width: 0%;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+    background: #d2d2d7; /* 默认颜色 */
+}
+
+.password-strength-fill.weak {
+    width: 33% !important;
+    background: #ff3b30 !important;
+}
+
+.password-strength-fill.medium {
+    width: 66% !important;
+    background: #ff9500 !important;
+}
+
+.password-strength-fill.strong {
+    width: 100% !important;
+    background: #30d158 !important;
+}
+
+.password-strength-text {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    min-height: 16px; /* 防止高度跳动 */
+}
+
+.password-strength-text.weak {
+    color: #ff3b30 !important;
+}
+
+.password-strength-text.medium {
+    color: #ff9500 !important;
+}
+
+.password-strength-text.strong {
+    color: #30d158 !important;
+}
+
+/* ========== 密码要求列表 ========== */
+.password-requirements {
+    background: #f5f5f7;
+    padding: 16px;
+    border-radius: 12px;
+    margin-top: 12px;
+    margin-bottom: 0;
+}
+
+.password-requirements h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin: 0 0 12px 0;
+}
+
+.password-requirements ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.password-requirements li {
+    font-size: 12px;
+    color: #6e6e73;
+    padding: 6px 0;
+    padding-left: 24px;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.password-requirements li::before {
+    content: "○";
+    position: absolute;
+    left: 0;
+    color: #d2d2d7;
+    font-size: 16px;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.password-requirements li.valid {
+    color: #30d158 !important;
+}
+
+.password-requirements li.valid::before {
+    content: "✓";
+    color: #30d158 !important;
+    font-weight: bold;
+}
+
+.password-requirements li.invalid {
+    color: #ff3b30 !important;
+}
+
+.password-requirements li.invalid::before {
+    content: "✗";
+    color: #ff3b30 !important;
+}
+
+/* 实时错误提示 */
+.error-msg.realtime {
+    display: block;
+    color: #ff3b30;
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+/* ========== 响应式调整 ========== */
+@media (max-width: 480px) {
+    .password-requirements {
+        padding: 12px;
+    }
+    
+    .password-requirements li {
+        font-size: 11px;
+        padding: 4px 0;
+        padding-left: 20px;
+    }
+    
+    .toggle-password {
+        right: 8px;
+        top: 10px;
+        font-size: 16px;
+    }
+}
