@@ -13,7 +13,7 @@ if (isset($_SESSION['user_id'])) {
         header("Location: views/member/home.php");
     }
 } else {
-    // [修改] 未登录用户现在也直接去首页，而不是强制登录
+    // [修改] 未登录用户现在也直接去首页，而不是强制登录hhjhjhjhjhjhk
     header("Location: views/member/home.php");
 }
 exit();
