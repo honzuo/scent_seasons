@@ -34,17 +34,53 @@ $extra_css = "shop.css";
 require $path . 'includes/header.php';
 ?>
 
+<!-- 取消成功消息 -->
+<?php if (isset($_GET['msg']) && $_GET['msg'] == 'cancelled'): ?>
+    <div style="text-align: center; margin: 30px auto; padding: 40px; background: #fff; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 600px; border-left: 4px solid #ff3b30;">
+        <div style="font-size: 64px; margin-bottom: 20px;">✓</div>
+        <h2 style="color: #ff3b30; margin-bottom: 10px;">Order Cancelled Successfully</h2>
+        <p style="color: #666; margin-bottom: 20px;">Your order has been cancelled. A confirmation email has been sent to you.</p>
+        <p style="font-size: 14px; color: #999;">If payment was made, refund will be processed within 5-7 business days.</p>
+    </div>
+<?php endif; ?>
+
+<!-- 错误消息 -->
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-error" style="margin-bottom: 20px;">
+        <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+    </div>
+<?php endif; ?>
+
 <div class="order-detail-box">
     <div class="order-header">
-        <h2 class="mt-0">Order #<?php echo $order_id; ?></h2>
-        <p><strong>Date:</strong> <?php echo $order['order_date']; ?></p>
+        <div class="flex-between">
+            <div>
+                <h2 class="mt-0">Order #<?php echo $order_id; ?></h2>
+                <p><strong>Date:</strong> <?php echo $order['order_date']; ?></p>
+            </div>
+            
+            <!-- 只有 Pending 状态的订单才显示取消按钮 -->
+            <?php if ($status == 'pending'): ?>
+                <div>
+                    <form action="../../controllers/order_controller.php" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order?');" style="display: inline;">
+                        <input type="hidden" name="action" value="cancel">
+                        <input type="hidden" name="order_id" value="<?php echo $order_id; ?>">
+                        <button type="submit" class="btn-red" style="padding: 10px 24px;">
+                            ✗ Cancel Order
+                        </button>
+                    </form>
+                </div>
+            <?php endif; ?>
+        </div>
+        
         <p><strong>Shipping Address:</strong> <?php echo nl2br(htmlspecialchars($order['address'])); ?></p>
         <p>
             <strong>Status:</strong>
             <?php
-            if ($status == 'completed') echo "<span class='text-green-bold'>Completed</span>";
-            elseif ($status == 'pending') echo "<span class='text-orange-bold'>Pending</span>";
-            else echo "<span class='text-red-bold'>" . ucfirst($status) . "</span>";
+            if ($status == 'completed') echo "<span class='text-green-bold'>✓ Completed</span>";
+            elseif ($status == 'pending') echo "<span class='text-orange-bold'>⏳ Pending</span>";
+            elseif ($status == 'cancelled') echo "<span class='text-red-bold'>✗ Cancelled</span>";
+            else echo "<span class='text-dark-bold'>" . ucfirst($status) . "</span>";
             ?>
         </p>
     </div>
@@ -87,7 +123,12 @@ require $path . 'includes/header.php';
     </table>
 
     <div class="text-total">
-        Total Paid: $<?php echo $order['total_amount']; ?>
+        Total: $<?php echo $order['total_amount']; ?>
+        <?php if ($status == 'cancelled'): ?>
+            <span style="color: #ff3b30; font-size: 16px; display: block; margin-top: 8px;">
+                (Order Cancelled)
+            </span>
+        <?php endif; ?>
     </div>
 
     <div class="mt-20">
