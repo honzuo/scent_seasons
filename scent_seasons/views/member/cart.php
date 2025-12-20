@@ -126,7 +126,8 @@ require $path . 'includes/header.php';
 
     <script>
         $(document).ready(function () {
-            // --- 1. 金额计算逻辑 ---
+
+            // 1. 计算总价函数
             function calculateTotal() {
                 let total = 0;
                 $('.item-checkbox:checked').each(function () {
@@ -146,23 +147,26 @@ require $path . 'includes/header.php';
                 calculateTotal();
             });
 
-            // --- 2. 地址切换逻辑 ---
-            // 监听地址单选框的变化
-            $('.addr-radio').change(function () {
+            // 监听地址单选框切换 (如果你已经按照之前的建议添加了 radio)
+            $(document).on('change', '.addr-radio', function () {
                 if ($(this).val() === 'new') {
-                    // 如果选择“使用新地址”，显示输入框并清空内容（可选）
                     $('#new-address-input').slideDown();
                 } else {
-                    // 如果选择已保存地址，隐藏输入框
                     $('#new-address-input').slideUp();
                 }
             });
 
-            // --- 3. PayPal 支付集成 ---
+            // 2. 初始化 PayPal 按钮
             paypal.Buttons({
-                // 初始化：金额 > 0 时启用按钮
                 onInit: function (data, actions) {
-                    actions.disable();
+                    // 初始检查：如果购物车已有选中的商品，直接启用
+                    if (calculateTotal() > 0) {
+                        actions.enable();
+                    } else {
+                        actions.disable();
+                    }
+
+                    // 监听勾选框实时切换按钮状态
                     $('.item-checkbox, #select-all').change(function () {
                         if (calculateTotal() > 0) {
                             actions.enable();
@@ -172,36 +176,32 @@ require $path . 'includes/header.php';
                     });
                 },
 
-                // 点击 PayPal 按钮时的验证逻辑
                 onClick: function (data, actions) {
-                    let selectedAddress = '';
+                    let address = '';
 
-                    // 检查是否有选中的地址单选框
-                    const activeRadio = $('.addr-radio:checked');
+                    // 逻辑：优先判断是否有选中的保存地址
+                    const savedAddr = $('input[name="address_option"]:checked');
 
-                    if (activeRadio.length > 0) {
-                        if (activeRadio.val() === 'new') {
-                            // 如果选了新地址，则从 textarea 获取
-                            selectedAddress = $('#shipping-address').val().trim();
+                    if (savedAddr.length > 0) {
+                        if (savedAddr.val() === 'new') {
+                            address = $('#shipping-address').val().trim();
                         } else {
-                            // 否则直接获取选中的已保存地址内容
-                            selectedAddress = activeRadio.val().trim();
+                            address = savedAddr.val().trim();
                         }
                     } else {
-                        // 如果页面上没有单选框（即用户没有保存过地址），直接从 textarea 获取
-                        selectedAddress = $('#shipping-address').val().trim();
+                        // 如果没有 radio (旧版本)，直接读 textarea
+                        address = $('#shipping-address').val().trim();
                     }
 
-                    if (selectedAddress.length === 0) {
-                        alert("Please select an existing address or enter a new shipping address.");
-                        return actions.reject(); // 阻止 PayPal 弹窗
+                    if (address.length === 0) {
+                        alert("Please select or enter a shipping address before proceeding.");
+                        return actions.reject();
                     }
 
-                    // 将最终地址存入全局变量或 window 对象，供 onApprove 使用
-                    window.finalShippingAddress = selectedAddress;
+                    // 存入全局变量供 onApprove 使用
+                    window.finalAddress = address;
                 },
 
-                // 创建订单
                 createOrder: function (data, actions) {
                     let amount = calculateTotal().toFixed(2);
                     return actions.order.create({
@@ -211,25 +211,20 @@ require $path . 'includes/header.php';
                     });
                 },
 
-                // 支付成功后的处理
                 onApprove: function (data, actions) {
                     return actions.order.capture().then(function (details) {
-                        console.log('Transaction completed by ' + details.payer.name.given_name);
-
-                        // 收集选中的商品 ID
                         let selectedIds = [];
                         $('.item-checkbox:checked').each(function () {
                             selectedIds.push($(this).val());
                         });
 
-                        // 发送数据给后端 checkout 接口
                         fetch('../../controllers/order_controller.php?action=checkout', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 selected_items: selectedIds,
                                 transaction_id: details.id,
-                                address: window.finalShippingAddress // 传递在 onClick 中确定的地址
+                                address: window.finalAddress // 使用确定的地址
                             })
                         })
                             .then(response => response.json())
@@ -237,19 +232,10 @@ require $path . 'includes/header.php';
                                 if (data.success) {
                                     window.location.href = "../member/orders.php?msg=success";
                                 } else {
-                                    alert("Error: " + data.message);
+                                    alert("Order failed: " + data.message);
                                 }
-                            })
-                            .catch((error) => {
-                                console.error('Error:', error);
-                                alert("System error processing order.");
                             });
                     });
-                },
-
-                onError: function (err) {
-                    console.error('PayPal Error:', err);
-                    alert("Something went wrong with PayPal.");
                 }
             }).render('#paypal-button-container');
         });

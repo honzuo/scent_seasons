@@ -42,6 +42,10 @@ require $path . 'includes/header.php';
                 echo "Password changed successfully!";
             elseif ($_GET['msg'] == 'wishlist_removed')
                 echo "Item removed from wishlist.";
+            elseif ($_GET['msg'] == 'address_added')
+                echo "New address added successfully!";
+            elseif ($_GET['msg'] == 'address_deleted')
+                echo "Address deleted successfully!";
             ?>
         </div>
     <?php endif; ?>
