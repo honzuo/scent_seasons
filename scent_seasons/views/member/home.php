@@ -4,13 +4,11 @@ require '../../config/database.php';
 require '../../includes/functions.php';
 
 // Get popular products based on total quantity sold
-// First check if there are any order_items, if not, just show random products
 $check_orders_sql = "SELECT COUNT(*) as count FROM order_items";
 $stmt = $pdo->query($check_orders_sql);
 $has_orders = $stmt->fetch()['count'] > 0;
 
 if ($has_orders) {
-    // If there are orders, get popular items based on sales
     $popular_sql = "SELECT p.product_id, p.name, p.price, p.image_path, p.description, p.category_id, p.stock, 
                             COALESCE(SUM(oi.quantity), 0) as total_sold 
                      FROM products p 
@@ -29,21 +27,18 @@ if ($has_orders) {
     $hot_products = [];
 }
 
-// Fallback: If no popular products found, show random products
 if (empty($hot_products)) {
     $fallback_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
     $stmt = $pdo->query($fallback_sql);
     $hot_products = $stmt->fetchAll();
 }
 
-// --- 第二部分：获取推荐商品 (已修改，增加登录检查) ---
+// Get recommended products
 $recommended_products = [];
 
-// [关键修改] 先检查用户是否已登录
 if (is_logged_in()) {
     $user_id = $_SESSION['user_id'];
 
-    // 检查是否有购买记录
     $check_orders_sql = "SELECT COUNT(*) as order_count FROM orders WHERE user_id = ?";
     $stmt = $pdo->prepare($check_orders_sql);
     $stmt->execute([$user_id]);
@@ -51,7 +46,6 @@ if (is_logged_in()) {
     $has_order_history = $order_check['order_count'] > 0;
 
     if ($has_order_history) {
-        // 有购买记录：根据购买过的分类推荐
         $recommended_sql = "SELECT DISTINCT p.* FROM products p 
                             WHERE p.is_deleted = 0 
                             AND p.category_id IN (
@@ -80,13 +74,11 @@ if (is_logged_in()) {
             $recommended_products = $stmt->fetchAll();
         }
     } else {
-        // 登录了但没买过东西：随机推荐
         $random_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
         $stmt = $pdo->query($random_sql);
         $recommended_products = $stmt->fetchAll();
     }
 } else {
-    // [关键修改] 未登录用户：直接随机推荐，不要去查 user_id
     $random_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
     $stmt = $pdo->query($random_sql);
     $recommended_products = $stmt->fetchAll();
@@ -94,17 +86,45 @@ if (is_logged_in()) {
 
 $page_title = "Welcome - Scent Seasons";
 $path = "../../";
-$extra_css = "shop.css";
+$extra_css = "shop.css"; // This will be loaded first by header.php
 
 require $path . 'includes/header.php';
 ?>
+
+<!-- Load home.css AFTER shop.css to override styles -->
+<link rel="stylesheet" href="<?php echo $path; ?>css/home.css">
 <link rel="stylesheet" href="<?php echo $path; ?>css/memberchat.css">
 
-<div class="hero-banner">
-    <div class="hero-content">
-        <h1>Discover Your Signature Scent</h1>
-        <p>Experience the essence of luxury with our exclusive collection.</p>
-        <a href="shop.php" class="btn-hero">Shop Now</a>
+<div class="hero-section">
+    <div class="hero-slideshow">
+        <!-- Slide 1 -->
+        <div class="hero-slide active">
+            <img src="../../images/products/jennie.png" alt="Slide 1" class="hero-image">
+        </div>
+        <!-- Slide 2 -->
+        <div class="hero-slide">
+            <img src="../../images/products/chanel.jpg" alt="Slide 2" class="hero-image">
+        </div>
+        <!-- Slide 3 -->
+        <div class="hero-slide">
+            <img src="../../images/products/chanel2.png" alt="Slide 3" class="hero-image">
+        </div>
+    </div>
+
+    <!-- Shop Now button only -->
+    <div class="hero-overlay-content">
+        <a href="shop.php" class="btn-hero-shopnow">Shop Now</a>
+    </div>
+
+    <!-- Navigation arrows -->
+    <button class="hero-arrow hero-arrow-left" aria-label="Previous slide">‹</button>
+    <button class="hero-arrow hero-arrow-right" aria-label="Next slide">›</button>
+
+    <!-- Navigation dots -->
+    <div class="hero-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
     </div>
 </div>
 
@@ -146,10 +166,8 @@ require $path . 'includes/header.php';
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
-
 </div>
 
-<!-- Row 2: Recommended for You (Based on Purchase Habits) -->
 <div class="container" style="margin-top: 50px;">
     <h2 style="text-align:center; margin-bottom: 30px;">Recommended for You</h2>
 
@@ -181,6 +199,9 @@ require $path . 'includes/header.php';
 </div>
 
 <?php require $path . 'includes/footer.php'; ?>
+
+<!-- Load JavaScript for hero slider -->
+<script src="<?php echo $path; ?>js/hero_slider.js"></script>
 
 <!-- Floating Chat -->
 <div class="chat-fab" id="chatFab" title="Chat with admin">💬</div>
