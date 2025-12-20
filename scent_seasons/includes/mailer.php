@@ -35,8 +35,8 @@ function send_order_receipt($to_email, $to_name, $order_data) {
         $mail->SMTPAuth   = true;
         $mail->Username   = 'gansq-wm23@student.tarc.edu.my';
         $mail->Password   = 'kmziylissuqjtcwr';
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        $mail->Port       = 465;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = 587;
         $mail->CharSet    = 'UTF-8';
 
         error_log("✓ SMTP configuration set");
@@ -97,8 +97,8 @@ function send_otp_email($to_email, $to_name, $otp_code) {
         $mail->SMTPAuth   = true;
         $mail->Username   = 'gansq-wm23@student.tarc.edu.my';
         $mail->Password   = 'kmziylissuqjtcwr';
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        $mail->Port       = 465;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = 587;
         $mail->CharSet    = 'UTF-8';
 
         // 发件人
