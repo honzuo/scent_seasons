@@ -83,9 +83,11 @@ require $path . 'includes/header.php';
                     <td>
                         <?php
                         $s = strtolower($o['status']);
-                        if ($s == 'completed') echo '<span class="text-green-bold">Completed</span>';
-                        elseif ($s == 'cancelled') echo '<span class="text-red-bold">Cancelled</span>';
-                        else echo '<span class="text-orange-bold">Pending</span>';
+                        if ($s == 'completed') echo '<span class="text-green-bold">✅ Completed</span>';
+                        elseif ($s == 'cancelled') echo '<span class="text-red-bold">❌ Cancelled</span>';
+                        elseif ($s == 'returned') echo '<span class="text-orange-bold">🔄 Return Requested</span>';
+                        elseif ($s == 'refunded') echo '<span class="text-green-bold">💰 Refunded</span>';
+                        else echo '<span class="text-orange-bold">⏳ Pending</span>';
                         ?>
                     </td>
                     <td>
@@ -128,11 +130,17 @@ require $path . 'includes/header.php';
 
                 <div class="status-form">
                     <select name="status" id="form_status" class="status-select">
-                        <option value="pending">Pending</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="pending">⏳ Pending</option>
+                        <option value="completed">✅ Completed</option>
+                        <option value="cancelled">❌ Cancelled</option>
+                        <option value="returned">🔄 Returned (Refund Pending)</option>
+                        <option value="refunded">💰 Refunded (Completed)</option>
                     </select>
                     <button type="submit" class="btn-green">Update</button>
+                </div>
+                
+                <div id="status-help-text" style="margin-top: 10px; padding: 10px; background: #f0f9ff; border-radius: 5px; font-size: 13px; display: none; color: #555;">
+                    <!-- Dynamic help text will appear here -->
                 </div>
             </form>
         </div>
@@ -149,6 +157,9 @@ require $path . 'includes/header.php';
         document.getElementById('modalTitle').innerText = "Manage Order #" + orderId;
         document.getElementById('form_order_id').value = orderId;
         document.getElementById('form_status').value = currentStatus.toLowerCase();
+
+        // Trigger help text update
+        updateStatusHelpText(currentStatus.toLowerCase());
 
         // 2. 处理地址显示 (防止 XSS 并支持换行)
         const contentDiv = document.getElementById('orderItemsContent');
@@ -199,6 +210,30 @@ require $path . 'includes/header.php';
 
         document.getElementById('manageOrderModal').style.display = 'flex';
     }
+
+    function updateStatusHelpText(status) {
+        const helpText = document.getElementById('status-help-text');
+        
+        const messages = {
+            'pending': '⏳ Order is awaiting processing or payment confirmation.',
+            'completed': '✅ Order has been fulfilled and delivered to customer.',
+            'cancelled': '❌ Order was cancelled (stock has been restored).',
+            'returned': '🔄 Customer requested return. Items restocked. Awaiting refund approval.',
+            'refunded': '💰 Return approved and refund processed. Case closed.'
+        };
+        
+        if (messages[status]) {
+            helpText.textContent = messages[status];
+            helpText.style.display = 'block';
+        } else {
+            helpText.style.display = 'none';
+        }
+    }
+
+    // Add event listener for status change
+    document.getElementById('form_status').addEventListener('change', function() {
+        updateStatusHelpText(this.value);
+    });
 
     function closeOrderModal() {
         document.getElementById('manageOrderModal').style.display = 'none';

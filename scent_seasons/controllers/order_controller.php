@@ -201,20 +201,22 @@ if ($action == 'cancel') {
     $order = $stmt->fetch();
 
     if (!$order) {
-        header("Location: ../views/member/orders.php?msg=order_not_found");
+        $_SESSION['error'] = "Order not found.";
+        header("Location: ../views/member/order_detail.php?id=$order_id");
         exit();
     }
 
     if ($order['status'] != 'pending') {
-        header("Location: ../views/member/orders.php?msg=cannot_cancel");
+        $_SESSION['error'] = "Only pending orders can be cancelled.";
+        header("Location: ../views/member/order_detail.php?id=$order_id");
         exit();
     }
 
     try {
         $pdo->beginTransaction();
 
-        // 获取订单商品详情（JOIN products 表获取商品名称）
-        $sql_items = "SELECT oi.quantity, oi.price_each, oi.product_id, p.name as product_name 
+        // 获取订单商品详情
+        $sql_items = "SELECT oi.quantity, oi.product_id, p.name as product_name 
                       FROM order_items oi 
                       JOIN products p ON oi.product_id = p.product_id 
                       WHERE oi.order_id = ?";
@@ -227,7 +229,8 @@ if ($action == 'cancel') {
         $stmt_restore = $pdo->prepare($sql_restore);
 
         foreach ($items as $item) {
-            $stmt_restore->execute([$item['quantity'], $item['product_id']]);
+            $result = $stmt_restore->execute([$item['quantity'], $item['product_id']]);
+            error_log("✓ Restored stock for product ID {$item['product_id']}: +{$item['quantity']}");
         }
 
         // 更新订单状态
@@ -239,19 +242,124 @@ if ($action == 'cancel') {
         // 记录日志
         error_log("✅ Order #$order_id cancelled successfully by user #$user_id. Reason: $final_reason");
 
-        header("Location: ../views/member/orders.php?msg=cancelled");
+        header("Location: ../views/member/order_detail.php?id=$order_id&msg=cancelled");
         exit();
 
     } catch (Exception $e) {
         $pdo->rollBack();
-        error_log("Cancel Error: " . $e->getMessage());
-        header("Location: ../views/member/orders.php?msg=error");
+        error_log("❌ Cancel Error: " . $e->getMessage());
+        error_log("Error details: " . print_r($e, true));
+        $_SESSION['error'] = "Failed to cancel order. Please try again.";
+        header("Location: ../views/member/order_detail.php?id=$order_id");
         exit();
     }
 }
 
 // ============================================
-// 4. 默认重定向（防止直接访问）
+// 4. [Member] 退货订单 (Return Order)
+// ============================================
+if ($action == 'return') {
+    error_log("========================================");
+    error_log("🔄 RETURN ACTION TRIGGERED");
+    error_log("POST data: " . print_r($_POST, true));
+    error_log("========================================");
+    
+    $user_id = $_SESSION['user_id'];
+    $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : 0;
+    
+    error_log("User ID: $user_id, Order ID: $order_id");
+    
+    // 获取退货原因
+    $return_reason_select = isset($_POST['return_reason']) ? clean_input($_POST['return_reason']) : '';
+    $custom_return_reason = isset($_POST['custom_return_reason']) ? clean_input($_POST['custom_return_reason']) : '';
+    $return_notes = isset($_POST['return_notes']) ? clean_input($_POST['return_notes']) : '';
+    
+    $final_return_reason = ($return_reason_select === 'Other' && !empty($custom_return_reason)) 
+                          ? $custom_return_reason 
+                          : $return_reason_select;
+
+    // 验证订单
+    $stmt = $pdo->prepare("SELECT * FROM orders WHERE order_id = ? AND user_id = ?");
+    $stmt->execute([$order_id, $user_id]);
+    $order = $stmt->fetch();
+
+    if (!$order) {
+        $_SESSION['error'] = "Order not found.";
+        error_log("❌ Order not found: Order ID $order_id, User ID $user_id");
+        header("Location: ../views/member/order_detail.php?id=$order_id");
+        exit();
+    }
+
+    // 只有已完成的订单才能退货
+    if ($order['status'] != 'completed') {
+        $_SESSION['error'] = "Only completed orders can be returned. Current status: " . $order['status'];
+        error_log("❌ Invalid status for return: Order #$order_id status is '{$order['status']}'");
+        header("Location: ../views/member/order_detail.php?id=$order_id");
+        exit();
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        // 获取订单商品详情
+        $sql_items = "SELECT oi.quantity, oi.product_id, p.name as product_name 
+                      FROM order_items oi 
+                      JOIN products p ON oi.product_id = p.product_id 
+                      WHERE oi.order_id = ?";
+        $stmt_items = $pdo->prepare($sql_items);
+        $stmt_items->execute([$order_id]);
+        $items = $stmt_items->fetchAll();
+
+        if (empty($items)) {
+            throw new Exception("No items found for order #$order_id");
+        }
+
+        error_log("📦 Processing return for " . count($items) . " items");
+
+        // 恢复库存（退货时将商品退回库存）
+        $sql_restore = "UPDATE products SET stock = stock + ? WHERE product_id = ?";
+        $stmt_restore = $pdo->prepare($sql_restore);
+
+        foreach ($items as $item) {
+            $result = $stmt_restore->execute([$item['quantity'], $item['product_id']]);
+            error_log("✓ Restored stock for product ID {$item['product_id']} ({$item['product_name']}): +{$item['quantity']}");
+        }
+
+        // 更新订单状态为 'returned'
+        $stmt_update = $pdo->prepare("UPDATE orders SET status = 'returned' WHERE order_id = ?");
+        $result = $stmt_update->execute([$order_id]);
+
+        if (!$result) {
+            throw new Exception("Failed to update order status");
+        }
+
+        $pdo->commit();
+
+        // 记录日志
+        $log_message = "Order #$order_id returned by user #$user_id. Reason: $final_return_reason";
+        if (!empty($return_notes)) {
+            $log_message .= " | Notes: $return_notes";
+        }
+        error_log("✅ " . $log_message);
+
+        // 可以在这里发送退货确认邮件给用户和管理员
+        // send_return_confirmation_email($user_id, $order_id, $final_return_reason);
+
+        header("Location: ../views/member/order_detail.php?id=$order_id&msg=returned");
+        exit();
+
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        error_log("❌ Return Error: " . $e->getMessage());
+        error_log("Error details: " . print_r($e, true));
+        $_SESSION['error'] = "Failed to process return: " . $e->getMessage();
+        header("Location: ../views/member/order_detail.php?id=$order_id");
+        exit();
+    }
+}
+
+// ============================================
+// 5. 默认重定向（防止直接访问)
 // ============================================
 if (isset($_SERVER["CONTENT_TYPE"]) && trim($_SERVER["CONTENT_TYPE"]) === "application/json") {
     echo json_encode(['success' => false, 'message' => 'Unknown action']);
