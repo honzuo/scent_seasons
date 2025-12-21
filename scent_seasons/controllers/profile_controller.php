@@ -16,7 +16,7 @@ $action = isset($_POST['action']) ? $_POST['action'] : '';
 if ($action == 'update_info') {
     $full_name = clean_input($_POST['full_name']);
     $email = clean_input($_POST['email']);
-    
+
     // 简单的验证
     if (empty($full_name) || empty($email)) {
         header("Location: ../views/member/profile.php?error=empty_fields");
@@ -93,6 +93,23 @@ if ($action == 'change_password') {
     $stmt->execute([$new_hash, $user_id]);
 
     header("Location: ../views/member/profile.php?msg=password_changed");
+    exit();
+}
+
+if ($action == 'add_address') {
+    $user_id = $_SESSION['user_id'];
+    $address = clean_input($_POST['address']);
+    $stmt = $pdo->prepare("INSERT INTO user_addresses (user_id, address_text) VALUES (?, ?)");
+    $stmt->execute([$user_id, $address]);
+    header("Location: ../views/member/profile.php?msg=address_added");
+    exit();
+}
+
+if ($action == 'delete_address') {
+    $address_id = intval($_POST['address_id']);
+    $stmt = $pdo->prepare("DELETE FROM user_addresses WHERE address_id = ? AND user_id = ?");
+    $stmt->execute([$address_id, $_SESSION['user_id']]);
+    header("Location: ../views/member/profile.php?msg=address_deleted");
     exit();
 }
 ?>
