@@ -13,23 +13,24 @@ use PHPMailer\PHPMailer\Exception;
 /**
  * 发送订单收据邮件 - 增强调试版
  */
-function send_order_receipt($to_email, $to_name, $order_data) {
+function send_order_receipt($to_email, $to_name, $order_data)
+{
     error_log("========================================");
     error_log("📧 STARTING EMAIL SEND PROCESS");
     error_log("To: $to_email");
     error_log("Name: $to_name");
     error_log("Order ID: " . $order_data['order_id']);
     error_log("========================================");
-    
+
     $mail = new PHPMailer(true);
 
     try {
         // 服务器设置
         $mail->SMTPDebug = 2; // 开启详细调试 (0=关闭, 1=客户端, 2=客户端+服务器)
-        $mail->Debugoutput = function($str, $level) {
+        $mail->Debugoutput = function ($str, $level) {
             error_log("PHPMailer DEBUG [$level]: $str");
         };
-        
+
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
@@ -44,7 +45,7 @@ function send_order_receipt($to_email, $to_name, $order_data) {
         // 发件人
         $mail->setFrom('gansq-wm23@student.tarc.edu.my', 'Scent Seasons');
         error_log("✓ From address set");
-        
+
         // 收件人
         $mail->addAddress($to_email, $to_name ?: 'Valued Customer');
         error_log("✓ Recipient added: $to_email");
@@ -53,7 +54,7 @@ function send_order_receipt($to_email, $to_name, $order_data) {
         $mail->isHTML(true);
         $mail->Subject = 'Payment Receipt - Order #' . $order_data['order_id'] . ' - Scent Seasons';
         error_log("✓ Subject set: " . $mail->Subject);
-        
+
         $mail->Body    = get_receipt_email_template($to_name, $order_data);
         $mail->AltBody = get_receipt_plain_text($to_name, $order_data);
         error_log("✓ Email body generated (HTML: " . strlen($mail->Body) . " chars)");
@@ -61,7 +62,7 @@ function send_order_receipt($to_email, $to_name, $order_data) {
         // 尝试发送
         error_log("⏳ Attempting to send email...");
         $send_result = $mail->send();
-        
+
         if ($send_result) {
             error_log("✅ SUCCESS: Email sent to $to_email for Order #{$order_data['order_id']}");
             error_log("========================================");
@@ -71,7 +72,6 @@ function send_order_receipt($to_email, $to_name, $order_data) {
             error_log("========================================");
             return false;
         }
-        
     } catch (Exception $e) {
         error_log("❌ EXCEPTION in send_order_receipt()");
         error_log("Error Message: " . $e->getMessage());
@@ -86,7 +86,8 @@ function send_order_receipt($to_email, $to_name, $order_data) {
 /**
  * 发送 OTP 邮件
  */
-function send_otp_email($to_email, $to_name, $otp_code) {
+function send_otp_email($to_email, $to_name, $otp_code)
+{
     $mail = new PHPMailer(true);
 
     try {
@@ -103,7 +104,7 @@ function send_otp_email($to_email, $to_name, $otp_code) {
 
         // 发件人
         $mail->setFrom('gansq-wm23@student.tarc.edu.my', 'Scent Seasons');
-        
+
         // 收件人
         $mail->addAddress($to_email, $to_name ?: 'User');
 
@@ -125,11 +126,12 @@ function send_otp_email($to_email, $to_name, $otp_code) {
 /**
  * OTP 邮件模板
  */
-function get_otp_email_template($name, $otp) {
+function get_otp_email_template($name, $otp)
+{
     if (empty($name)) {
         $name = 'User';
     }
-    
+
     return "
     <!DOCTYPE html>
     <html>
@@ -240,14 +242,15 @@ function get_otp_email_template($name, $otp) {
 /**
  * 生成收据邮件 HTML 模板
  */
-function get_receipt_email_template($name, $order) {
+function get_receipt_email_template($name, $order)
+{
     if (empty($name)) {
         $name = 'Valued Customer';
     }
-    
+
     // 格式化日期
     $order_date = date('F d, Y', strtotime($order['order_date']));
-    
+
     // 生成商品列表 HTML
     $items_html = '';
     foreach ($order['items'] as $item) {
@@ -268,12 +271,12 @@ function get_receipt_email_template($name, $order) {
             </td>
         </tr>";
     }
-    
+
     // 支付方式显示
-    $payment_method = !empty($order['transaction_id']) ? 
-        "PayPal (Transaction: " . htmlspecialchars($order['transaction_id']) . ")" : 
+    $payment_method = !empty($order['transaction_id']) ?
+        "PayPal (Transaction: " . htmlspecialchars($order['transaction_id']) . ")" :
         "Pending Payment";
-    
+
     return "
     <!DOCTYPE html>
     <html>
@@ -498,36 +501,36 @@ function get_receipt_email_template($name, $order) {
 /**
  * 生成纯文本版本收据
  */
-function get_receipt_plain_text($name, $order) {
+function get_receipt_plain_text($name, $order)
+{
     $text = "SCENT SEASONS - PAYMENT RECEIPT\n";
     $text .= "================================\n\n";
     $text .= "Dear " . ($name ?: 'Valued Customer') . ",\n\n";
     $text .= "Thank you for your purchase! Your payment has been successfully processed.\n\n";
-    
+
     $text .= "ORDER INFORMATION:\n";
     $text .= "------------------\n";
     $text .= "Order Number: #" . $order['order_id'] . "\n";
     $text .= "Order Date: " . date('F d, Y', strtotime($order['order_date'])) . "\n";
     $text .= "Status: " . strtoupper($order['status']) . "\n";
-    
+
     if (!empty($order['transaction_id'])) {
         $text .= "Transaction ID: " . $order['transaction_id'] . "\n";
     }
-    
+
     $text .= "\nORDER DETAILS:\n";
     $text .= "--------------\n";
-    
+
     foreach ($order['items'] as $item) {
         $subtotal = $item['price_each'] * $item['quantity'];
         $text .= $item['product_name'] . " x " . $item['quantity'] . " - RM " . number_format($subtotal, 2) . "\n";
     }
-    
+
     $text .= "\nTOTAL AMOUNT PAID: RM " . number_format($order['total_amount'], 2) . "\n\n";
-    
+
     $text .= "Your order is being processed and you'll receive shipping updates via email.\n\n";
     $text .= "Best regards,\n";
     $text .= "The Scent Seasons Team\n";
-    
+
     return $text;
 }
-?>
