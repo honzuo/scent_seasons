@@ -149,7 +149,6 @@ if (!isset($homeVideo)) {
 
 <?php if ($homeVideo): ?>
     <section class="home-video" style="margin: 40px auto; max-width: 800px; padding: 0 20px;">
-        <h2 style="text-align: center; margin-bottom: 20px;">Latest Video</h2>
         <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
             <iframe 
                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
