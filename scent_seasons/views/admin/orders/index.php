@@ -133,7 +133,6 @@ require $path . 'includes/header.php';
                         <option value="pending">⏳ Pending</option>
                         <option value="completed">✅ Completed</option>
                         <option value="cancelled">❌ Cancelled</option>
-                        <option value="returned">🔄 Returned (Refund Pending)</option>
                         <option value="refunded">💰 Refunded (Completed)</option>
                     </select>
                     <button type="submit" class="btn-green">Update</button>
