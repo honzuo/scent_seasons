@@ -10,7 +10,7 @@ $extra_css = "admin.css"; // 引用 admin.css
 require $path . 'includes/header.php';
 ?>
 
-<h1>Welcome, Admin!</h1>
+<h1>Welcome, <?php echo isset($_SESSION['user_name']) ? htmlspecialchars($_SESSION['user_name']) : 'Admin'; ?></h1>
 <p>Manage your perfume shop from here.</p>
 
 <div class="dashboard-grid">

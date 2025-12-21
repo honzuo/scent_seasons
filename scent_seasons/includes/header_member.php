@@ -47,7 +47,6 @@ if (isset($_SESSION['user_id'])) {
 
             <ul>
                 <!-- Member navigation - regular users only -->
-                <li><a href="<?php echo $path; ?>views/member/home.php">Home</a></li>
                 <li><a href="<?php echo $path; ?>views/member/shop.php">Shop</a></li>
                 <li>
                     <a href="<?php echo $path; ?>views/member/cart.php">
