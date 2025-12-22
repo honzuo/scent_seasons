@@ -27,17 +27,27 @@
     border-bottom: 1px solid #f2f2f2;
     cursor: pointer;
     transition: background 0.2s;
+    position: relative;
 }
 .chat-list-item:hover {
     background: #f5f5f7;
 }
 .chat-list-item.active {
-    background: #e8f3ff;
+    background: #0071e3;
     border-left: 3px solid #0071e3;
+}
+.chat-list-item.active .name {
+    color: #fff;
+}
+.chat-list-item.active .email {
+    color: rgba(255, 255, 255, 0.8);
 }
 .chat-list-item .name {
     font-weight: 600;
     color: #1d1d1f;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 .chat-list-item .email {
     color: #6e6e73;
@@ -120,3 +130,78 @@
     font-size: 13px;
 }
 
+/* ========== 未读消息徽章样式（红点在名字旁边）========== */
+.chat-unread-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ff3b30 0%, #ff2d55 100%);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    padding: 0 5px;
+    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.5);
+    animation: badgePulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+/* 脉动动画效果 */
+@keyframes badgePulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(255, 59, 48, 0.5);
+    }
+    50% {
+        transform: scale(1.15);
+        box-shadow: 0 4px 12px rgba(255, 59, 48, 0.7);
+    }
+}
+
+.chat-unread-badge.large {
+    font-size: 9px;
+    min-width: 20px;
+}
+
+/* 有未读消息的列表项高亮 */
+.chat-list-item.has-unread {
+    background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
+    border-left: 3px solid #ff3b30;
+}
+
+.chat-list-item.has-unread .name {
+    font-weight: 700;
+}
+
+.chat-list-item.has-unread .email {
+    color: #666;
+}
+
+/* 选中后移除未读样式 */
+.chat-list-item.active.has-unread {
+    background: #0071e3;
+    border-left: 3px solid #0071e3;
+}
+
+.chat-list-item.active .name {
+    color: #fff;
+}
+
+.chat-list-item.active .email {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .chat-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .chat-unread-badge {
+        min-width: 16px;
+        height: 16px;
+        font-size: 9px;
+    }
+}

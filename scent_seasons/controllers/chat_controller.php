@@ -20,7 +20,7 @@ if ($action === 'send_member') {
     $message = trim($_POST['message'] ?? '');
     if ($message === '') json_response(['status' => 'error', 'message' => 'Message cannot be empty']);
 
-    $stmt = $pdo->prepare("INSERT INTO messages (sender_id, receiver_id, is_admin, message) VALUES (?, NULL, 0, ?)");
+    $stmt = $pdo->prepare("INSERT INTO messages (sender_id, receiver_id, is_admin, message, admin_read) VALUES (?, NULL, 0, ?, 0)");
     $stmt->execute([$_SESSION['user_id'], $message]);
     json_response(['status' => 'success']);
 }
@@ -38,16 +38,32 @@ if ($action === 'fetch_member') {
     json_response(['status' => 'success', 'messages' => $messages]);
 }
 
-// Admin: list members with conversations
+// Admin: list members with conversations + unread count
 if ($action === 'admin_list_members') {
     require_admin();
-    $sql = "SELECT u.user_id, u.full_name, u.email, MAX(m.created_at) as last_ts
-            FROM messages m
-            JOIN users u ON u.user_id = CASE WHEN m.is_admin = 1 THEN m.receiver_id ELSE m.sender_id END
-            WHERE u.role = 'member'
-            GROUP BY u.user_id, u.full_name, u.email
-            ORDER BY last_ts DESC";
-    $members = $pdo->query($sql)->fetchAll();
+    
+    // 获取所有发过消息的用户
+    $sql = "SELECT DISTINCT m.sender_id as user_id, u.full_name, u.email 
+            FROM messages m 
+            JOIN users u ON m.sender_id = u.user_id 
+            WHERE m.is_admin = 0 
+            ORDER BY (SELECT MAX(created_at) FROM messages WHERE sender_id = m.sender_id) DESC";
+    $stmt = $pdo->query($sql);
+    $members = $stmt->fetchAll();
+    
+    // 为每个用户统计未读消息数（使用 admin_read 字段）
+    foreach ($members as &$member) {
+        $sql_unread = "SELECT COUNT(*) as unread_count 
+                       FROM messages 
+                       WHERE sender_id = ? 
+                       AND is_admin = 0 
+                       AND admin_read = 0";
+        $stmt_unread = $pdo->prepare($sql_unread);
+        $stmt_unread->execute([$member['user_id']]);
+        $unread = $stmt_unread->fetch();
+        $member['unread_count'] = (int)$unread['unread_count'];
+    }
+    
     json_response(['status' => 'success', 'members' => $members]);
 }
 
@@ -77,6 +93,34 @@ if ($action === 'admin_send') {
     $stmt = $pdo->prepare("INSERT INTO messages (sender_id, receiver_id, is_admin, message) VALUES (?, ?, 1, ?)");
     $stmt->execute([$_SESSION['user_id'], $member_id, $message]);
     json_response(['status' => 'success']);
+}
+
+// Admin: mark messages as read
+if ($action === 'mark_read') {
+    require_admin();
+    $member_id = intval($_POST['member_id'] ?? 0);
+    
+    if ($member_id <= 0) {
+        json_response(['status' => 'error', 'message' => 'Invalid member']);
+    }
+    
+    // 将该用户发送给管理员的所有未读消息标记为已读
+    $stmt = $pdo->prepare("
+        UPDATE messages 
+        SET admin_read = 1 
+        WHERE sender_id = ? 
+        AND is_admin = 0 
+        AND admin_read = 0
+    ");
+    
+    $stmt->execute([$member_id]);
+    $marked_count = $stmt->rowCount();
+    
+    json_response([
+        'status' => 'success',
+        'marked_count' => $marked_count,
+        'message' => "Marked {$marked_count} message(s) as read"
+    ]);
 }
 
 // Default
