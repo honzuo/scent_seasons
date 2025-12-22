@@ -10,6 +10,42 @@ $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
+    // ==========================================
+    // [新增] 视频处理逻辑 (由 Step 3 添加)
+    // ==========================================
+    $final_video_db_id = null; // 默认为空
+
+    // 1. 如果管理员输入了新的 YouTube URL
+    if (!empty($_POST['new_video_url'])) {
+        $newUrl = clean_input($_POST['new_video_url']);
+        // 注意：这里调用了 Step 2 在 functions.php 中添加的 getYoutubeId 函数
+        $extractedId = getYoutubeId($newUrl); 
+
+        if ($extractedId) {
+            // 先检查数据库是否已存在该视频ID，避免重复
+            $check = $pdo->prepare("SELECT id FROM youtube_videos WHERE video_id = ?");
+            $check->execute([$extractedId]);
+            $exist = $check->fetch();
+
+            if ($exist) {
+                $final_video_db_id = $exist['id'];
+            } else {
+                // 如果不存在，插入新视频
+                $stmt_vid = $pdo->prepare("INSERT INTO youtube_videos (video_id, url) VALUES (?, ?)");
+                $stmt_vid->execute([$extractedId, $newUrl]);
+                $final_video_db_id = $pdo->lastInsertId();
+            }
+        }
+    } 
+    // 2. 如果没有输入新URL，但从下拉菜单选择了现有视频
+    elseif (!empty($_POST['existing_video_id'])) {
+        $final_video_db_id = intval($_POST['existing_video_id']);
+    }
+    // ==========================================
+    // [结束] 视频处理逻辑
+    // ==========================================
+
+
     // --- 1. 添加产品 (CREATE) ---
     if ($action == 'add') {
         $name = clean_input($_POST['name']);
@@ -29,9 +65,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
-        $sql = "INSERT INTO products (name, category_id, price, stock, description, image_path) VALUES (?, ?, ?, ?, ?, ?)";
+        // [修改] SQL 语句加入 youtube_video_id
+        $sql = "INSERT INTO products (name, category_id, price, stock, description, image_path, youtube_video_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$name, $category_id, $price, $stock, $description, $image_path]);
+        // [修改] 参数数组加入 $final_video_db_id
+        $stmt->execute([$name, $category_id, $price, $stock, $description, $image_path, $final_video_db_id]);
 
         log_activity($pdo, "Add Product", "Name: $name");
         header("Location: ../views/admin/products/index.php?msg=added");
@@ -123,9 +161,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
-        $sql = "UPDATE products SET name=?, category_id=?, price=?, stock=?, description=?, image_path=? WHERE product_id=?";
+        // [修改] SQL 语句加入 youtube_video_id
+        $sql = "UPDATE products SET name=?, category_id=?, price=?, stock=?, description=?, image_path=?, youtube_video_id=? WHERE product_id=?";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$name, $category_id, $price, $stock, $description, $final_image, $id]);
+        // [修改] 参数数组加入 $final_video_db_id
+        $stmt->execute([$name, $category_id, $price, $stock, $description, $final_image, $final_video_db_id, $id]);
 
         log_activity($pdo, "Update Product", "Product ID: $id, Name: $name");
         header("Location: ../views/admin/products/index.php?msg=updated");

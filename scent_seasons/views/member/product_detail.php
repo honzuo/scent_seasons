@@ -61,7 +61,6 @@ $extra_css = "shop.css";
 require $path . 'includes/header.php';
 ?>
 
-<!-- Wishlist 消息提示 -->
 <?php if (isset($_GET['wishlist'])): ?>
     <div class="alert <?php echo ($_GET['wishlist'] == 'added') ? 'alert-success' : 'alert-info'; ?>" style="margin-bottom: 20px;">
         <?php
@@ -91,7 +90,6 @@ require $path . 'includes/header.php';
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
 
-        <!-- 库存充足：显示加入购物车 + 收藏按钮 -->
         <?php if ($product['stock'] > 0): ?>
             <form action="../../controllers/cart_controller.php" method="POST" style="display: inline-block;">
                 <input type="hidden" name="action" value="add">
@@ -103,7 +101,6 @@ require $path . 'includes/header.php';
                 <button type="submit" class="btn-green">Add to Cart</button>
             </form>
 
-            <!-- 收藏按钮（仅登录用户可见） -->
             <?php if (is_logged_in()): ?>
                 <form action="../../controllers/wishlist_controller.php" method="POST" style="display: inline-block; margin-left: 12px;">
                     <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">
@@ -123,8 +120,7 @@ require $path . 'includes/header.php';
                 </form>
             <?php endif; ?>
 
-            <!-- 缺货：只显示收藏按钮 -->
-        <?php else: ?>
+            <?php else: ?>
             <button disabled class="btn-disabled">Out of Stock</button>
 
             <?php if (is_logged_in()): ?>
@@ -152,7 +148,32 @@ require $path . 'includes/header.php';
     </div>
 </div>
 
-<!-- 评价部分保持不变 -->
+<?php 
+// 视频自动播放 + 静音逻辑修改
+if (!empty($product['youtube_video_id'])) {
+    $stmt_v = $pdo->prepare("SELECT video_id FROM youtube_videos WHERE id = ?");
+    $stmt_v->execute([$product['youtube_video_id']]);
+    $video = $stmt_v->fetch();
+
+    if ($video) {
+?>
+    <div class="product-video-section" style="margin-top: 30px;">
+        <h3>Product Video</h3>
+        <div class="video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000;">
+            <iframe 
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                src="https://www.youtube.com/embed/<?php echo htmlspecialchars($video['video_id']); ?>?autoplay=1&mute=1&controls=1" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+<?php 
+    }
+} 
+?>
+
 <div class="reviews-container">
     <div class="review-summary">
         <div class="big-rating"><?php echo $avg_rating; ?></div>

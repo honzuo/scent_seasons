@@ -10,13 +10,13 @@ $has_orders = $stmt->fetch()['count'] > 0;
 
 if ($has_orders) {
     $popular_sql = "SELECT p.product_id, p.name, p.price, p.image_path, p.description, p.category_id, p.stock, 
-                            COALESCE(SUM(oi.quantity), 0) as total_sold 
-                     FROM products p 
-                     LEFT JOIN order_items oi ON p.product_id = oi.product_id 
-                     WHERE p.is_deleted = 0 
-                     GROUP BY p.product_id, p.name, p.price, p.image_path, p.description, p.category_id, p.stock
-                     ORDER BY total_sold DESC, p.product_id ASC 
-                     LIMIT 4";
+                           COALESCE(SUM(oi.quantity), 0) as total_sold 
+                    FROM products p 
+                    LEFT JOIN order_items oi ON p.product_id = oi.product_id 
+                    WHERE p.is_deleted = 0 
+                    GROUP BY p.product_id, p.name, p.price, p.image_path, p.description, p.category_id, p.stock
+                    ORDER BY total_sold DESC, p.product_id ASC 
+                    LIMIT 4";
     try {
         $stmt = $pdo->query($popular_sql);
         $hot_products = $stmt->fetchAll();
@@ -91,36 +91,29 @@ $extra_css = "shop.css"; // This will be loaded first by header.php
 require $path . 'includes/header.php';
 ?>
 
-<!-- Load home.css AFTER shop.css to override styles -->
 <link rel="stylesheet" href="<?php echo $path; ?>css/home.css">
 <link rel="stylesheet" href="<?php echo $path; ?>css/memberchat.css">
 
 <div class="hero-section">
     <div class="hero-slideshow">
-        <!-- Slide 1 -->
         <div class="hero-slide active">
             <img src="../../images/products/jennie.png" alt="Slide 1" class="hero-image">
         </div>
-        <!-- Slide 2 -->
         <div class="hero-slide">
             <img src="../../images/products/chanel.jpg" alt="Slide 2" class="hero-image">
         </div>
-        <!-- Slide 3 -->
         <div class="hero-slide">
             <img src="../../images/products/chanel2.png" alt="Slide 3" class="hero-image">
         </div>
     </div>
 
-    <!-- Shop Now button only -->
     <div class="hero-overlay-content">
         <a href="shop.php" class="btn-hero-shopnow">Shop Now</a>
     </div>
 
-    <!-- Navigation arrows -->
     <button class="hero-arrow hero-arrow-left" aria-label="Previous slide">‹</button>
     <button class="hero-arrow hero-arrow-right" aria-label="Next slide">›</button>
 
-    <!-- Navigation dots -->
     <div class="hero-dots">
         <span class="dot active"></span>
         <span class="dot"></span>
@@ -142,6 +135,31 @@ require $path . 'includes/header.php';
         <p>100% secure checkout.</p>
     </div>
 </div>
+
+<?php
+// 获取首页视频 (如果要强制指定视频，请把下面这行取消注释并填入ID)
+// $homeVideo = ['video_id' => 'JLpKktJPE7k'];
+
+// 默认逻辑：从数据库获取最新一条
+if (!isset($homeVideo)) {
+    $stmt_home_video = $pdo->query("SELECT video_id FROM youtube_videos ORDER BY id DESC LIMIT 1");
+    $homeVideo = $stmt_home_video->fetch();
+}
+?>
+
+<?php if ($homeVideo): ?>
+    <section class="home-video" style="margin: 40px auto; max-width: 800px; padding: 0 20px;">
+        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <iframe 
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                src="https://www.youtube.com/embed/<?php echo htmlspecialchars($homeVideo['video_id']); ?>?autoplay=1&mute=1&controls=1" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+            </iframe>
+        </div>
+    </section>
+<?php endif; ?>
 
 <div class="container" style="margin-top: 50px;">
     <h2 style="text-align:center; margin-bottom: 30px;">Popular Items</h2>
@@ -200,10 +218,8 @@ require $path . 'includes/header.php';
 
 <?php require $path . 'includes/footer.php'; ?>
 
-<!-- Load JavaScript for hero slider -->
 <script src="<?php echo $path; ?>js/hero_slider.js"></script>
 
-<!-- Floating Chat -->
 <div class="chat-fab" id="chatFab" title="Chat with admin">💬</div>
 <div class="chat-window" id="chatWindow">
     <div class="chat-header">

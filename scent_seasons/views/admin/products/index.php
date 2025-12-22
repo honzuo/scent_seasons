@@ -8,6 +8,11 @@ require_admin();
 $stmt_cats = $pdo->query("SELECT * FROM categories ORDER BY category_name ASC");
 $categories = $stmt_cats->fetchAll();
 
+// 1.5 [新增] 获取所有 YouTube 视频 (供下拉菜单使用)
+// 确保你在数据库里已经运行了 Step 1 的 SQL 创建了 youtube_videos 表
+$stmt_vids = $pdo->query("SELECT * FROM youtube_videos ORDER BY id DESC");
+$videos = $stmt_vids->fetchAll();
+
 // 2. 搜索逻辑 (只针对活跃商品)
 $search = isset($_GET['search']) ? clean_input($_GET['search']) : '';
 
@@ -99,7 +104,8 @@ require $path . 'includes/header.php';
                             data-price="<?php echo $p['price']; ?>"
                             data-stock="<?php echo $p['stock']; ?>"
                             data-desc="<?php echo htmlspecialchars($p['description']); ?>"
-                            data-img="<?php echo $p['image_path']; ?>">
+                            data-img="<?php echo $p['image_path']; ?>"
+                            data-video="<?php echo isset($p['youtube_video_id']) ? $p['youtube_video_id'] : ''; /* [新增] 传递视频ID */ ?>">
                             Edit
                         </button>
 
@@ -165,6 +171,23 @@ require $path . 'includes/header.php';
                 <input type="file" name="image" accept="image/*" required class="input-file-custom">
             </div>
 
+            <div class="form-group" style="border-top: 1px dashed #ccc; padding-top: 15px; margin-top: 15px;">
+                <label>Product Video (YouTube):</label>
+                
+                <select name="existing_video_id" class="form-control" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+                    <option value="">-- No Video / Select Existing --</option>
+                    <?php foreach ($videos as $v): ?>
+                        <option value="<?php echo $v['id']; ?>">
+                            <?php echo htmlspecialchars($v['url']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <p style="text-align:center; margin: 5px 0; font-size: 12px; color: #888;">- OR -</p>
+
+                <input type="text" name="new_video_url" placeholder="Paste new YouTube URL here (e.g., https://youtu.be/...)" class="form-control" style="width: 100%; padding: 8px;">
+            </div>
+
             <div class="modal-actions">
                 <button type="button" class="btn-disabled js-close-modal">Cancel</button>
                 <button type="submit" class="btn-green">Save Product</button>
@@ -218,6 +241,24 @@ require $path . 'includes/header.php';
                 <br>
                 <small class="text-muted">Upload new image to replace:</small>
                 <input type="file" name="image" accept="image/*" class="input-file-custom">
+            </div>
+
+            <div class="form-group" style="border-top: 1px dashed #ccc; padding-top: 15px; margin-top: 15px;">
+                <label>Product Video (YouTube):</label>
+                
+                <select name="existing_video_id" id="edit_video_id" class="form-control" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+                    <option value="">-- No Video / Select Existing --</option>
+                    <?php foreach ($videos as $v): ?>
+                        <option value="<?php echo $v['id']; ?>">
+                            <?php echo htmlspecialchars($v['url']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <p style="text-align:center; margin: 5px 0; font-size: 12px; color: #888;">- OR -</p>
+
+                <input type="text" name="new_video_url" placeholder="Change to new YouTube URL..." class="form-control" style="width: 100%; padding: 8px;">
+                <small class="text-muted" style="color:#666; font-size:0.85em;">Only enter URL if adding a NEW video not in the list.</small>
             </div>
 
             <div class="modal-actions">
@@ -327,6 +368,8 @@ require $path . 'includes/header.php';
             let stock = btn.data('stock');
             let desc = btn.data('desc');
             let img = btn.data('img');
+            // [新增] 获取视频 ID
+            let videoId = btn.data('video');
 
             // 填充表单
             $('#edit_product_id').val(id);
@@ -335,6 +378,9 @@ require $path . 'includes/header.php';
             $('#edit_price').val(price);
             $('#edit_stock').val(stock);
             $('#edit_description').val(desc);
+
+            // [新增] 填充视频 ID
+            $('#edit_video_id').val(videoId);
 
             let imgText = img ? "(" + img + ")" : "(No Image)";
             $('#edit_current_img_name').text(imgText);

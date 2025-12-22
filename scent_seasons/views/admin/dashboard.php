@@ -27,10 +27,9 @@ $extra_css = "admin.css";
 require $path . 'includes/header.php';
 ?>
 
-<!-- Load notification badge styles -->
 <link rel="stylesheet" href="<?php echo $path; ?>css/order_modals.css">
 
-<h1>Welcome, Admin!</h1>
+<h1>Welcome, <?php echo isset($_SESSION['user_name']) ? htmlspecialchars($_SESSION['user_name']) : 'Admin'; ?></h1>
 <p>Manage your perfume shop from here.</p>
 
 <div class="dashboard-grid">
