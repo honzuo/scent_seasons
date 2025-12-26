@@ -86,13 +86,12 @@ require $path . 'includes/header.php';
         </tbody>
     </table>
 
-    <!-- Promotion Code Section -->
     <div style="margin-top: 30px; padding: 20px; background: #f5f5f7; border-radius: 12px; max-width: 500px;">
         <h3 style="margin-bottom: 15px; font-size: 18px;">Promotion Code</h3>
         <div style="display: flex; gap: 10px; align-items: flex-start;">
             <div style="flex: 1;">
-                <input type="text" id="promoCode" placeholder="Enter promotion code" 
-                       style="width: 100%; padding: 10px; border: 1px solid #d2d2d7; border-radius: 8px; font-size: 14px;">
+                <input type="text" id="promoCode" placeholder="Enter promotion code"
+                    style="width: 100%; padding: 10px; border: 1px solid #d2d2d7; border-radius: 8px; font-size: 14px;">
                 <div id="promoMessage" style="margin-top: 8px; font-size: 13px;"></div>
             </div>
             <button id="applyPromo" class="btn-blue" style="padding: 10px 20px; white-space: nowrap;">Apply</button>
@@ -106,212 +105,215 @@ require $path . 'includes/header.php';
         </div>
         <div id="discount-row" style="display: none; justify-content: space-between; margin-bottom: 10px; color: #30d158;">
             <span>Discount (<span id="discount-code-name"></span>):</span>
-            <span>-$<span id="display-discount">0.00</span> <button id="removePromo" style="margin-left: 10px; padding: 2px 8px; font-size: 11px; background: #ff3b30; color: white; border: none; border-radius: 4px; cursor: pointer;">Remove</button></span>
+            <span>-$<span id="display-discount">0.00</span> <button id="removePromo"
+                    style="margin-left: 10px; padding: 2px 8px; font-size: 11px; background: #ff3b30; color: white; border: none; border-radius: 4px; cursor: pointer;">Remove</button></span>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 20px; font-weight: 600; padding-top: 10px; border-top: 2px solid #e5e5e7;">
+        <div
+            style="display: flex; justify-content: space-between; font-size: 20px; font-weight: 600; padding-top: 10px; border-top: 2px solid #e5e5e7;">
             <span>Total:</span>
             <span>$<span id="display-total">0.00</span></span>
         </div>
 
-    <div style="margin-top: 30px; background: #fafafa; padding: 20px; border-radius: 12px; border: 1px solid #eee;">
-        <h3 style="margin-top: 0; font-size: 18px;">Shipping Address</h3>
+        <div style="margin-top: 30px; background: #fafafa; padding: 20px; border-radius: 12px; border: 1px solid #eee;">
+            <h3 style="margin-top: 0; font-size: 18px;">Shipping Address</h3>
 
-        <?php if (!empty($my_addresses)): ?>
-            <div class="saved-addresses" style="margin-bottom: 15px;">
-                <p><strong>Select a saved address:</strong></p>
-                <?php foreach ($my_addresses as $addr): ?>
-                    <label style="display: block; margin-bottom: 8px; cursor:pointer;">
-                        <input type="radio" name="address_option" class="addr-radio"
-                            value="<?php echo htmlspecialchars($addr['address_text']); ?>">
-                        <?php echo htmlspecialchars($addr['address_text']); ?>
+            <?php if (!empty($my_addresses)): ?>
+                <div class="saved-addresses" style="margin-bottom: 15px;">
+                    <p><strong>Select a saved address:</strong></p>
+                    <?php foreach ($my_addresses as $addr): ?>
+                        <label style="display: block; margin-bottom: 8px; cursor:pointer;">
+                            <input type="radio" name="address_option" class="addr-radio"
+                                value="<?php echo htmlspecialchars($addr['address_text']); ?>">
+                            <?php echo htmlspecialchars($addr['address_text']); ?>
+                        </label>
+                    <?php endforeach; ?>
+                    <label style="display: block; cursor:pointer;">
+                        <input type="radio" name="address_option" class="addr-radio" value="new" id="use-new-address">
+                        <em>-- Use a new address --</em>
                     </label>
-                <?php endforeach; ?>
-                <label style="display: block; cursor:pointer;">
-                    <input type="radio" name="address_option" class="addr-radio" value="new" id="use-new-address">
-                    <em>-- Use a new address --</em>
-                </label>
+                </div>
+            <?php endif; ?>
+
+            <div id="new-address-input" style="<?php echo !empty($my_addresses) ? 'display:none;' : ''; ?>">
+                <p class="text-muted" style="font-size: 14px; margin-bottom: 10px;">Please enter your full delivery address.
+                </p>
+                <textarea id="shipping-address" rows="3" placeholder="Street address, City, State, Zip Code..."
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #d2d2d7;"></textarea>
             </div>
-        <?php endif; ?>
-
-        <div id="new-address-input" style="<?php echo !empty($my_addresses) ? 'display:none;' : ''; ?>">
-            <p class="text-muted" style="font-size: 14px; margin-bottom: 10px;">Please enter your full delivery address.</p>
-            <textarea id="shipping-address" rows="3" placeholder="Street address, City, State, Zip Code..."
-                style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #d2d2d7;"></textarea>
         </div>
-    </div>
 
-    <div style="text-align: right; margin-top: 30px; display: flex; justify-content: flex-end;">
-        <div id="paypal-button-container" style="width: 300px;"></div>
-    </div>
+        <div style="text-align: right; margin-top: 30px; display: flex; justify-content: flex-end;">
+            <div id="paypal-button-container" style="width: 300px;"></div>
+        </div>
 
-    <script
-        src="https://www.paypal.com/sdk/js?client-id=Ab91QiHAZkGW1YVrL_60iEZvAraUdaF-BCUFbrxdRw6zmaI3wZP0XlwZAoUQHe0FIE5cuYUZe4X4I0M6&currency=USD"></script>
+        <script
+            src="https://www.paypal.com/sdk/js?client-id=Ab91QiHAZkGW1YVrL_60iEZvAraUdaF-BCUFbrxdRw6zmaI3wZP0XlwZAoUQHe0FIE5cuYUZe4X4I0M6&currency=USD"></script>
 
-    <script>
-        $(document).ready(function() {
-            let currentPromoCode = null;
-            let discountAmount = 0;
-            let discountInfo = null;
+        <script>
+            $(document).ready(function () {
+                let currentPromoCode = null;
+                let discountAmount = 0;
+                let discountInfo = null;
 
-            // 1. 计算总价函数
-            function calculateTotal() {
-                let subtotal = 0;
-                let count = 0;
-                $('.item-checkbox:checked').each(function() {
-                    subtotal += parseFloat($(this).data('subtotal'));
-                    count++;
-                });
-                
-                $('#display-subtotal').text(subtotal.toFixed(2));
-                
-                // Apply discount if promotion code is active
-                let finalTotal = subtotal;
-                if (currentPromoCode && discountInfo) {
-                    discountAmount = parseFloat(discountInfo.discount);
-                    finalTotal = subtotal - discountAmount;
-                    if (finalTotal < 0) finalTotal = 0;
-                    
-                    $('#discount-row').css('display', 'flex');
-                    $('#display-discount').text(discountAmount.toFixed(2));
-                    $('#discount-code-name').text(currentPromoCode);
-                } else {
-                    $('#discount-row').hide();
-                    discountAmount = 0;
-                }
-                
-                $('#display-total').text(finalTotal.toFixed(2));
-                return finalTotal;
-            }
+                // 1. 计算总价函数
+                function calculateTotal() {
+                    let subtotal = 0;
+                    let count = 0;
+                    $('.item-checkbox:checked').each(function () {
+                        subtotal += parseFloat($(this).data('subtotal'));
+                        count++;
+                    });
 
-            // Apply promotion code
-            $('#applyPromo').on('click', function() {
-                const code = $('#promoCode').val().trim().toUpperCase();
-                if (!code) {
-                    $('#promoMessage').html('<span style="color: #ff3b30;">Please enter a promotion code</span>');
-                    return;
-                }
-                
-                const subtotal = parseFloat($('#display-subtotal').text()) || 0;
-                if (subtotal <= 0) {
-                    $('#promoMessage').html('<span style="color: #ff3b30;">Please select items first</span>');
-                    return;
-                }
-                
-                $.getJSON('../../controllers/promotion_controller.php', {
-                    action: 'validate',
-                    code: code,
-                    total: subtotal
-                }, function(res) {
-                    if (res.status === 'success') {
-                        currentPromoCode = code;
-                        discountInfo = res;
-                        $('#promoMessage').html('<span style="color: #30d158;">✓ Promotion code applied! Discount: $' + res.discount.toFixed(2) + '</span>');
-                        $('#promoCode').prop('disabled', true);
-                        $('#applyPromo').text('Applied').prop('disabled', true);
-                        calculateTotal();
+                    $('#display-subtotal').text(subtotal.toFixed(2));
+
+                    // Apply discount if promotion code is active
+                    let finalTotal = subtotal;
+                    if (currentPromoCode && discountInfo) {
+                        discountAmount = parseFloat(discountInfo.discount);
+                        finalTotal = subtotal - discountAmount;
+                        if (finalTotal < 0) finalTotal = 0;
+
+                        $('#discount-row').css('display', 'flex');
+                        $('#display-discount').text(discountAmount.toFixed(2));
+                        $('#discount-code-name').text(currentPromoCode);
                     } else {
-                        currentPromoCode = null;
-                        discountInfo = null;
-                        $('#promoMessage').html('<span style="color: #ff3b30;">' + res.message + '</span>');
-                        calculateTotal();
-                    }
-                }).fail(function() {
-                    $('#promoMessage').html('<span style="color: #ff3b30;">Error validating promotion code</span>');
-                });
-            });
-
-            // Remove promotion code
-            $(document).on('click', '#removePromo', function() {
-                currentPromoCode = null;
-                discountInfo = null;
-                $('#promoCode').val('').prop('disabled', false);
-                $('#applyPromo').text('Apply').prop('disabled', false);
-                $('#promoMessage').html('');
-                calculateTotal();
-            });
-
-            // 监听复选框变化
-            $('.item-checkbox, #select-all').change(function () {
-                if (this.id === 'select-all') {
-                    $('.item-checkbox').prop('checked', $(this).prop('checked'));
-                } else if (!$(this).prop('checked')) {
-                    $('#select-all').prop('checked', false);
-                }
-                calculateTotal();
-            });
-
-            // 监听地址单选框切换 (如果你已经按照之前的建议添加了 radio)
-            $(document).on('change', '.addr-radio', function () {
-                if ($(this).val() === 'new') {
-                    $('#new-address-input').slideDown();
-                } else {
-                    $('#new-address-input').slideUp();
-                }
-            });
-
-            // 2. 初始化 PayPal 按钮
-            paypal.Buttons({
-                onInit: function (data, actions) {
-                    // 初始检查：如果购物车已有选中的商品，直接启用
-                    if (calculateTotal() > 0) {
-                        actions.enable();
-                    } else {
-                        actions.disable();
+                        $('#discount-row').hide();
+                        discountAmount = 0;
                     }
 
-                    // 监听勾选框实时切换按钮状态
-                    $('.item-checkbox, #select-all').change(function () {
+                    $('#display-total').text(finalTotal.toFixed(2));
+                    return finalTotal;
+                }
+
+                // Apply promotion code
+                $('#applyPromo').on('click', function () {
+                    const code = $('#promoCode').val().trim().toUpperCase();
+                    if (!code) {
+                        $('#promoMessage').html('<span style="color: #ff3b30;">Please enter a promotion code</span>');
+                        return;
+                    }
+
+                    const subtotal = parseFloat($('#display-subtotal').text()) || 0;
+                    if (subtotal <= 0) {
+                        $('#promoMessage').html('<span style="color: #ff3b30;">Please select items first</span>');
+                        return;
+                    }
+
+                    $.getJSON('../../controllers/promotion_controller.php', {
+                        action: 'validate',
+                        code: code,
+                        total: subtotal
+                    }, function (res) {
+                        if (res.status === 'success') {
+                            currentPromoCode = code;
+                            discountInfo = res;
+                            $('#promoMessage').html('<span style="color: #30d158;">✓ Promotion code applied! Discount: $' + res.discount.toFixed(2) + '</span>');
+                            $('#promoCode').prop('disabled', true);
+                            $('#applyPromo').text('Applied').prop('disabled', true);
+                            calculateTotal();
+                        } else {
+                            currentPromoCode = null;
+                            discountInfo = null;
+                            $('#promoMessage').html('<span style="color: #ff3b30;">' + res.message + '</span>');
+                            calculateTotal();
+                        }
+                    }).fail(function () {
+                        $('#promoMessage').html('<span style="color: #ff3b30;">Error validating promotion code</span>');
+                    });
+                });
+
+                // Remove promotion code
+                $(document).on('click', '#removePromo', function () {
+                    currentPromoCode = null;
+                    discountInfo = null;
+                    $('#promoCode').val('').prop('disabled', false);
+                    $('#applyPromo').text('Apply').prop('disabled', false);
+                    $('#promoMessage').html('');
+                    calculateTotal();
+                });
+
+                // 监听复选框变化
+                $('.item-checkbox, #select-all').change(function () {
+                    if (this.id === 'select-all') {
+                        $('.item-checkbox').prop('checked', $(this).prop('checked'));
+                    } else if (!$(this).prop('checked')) {
+                        $('#select-all').prop('checked', false);
+                    }
+                    calculateTotal();
+                });
+
+                // 监听地址单选框切换
+                $(document).on('change', '.addr-radio', function () {
+                    if ($(this).val() === 'new') {
+                        $('#new-address-input').slideDown();
+                    } else {
+                        $('#new-address-input').slideUp();
+                    }
+                });
+
+                // 2. 初始化 PayPal 按钮
+                paypal.Buttons({
+                    onInit: function (data, actions) {
+                        // 初始检查：如果购物车已有选中的商品，直接启用
                         if (calculateTotal() > 0) {
                             actions.enable();
                         } else {
                             actions.disable();
                         }
-                    });
-                },
 
-                onClick: function (data, actions) {
-                    let address = '';
-
-                    // 逻辑：优先判断是否有选中的保存地址
-                    const savedAddr = $('input[name="address_option"]:checked');
-
-                    if (savedAddr.length > 0) {
-                        if (savedAddr.val() === 'new') {
-                            address = $('#shipping-address').val().trim();
-                        } else {
-                            address = savedAddr.val().trim();
-                        }
-                    } else {
-                        // 如果没有 radio (旧版本)，直接读 textarea
-                        address = $('#shipping-address').val().trim();
-                    }
-
-                    if (address.length === 0) {
-                        alert("Please select or enter a shipping address before proceeding.");
-                        return actions.reject();
-                    }
-
-                    // 存入全局变量供 onApprove 使用
-                    window.finalAddress = address;
-                },
-
-                createOrder: function (data, actions) {
-                    let amount = calculateTotal().toFixed(2);
-                    return actions.order.create({
-                        purchase_units: [{
-                            amount: { value: amount }
-                        }]
-                    });
-                },
-
-                onApprove: function (data, actions) {
-                    return actions.order.capture().then(function (details) {
-                        let selectedIds = [];
-                        $('.item-checkbox:checked').each(function () {
-                            selectedIds.push($(this).val());
+                        // 监听勾选框实时切换按钮状态
+                        $('.item-checkbox, #select-all').change(function () {
+                            if (calculateTotal() > 0) {
+                                actions.enable();
+                            } else {
+                                actions.disable();
+                            }
                         });
+                    },
 
-                        fetch('../../controllers/order_controller.php?action=checkout', {
+                    onClick: function (data, actions) {
+                        let address = '';
+
+                        // 逻辑：优先判断是否有选中的保存地址
+                        const savedAddr = $('input[name="address_option"]:checked');
+
+                        if (savedAddr.length > 0) {
+                            if (savedAddr.val() === 'new') {
+                                address = $('#shipping-address').val().trim();
+                            } else {
+                                address = savedAddr.val().trim();
+                            }
+                        } else {
+                            // 如果没有 radio，直接读 textarea
+                            address = $('#shipping-address').val().trim();
+                        }
+
+                        if (address.length === 0) {
+                            alert("Please select or enter a shipping address before proceeding.");
+                            return actions.reject();
+                        }
+
+                        // 存入全局变量供 onApprove 使用
+                        window.finalAddress = address;
+                    },
+
+                    createOrder: function (data, actions) {
+                        let amount = calculateTotal().toFixed(2);
+                        return actions.order.create({
+                            purchase_units: [{
+                                amount: { value: amount }
+                            }]
+                        });
+                    },
+
+                    onApprove: function (data, actions) {
+                        return actions.order.capture().then(function (details) {
+                            let selectedIds = [];
+                            $('.item-checkbox:checked').each(function () {
+                                selectedIds.push($(this).val());
+                            });
+
+                            return fetch('../../controllers/order_controller.php?action=checkout', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json'
@@ -323,21 +325,20 @@ require $path . 'includes/header.php';
                                     discount_amount: discountAmount || 0
                                 })
                             })
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    window.location.href = "../member/orders.php?msg=success";
-                                } else {
-                                    alert("Order failed: " + data.message);
-                                }
-                            });
-                    });
-                }
-            }).render('#paypal-button-container');
-        });
-    </script>
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        window.location.href = "../member/orders.php?msg=success";
+                                    } else {
+                                        alert("Order failed: " + data.message);
+                                    }
+                                });
+                        });
+                    }
+                }).render('#paypal-button-container');
+            });
+        </script>
 
-<?php endif; ?>
+    <?php endif; ?>
 
-<?php require $path . 'includes/footer.php'; ?>
+    <?php require $path . 'includes/footer.php'; ?>

@@ -2,7 +2,6 @@
 session_start();
 require '../config/database.php';
 require '../includes/functions.php';
-require_admin();
 
 // Get all promotion codes (This is the part that GETS the data)
 $stmt = $pdo->query("SELECT * FROM promotion_codes ORDER BY created_at DESC");
