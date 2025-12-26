@@ -11,9 +11,7 @@ $page_title = "Forgot Password - Scent Seasons";
 $path = "../../";
 require $path . 'includes/header.php';
 
-// 调试：显示当前路径
-// echo "Current file: " . __FILE__ . "<br>";
-// echo "Document root: " . $_SERVER['DOCUMENT_ROOT'] . "<br>";
+
 ?>
 
 <div class="auth-box">
@@ -24,7 +22,7 @@ require $path . 'includes/header.php';
         <div class="alert alert-success"><?php echo $success; ?></div>
     <?php endif; ?>
 
-    <!-- 修改form action的路径 -->
+   
     <form action="<?php echo $path; ?>controllers/auth_forgot_password.php" method="POST">
         <div class="form-group">
             <label>Email Address:</label>

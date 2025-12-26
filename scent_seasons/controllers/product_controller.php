@@ -9,7 +9,7 @@ $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // --- 公用函数：处理多图上传 ---
+
     function uploadGalleryImages($pdo, $product_id, $files) {
         if (isset($files['name']) && is_array($files['name'])) {
             $total_files = count($files['name']);
@@ -17,16 +17,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             for ($i = 0; $i < $total_files; $i++) {
                 if ($files['error'][$i] == 0) {
                     $ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
-                    // 只允许图片
+                    
                     if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                         $new_name = uniqid('gallery_') . '.' . $ext;
                         $target = "../images/products/" . $new_name;
                         
-                        // 确保目录存在
+                      
                         if (!is_dir("../images/products/")) mkdir("../images/products/", 0777, true);
                         
                         if (move_uploaded_file($files['tmp_name'][$i], $target)) {
-                            // 插入数据库
+                          
                             $stmt = $pdo->prepare("INSERT INTO product_images (product_id, image_path) VALUES (?, ?)");
                             $stmt->execute([$product_id, $new_name]);
                         }
@@ -36,9 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // ==========================================
-    // [新增] 视频处理逻辑 (保留你之前的代码)
-    // ==========================================
+ 
     $final_video_db_id = null;
     if (!empty($_POST['new_video_url'])) {
         $newUrl = clean_input($_POST['new_video_url']);
@@ -59,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $final_video_db_id = intval($_POST['existing_video_id']);
     }
 
-    // --- 1. 添加产品 (CREATE) ---
+  
     if ($action == 'add') {
         $name = clean_input($_POST['name']);
         $category_id = intval($_POST['category_id']);
@@ -67,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stock = intval($_POST['stock']);
         $description = clean_input($_POST['description']);
 
-        // 处理主图 (Main Image)
+       
         $image_path = 'default_product.jpg';
         if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
             $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
@@ -84,7 +82,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         $new_product_id = $pdo->lastInsertId();
 
-        // [新增] 处理相册多图上传
+        
         if (isset($_FILES['gallery_images'])) {
             uploadGalleryImages($pdo, $new_product_id, $_FILES['gallery_images']);
         }
@@ -94,31 +92,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // --- 2. 软删除 (Soft Delete) ---
+  
     elseif ($action == 'delete') {
         $id = intval($_POST['product_id']);
-        // ... (保持原有逻辑)
+        
         $stmt = $pdo->prepare("UPDATE products SET is_deleted = 1 WHERE product_id = ?");
         $stmt->execute([$id]);
         header("Location: ../views/admin/products/index.php?msg=trashed");
         exit();
     }
 
-    // --- 3. 恢复 (RESTORE) ---
+
     elseif ($action == 'restore') {
         $id = intval($_POST['product_id']);
-        // ... (保持原有逻辑)
+        
         $stmt = $pdo->prepare("UPDATE products SET is_deleted = 0 WHERE product_id = ?");
         $stmt->execute([$id]);
         header("Location: ../views/admin/products/index.php?msg=restored&open_trash=1");
         exit();
     }
 
-    // --- 4. 彻底删除 (PERMANENT DELETE) ---
+    
     elseif ($action == 'delete_permanent') {
         $id = intval($_POST['product_id']);
         
-        // 删除主图
+        
         $stmt = $pdo->prepare("SELECT image_path FROM products WHERE product_id = ?");
         $stmt->execute([$id]);
         $prod = $stmt->fetch();
@@ -127,7 +125,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (file_exists($file)) unlink($file);
         }
 
-        // [新增] 删除关联的相册图片文件
+      
         $stmt_imgs = $pdo->prepare("SELECT image_path FROM product_images WHERE product_id = ?");
         $stmt_imgs->execute([$id]);
         $gallery_imgs = $stmt_imgs->fetchAll();
@@ -136,7 +134,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (file_exists($g_file)) unlink($g_file);
         }
 
-        // 级联删除会处理数据库记录，但我们手动删除了文件
+    
         $stmt = $pdo->prepare("DELETE FROM products WHERE product_id = ?");
         $stmt->execute([$id]);
 
@@ -144,7 +142,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // --- 5. 修改产品 (UPDATE) ---
+    
     elseif ($action == 'update') {
         $id = intval($_POST['product_id']);
         $name = clean_input($_POST['name']);
@@ -171,7 +169,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$name, $category_id, $price, $stock, $description, $final_image, $final_video_db_id, $id]);
 
-        // [新增] 处理相册多图上传 (追加)
+       
         if (isset($_FILES['gallery_images'])) {
             uploadGalleryImages($pdo, $id, $_FILES['gallery_images']);
         }
@@ -181,11 +179,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // --- 6. [新增] AJAX 删除单张相册图片 ---
+   
     elseif ($action == 'delete_gallery_image') {
         $image_id = intval($_POST['image_id']);
         
-        // 获取文件名以删除文件
+       
         $stmt = $pdo->prepare("SELECT image_path FROM product_images WHERE id = ?");
         $stmt->execute([$image_id]);
         $img = $stmt->fetch();
@@ -194,7 +192,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $file = "../images/products/" . $img['image_path'];
             if (file_exists($file)) unlink($file);
             
-            // 删除数据库记录
+          
             $delStmt = $pdo->prepare("DELETE FROM product_images WHERE id = ?");
             $delStmt->execute([$image_id]);
             echo "success";

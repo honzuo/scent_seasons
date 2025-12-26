@@ -4,7 +4,7 @@ require '../../../config/database.php';
 require '../../../includes/functions.php';
 require_admin();
 
-// 1. Popular Products (Top 10 by sales)
+
 $popular_sql = "SELECT p.product_id, p.name, p.price, p.image_path, c.category_name,
                         COALESCE(SUM(oi.quantity), 0) as total_sold,
                         COUNT(DISTINCT oi.order_id) as order_count
@@ -17,7 +17,7 @@ $popular_sql = "SELECT p.product_id, p.name, p.price, p.image_path, c.category_n
                  LIMIT 10";
 $popular_products = $pdo->query($popular_sql)->fetchAll();
 
-// 2. Unpopular Products (Products with no or very low sales)
+
 $unpopular_sql = "SELECT p.product_id, p.name, p.price, p.image_path, c.category_name,
                          COALESCE(SUM(oi.quantity), 0) as total_sold,
                          COUNT(DISTINCT oi.order_id) as order_count
@@ -31,7 +31,7 @@ $unpopular_sql = "SELECT p.product_id, p.name, p.price, p.image_path, c.category
                   LIMIT 10";
 $unpopular_products = $pdo->query($unpopular_sql)->fetchAll();
 
-// 3. High-Rated Products (Average rating >= 4.0, minimum 2 reviews)
+
 $high_rated_sql = "SELECT p.product_id, p.name, p.price, p.image_path, c.category_name,
                            COALESCE(AVG(r.rating), 0) as avg_rating,
                            COUNT(r.review_id) as review_count
@@ -45,7 +45,6 @@ $high_rated_sql = "SELECT p.product_id, p.name, p.price, p.image_path, c.categor
                     LIMIT 10";
 $high_rated_products = $pdo->query($high_rated_sql)->fetchAll();
 
-// 4. Low-Rated Products (Average rating < 3.0 or no reviews, minimum 1 review)
 $low_rated_sql = "SELECT p.product_id, p.name, p.price, p.image_path, c.category_name,
                          COALESCE(AVG(r.rating), 0) as avg_rating,
                          COUNT(r.review_id) as review_count
@@ -135,13 +134,13 @@ require $path . 'includes/header.php';
 <h2>Product Reports</h2>
 <p style="color: #86868b; margin-bottom: 30px;">Analyze product performance, sales, and customer ratings.</p>
 
-<!-- Popular Products Section -->
+
 <div style="margin-bottom: 50px;">
     <h3 style="color: #30d158; margin-bottom: 20px;">⭐ Popular Products (Top 10 by Sales)</h3>
     <?php if (empty($popular_products)): ?>
         <p class="text-gray">No popular products found.</p>
     <?php else: ?>
-        <!-- Chart for Popular Products -->
+   
         <div class="chart-container">
             <div class="chart-wrapper">
                 <canvas id="popularChart"></canvas>
@@ -179,13 +178,13 @@ require $path . 'includes/header.php';
     <?php endif; ?>
 </div>
 
-<!-- Unpopular Products Section -->
+
 <div style="margin-bottom: 50px;">
     <h3 style="color: #ff3b30; margin-bottom: 20px;">📉 Unpopular Products (Low or No Sales)</h3>
     <?php if (empty($unpopular_products)): ?>
         <p class="text-gray">No unpopular products found. All products are selling well!</p>
     <?php else: ?>
-        <!-- Chart for Unpopular Products -->
+
         <div class="chart-container">
             <div class="chart-wrapper">
                 <canvas id="unpopularChart"></canvas>
@@ -223,13 +222,13 @@ require $path . 'includes/header.php';
     <?php endif; ?>
 </div>
 
-<!-- High-Rated Products Section -->
+
 <div style="margin-bottom: 50px;">
     <h3 style="color: #30d158; margin-bottom: 20px;">⭐ High-Rated Products (Rating ≥ 4.0)</h3>
     <?php if (empty($high_rated_products)): ?>
         <p class="text-gray">No high-rated products found.</p>
     <?php else: ?>
-        <!-- Chart for High-Rated Products -->
+   
         <div class="chart-container">
             <div class="chart-wrapper">
                 <canvas id="highRatedChart"></canvas>
@@ -267,13 +266,13 @@ require $path . 'includes/header.php';
     <?php endif; ?>
 </div>
 
-<!-- Low-Rated Products Section -->
+
 <div style="margin-bottom: 50px;">
     <h3 style="color: #ff3b30; margin-bottom: 20px;">📉 Low-Rated Products (Rating < 3.0 or No Reviews)</h3>
     <?php if (empty($low_rated_products)): ?>
         <p class="text-gray">No low-rated products found. All products have good ratings!</p>
     <?php else: ?>
-        <!-- Chart for Low-Rated Products -->
+    
         <div class="chart-container">
             <div class="chart-wrapper">
                 <canvas id="lowRatedChart"></canvas>
@@ -318,13 +317,13 @@ require $path . 'includes/header.php';
 </div>
 
 <script>
-// Custom Chart Library - Reusable Functions
+
 (function() {
     'use strict';
     
-    // Chart configuration and helper functions
+    
     const ChartHelper = {
-        // Colors used in charts
+
         colors: {
             green: { fill: 'rgba(48, 209, 88, 0.7)', stroke: 'rgba(48, 209, 88, 1)' },
             blue: { fill: 'rgba(0, 113, 227, 0.7)', stroke: 'rgba(0, 113, 227, 1)' },
@@ -333,18 +332,18 @@ require $path . 'includes/header.php';
             purple: { fill: 'rgba(142, 68, 173, 0.7)', stroke: 'rgba(142, 68, 173, 1)' }
         },
         
-        // Draw bar chart
+    
         drawBarChart: function(canvasId, data, options) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
             
             const ctx = canvas.getContext('2d');
-            // Account for device pixel ratio scaling
+ 
             const scale = window.devicePixelRatio || 1;
             const width = canvas.width / scale;
             const height = canvas.height / scale;
             
-            // Clear canvas
+    
             ctx.clearRect(0, 0, width, height);
             
             const padding = { top: 70, right: 50, bottom: 100, left: 80 };
@@ -362,22 +361,22 @@ require $path . 'includes/header.php';
                 maxValue = Math.max.apply(Math, allValues);
             }
             maxValue = maxValue || 10;
-            // Round up to nearest nice number
+     
             maxValue = Math.ceil(maxValue / 5) * 5;
             
-            // Draw background with gradient
+         
             const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartHeight);
             gradient.addColorStop(0, '#fbfbfd');
             gradient.addColorStop(1, '#ffffff');
             ctx.fillStyle = gradient;
             ctx.fillRect(padding.left, padding.top, chartWidth, chartHeight);
             
-            // Draw border
+           
             ctx.strokeStyle = '#d2d2d7';
             ctx.lineWidth = 2;
             ctx.strokeRect(padding.left, padding.top, chartWidth, chartHeight);
             
-            // Draw grid lines (more subtle)
+        
             ctx.strokeStyle = '#e5e5e7';
             ctx.lineWidth = 1;
             const gridLines = 6;
@@ -388,7 +387,7 @@ require $path . 'includes/header.php';
                 ctx.lineTo(padding.left + chartWidth, y);
                 ctx.stroke();
                 
-                // Y-axis labels (bigger and clearer with more spacing)
+       
                 ctx.fillStyle = '#6e6e73';
                 ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, sans-serif';
                 ctx.textAlign = 'right';
@@ -396,7 +395,7 @@ require $path . 'includes/header.php';
                 ctx.fillText(Math.round(value).toString(), padding.left - 25, y + 5);
             }
             
-            // Draw Y-axis title (with more spacing from edge)
+           
             if (options.yAxisLabel) {
                 ctx.save();
                 ctx.fillStyle = '#86868b';
@@ -408,7 +407,7 @@ require $path . 'includes/header.php';
                 ctx.restore();
             }
             
-            // Draw bars (wider and more spaced)
+           
             const barGroupWidth = chartWidth / labels.length * 0.75;
             const barSpacing = chartWidth / labels.length;
             const datasetCount = datasets.length;
@@ -416,7 +415,7 @@ require $path . 'includes/header.php';
             const barGap = (barGroupWidth / datasetCount) * 0.15;
             
             datasets.forEach(function(dataset, datasetIndex) {
-                // Create gradient for bars
+               
                 const barGradient = ctx.createLinearGradient(0, padding.top + chartHeight, 0, padding.top);
                 barGradient.addColorStop(0, dataset.color.fill);
                 barGradient.addColorStop(1, dataset.color.stroke);
@@ -432,7 +431,7 @@ require $path . 'includes/header.php';
                               (barGroupWidth / datasetCount) * datasetIndex + barGap / 2;
                     const y = padding.top + chartHeight - barHeight;
                     
-                    // Draw bar with rounded corners effect
+                   
                     const cornerRadius = 6;
                     ctx.beginPath();
                     ctx.moveTo(x + cornerRadius, y);
@@ -446,12 +445,12 @@ require $path . 'includes/header.php';
                     ctx.fill();
                     ctx.stroke();
                     
-                    // Draw value on top of bar (bigger and clearer with more spacing)
+                    
                     if (value > 0) {
                         ctx.fillStyle = '#1d1d1f';
                         ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, sans-serif';
                         ctx.textAlign = 'center';
-                        // Add more space above bar to prevent touching
+                    
                         const labelY = y - 15;
                         ctx.fillText(value.toString(), x + barWidth / 2, labelY);
                         ctx.fillStyle = barGradient;
@@ -459,7 +458,7 @@ require $path . 'includes/header.php';
                 });
             });
             
-            // Draw X-axis labels (rotated for better readability with more spacing)
+          
             ctx.fillStyle = '#1d1d1f';
             ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
             ctx.textAlign = 'center';
@@ -467,17 +466,17 @@ require $path . 'includes/header.php';
                 const x = padding.left + (barSpacing * index) + barSpacing / 2;
                 const y = height - padding.bottom + 50;
                 
-                // Rotate labels for better readability
+             
                 ctx.save();
                 ctx.translate(x, y);
                 ctx.rotate(-Math.PI / 4);
                 const displayLabel = label.length > 20 ? label.substring(0, 20) + '...' : label;
-                // Offset text to prevent overlap with chart area
+              
                 ctx.fillText(displayLabel, 0, 10);
                 ctx.restore();
             });
             
-            // Draw title (bigger and centered with more spacing)
+           
             if (options.title) {
                 ctx.fillStyle = '#1d1d1f';
                 ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, sans-serif';
@@ -486,13 +485,13 @@ require $path . 'includes/header.php';
             }
         },
         
-        // Draw line chart overlay
+        
         drawLineChart: function(canvasId, data, options) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
             
             const ctx = canvas.getContext('2d');
-            // Account for device pixel ratio scaling
+          
             const scale = window.devicePixelRatio || 1;
             const width = canvas.width / scale;
             const height = canvas.height / scale;
@@ -513,7 +512,7 @@ require $path . 'includes/header.php';
             ctx.fillStyle = options.color.fill;
             ctx.lineWidth = 4;
             
-            // Draw line with smooth curve
+            
             ctx.beginPath();
             lineData.forEach(function(value, index) {
                 const x = padding.left + (pointSpacing * index) + pointSpacing / 2;
@@ -522,7 +521,7 @@ require $path . 'includes/header.php';
                 if (index === 0) {
                     ctx.moveTo(x, y);
                 } else {
-                    // Use quadratic curves for smoother lines
+              
                     const prevX = padding.left + (pointSpacing * (index - 1)) + pointSpacing / 2;
                     const prevY = padding.top + chartHeight - ((lineData[index - 1] - minValue) / valueRange) * chartHeight;
                     const cpx = (prevX + x) / 2;
@@ -531,12 +530,12 @@ require $path . 'includes/header.php';
             });
             ctx.stroke();
             
-            // Draw points (bigger and clearer)
+           
             lineData.forEach(function(value, index) {
                 const x = padding.left + (pointSpacing * index) + pointSpacing / 2;
                 const y = padding.top + chartHeight - ((value - minValue) / valueRange) * chartHeight;
                 
-                // Outer circle
+             
                 ctx.beginPath();
                 ctx.arc(x, y, 6, 0, Math.PI * 2);
                 ctx.fillStyle = '#ffffff';
@@ -545,13 +544,13 @@ require $path . 'includes/header.php';
                 ctx.lineWidth = 3;
                 ctx.stroke();
                 
-                // Inner circle
+               
                 ctx.beginPath();
                 ctx.arc(x, y, 3, 0, Math.PI * 2);
                 ctx.fillStyle = options.color.fill;
                 ctx.fill();
                 
-                // Value label above point (with more spacing)
+               
                 ctx.fillStyle = '#1d1d1f';
                 ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, sans-serif';
                 ctx.textAlign = 'center';
@@ -560,15 +559,15 @@ require $path . 'includes/header.php';
         }
     };
     
-    // Initialize charts when document is ready
+    
     $(document).ready(function() {
-        // Prepare data from PHP
+      
         const popularData = <?php echo json_encode($popular_products); ?>;
         const unpopularData = <?php echo json_encode($unpopular_products); ?>;
         const highRatedData = <?php echo json_encode($high_rated_products); ?>;
         const lowRatedData = <?php echo json_encode($low_rated_products); ?>;
         
-        // 1. Popular Products Chart
+       
         if (popularData.length > 0) {
             const canvas = document.getElementById('popularChart');
             if (canvas) {
@@ -599,7 +598,7 @@ require $path . 'includes/header.php';
                     yAxisLabel: 'Sales Volume'
                 });
                 
-                // Add legend
+                
                 const legendHtml = '<div class="chart-legend">' +
                     '<div class="chart-legend-item">' +
                     '<div class="chart-legend-color" style="background: ' + ChartHelper.colors.green.fill + ';"></div>' +
@@ -614,7 +613,7 @@ require $path . 'includes/header.php';
             }
         }
         
-        // 2. Unpopular Products Chart
+        
         if (unpopularData.length > 0) {
             const canvas = document.getElementById('unpopularChart');
             if (canvas) {
@@ -643,7 +642,7 @@ require $path . 'includes/header.php';
                     yAxisLabel: 'Units Sold'
                 });
                 
-                // Add legend
+             
                 const legendHtml = '<div class="chart-legend">' +
                     '<div class="chart-legend-item">' +
                     '<div class="chart-legend-color" style="background: ' + ChartHelper.colors.red.fill + ';"></div>' +
@@ -654,7 +653,7 @@ require $path . 'includes/header.php';
             }
         }
         
-        // 3. High-Rated Products Chart
+        
         if (highRatedData.length > 0) {
             const canvas = document.getElementById('highRatedChart');
             if (canvas) {
@@ -672,7 +671,7 @@ require $path . 'includes/header.php';
                 const ratingData = highRatedData.map(function(p) { return parseFloat(p.avg_rating); });
                 const reviewData = highRatedData.map(function(p) { return parseInt(p.review_count); });
                 
-                // Draw bars for ratings
+               
                 ChartHelper.drawBarChart('highRatedChart', {
                     labels: labels,
                     datasets: [
@@ -684,7 +683,7 @@ require $path . 'includes/header.php';
                     yAxisLabel: 'Rating (out of 5)'
                 });
                 
-                // Draw line for reviews on same canvas
+               
                 ChartHelper.drawLineChart('highRatedChart', {
                     labels: labels,
                     data: reviewData
@@ -694,7 +693,7 @@ require $path . 'includes/header.php';
                     minValue: 0
                 });
                 
-                // Add legend
+             
                 const legendHtml = '<div class="chart-legend">' +
                     '<div class="chart-legend-item">' +
                     '<div class="chart-legend-color" style="background: ' + ChartHelper.colors.green.fill + ';"></div>' +
@@ -709,7 +708,7 @@ require $path . 'includes/header.php';
             }
         }
         
-        // 4. Low-Rated Products Chart
+      
         if (lowRatedData.length > 0) {
             const canvas = document.getElementById('lowRatedChart');
             if (canvas) {
@@ -729,7 +728,7 @@ require $path . 'includes/header.php';
                 });
                 const reviewData = lowRatedData.map(function(p) { return parseInt(p.review_count); });
                 
-                // Draw bars for ratings
+              
                 ChartHelper.drawBarChart('lowRatedChart', {
                     labels: labels,
                     datasets: [
@@ -741,7 +740,7 @@ require $path . 'includes/header.php';
                     yAxisLabel: 'Rating (out of 5)'
                 });
                 
-                // Draw line for reviews on same canvas
+              
                 ChartHelper.drawLineChart('lowRatedChart', {
                     labels: labels,
                     data: reviewData
@@ -751,7 +750,7 @@ require $path . 'includes/header.php';
                     minValue: 0
                 });
                 
-                // Add legend
+            
                 const legendHtml = '<div class="chart-legend">' +
                     '<div class="chart-legend-item">' +
                     '<div class="chart-legend-color" style="background: ' + ChartHelper.colors.red.fill + ';"></div>' +
@@ -766,10 +765,9 @@ require $path . 'includes/header.php';
             }
         }
         
-        // Handle window resize
+      
         $(window).on('resize', function() {
-            // Charts will be redrawn on next page load or manual refresh
-            // For now, we'll just adjust canvas size
+
             $('canvas[id$="Chart"]').each(function() {
                 const canvas = this;
                 const rect = canvas.getBoundingClientRect();

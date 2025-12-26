@@ -2,7 +2,7 @@
 session_start();
 require '../../includes/functions.php';
 
-// 检查是否已经发送了OTP
+
 if (!isset($_SESSION['reset_email'])) {
     header("Location: forgot_password.php");
     exit();

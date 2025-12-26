@@ -1,6 +1,6 @@
 /* css/order_filter.css - Order Management Filter Styles */
 
-/* ========== 筛选容器 ========== */
+
 .filter-container {
     background: white;
     padding: 24px;
@@ -9,7 +9,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-/* ========== 状态标签筛选 ========== */
+
 .filter-tabs {
     display: flex;
     gap: 12px;
@@ -54,7 +54,7 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* ========== 搜索栏 ========== */
+
 .search-bar {
     display: flex;
     gap: 12px;
@@ -78,7 +78,7 @@
     box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
 }
 
-/* ========== 排序选择器 ========== */
+
 .sort-select {
     padding: 12px 16px;
     border: 1px solid #d2d2d7;
@@ -94,7 +94,7 @@
     border-color: #0071e3;
 }
 
-/* ========== 筛选按钮组 ========== */
+
 .filter-actions {
     display: flex;
     gap: 8px;
@@ -135,7 +135,7 @@
     background: #e8e8ed;
 }
 
-/* ========== 活动筛选条件 ========== */
+
 .active-filters {
     display: flex;
     gap: 8px;
@@ -165,7 +165,7 @@
     color: #0077ed;
 }
 
-/* ========== 结果计数 ========== */
+
 .results-count {
     color: #6e6e73;
     font-size: 14px;
@@ -177,7 +177,7 @@
     font-weight: 600;
 }
 
-/* ========== 分页样式 ========== */
+
 .pagination {
     display: flex;
     justify-content: center;
@@ -217,7 +217,7 @@
     pointer-events: none;
 }
 
-/* ========== 空状态 ========== */
+
 .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -241,7 +241,7 @@
     margin-bottom: 20px;
 }
 
-/* ========== 响应式设计 ========== */
+
 @media (max-width: 768px) {
     .filter-container {
         padding: 16px;

@@ -4,7 +4,7 @@ require '../../config/database.php';
 require '../../includes/functions.php';
 require_admin();
 
-// Create table if not exists
+
 try {
     $pdo->exec("CREATE TABLE IF NOT EXISTS promotion_codes (
         code_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -21,40 +21,40 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
 } catch (PDOException $e) {
-    // Table exists, continue
+
 }
 
-// Get all promotion codes
+
 $stmt = $pdo->query("SELECT * FROM promotion_codes ORDER BY created_at DESC");
 $promotions = $stmt->fetchAll();
 
-// Check if promotions have expired and determine status
+
 $current_date = date('Y-m-d');
 date_default_timezone_set('Asia/Kuala_Lumpur');
-$current_timestamp = strtotime($current_date . ' 23:59:59'); // End of today
+$current_timestamp = strtotime($current_date . ' 23:59:59'); 
 foreach ($promotions as &$promo) {
     $promo['is_expired'] = false;
     $promo['not_started'] = false;
     
-    // Check if end_date exists and has passed
+
     if ($promo['end_date']) {
         $end_date = $promo['end_date'];
-        // Compare dates directly - if end_date is before today, it's expired
+       
         if ($end_date < $current_date) {
             $promo['is_expired'] = true;
         }
     }
     
-    // Check if start_date hasn't arrived yet
+   
     if ($promo['start_date']) {
         $start_date = $promo['start_date'];
-        // If start date is after today, it hasn't started yet
+       
         if ($start_date > $current_date) {
             $promo['not_started'] = true;
         }
     }
 }
-unset($promo); // Break reference
+unset($promo);
 
 $page_title = "Promotion Codes";
 $path = "../../";
@@ -148,7 +148,7 @@ require $path . 'includes/header.php';
                         $status_class = 'inactive';
                         $status_text = 'Inactive';
                         
-                        // Priority: Expired > Not Started > Active/Inactive
+                      
                         if ($p['is_expired']) {
                             $status_class = 'expired';
                             $status_text = 'Expired';
@@ -192,7 +192,7 @@ require $path . 'includes/header.php';
     </tbody>
 </table>
 
-<!-- Create Modal -->
+
 <div id="createModal" class="modal-overlay">
     <div class="modal-box medium">
         <h3>Create Promotion Code</h3>
@@ -247,7 +247,7 @@ require $path . 'includes/header.php';
     </div>
 </div>
 
-<!-- Edit Modal -->
+
 <div id="editModal" class="modal-overlay">
     <div class="modal-box medium">
         <h3>Edit Promotion Code</h3>
@@ -342,7 +342,7 @@ $(document).ready(function() {
         }
     });
     
-    // Close modal on Escape key
+
     $(document).on('keydown', function(event) {
         if (event.key === 'Escape') {
             $('.modal-overlay').css('display', 'none');

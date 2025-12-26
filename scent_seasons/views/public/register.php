@@ -2,15 +2,15 @@
 session_start();
 require '../../includes/functions.php';
 
-// 获取 Session 中的错误信息
+
 $errors = isset($_SESSION['errors']) ? $_SESSION['errors'] : [];
 $old = isset($_SESSION['old_input']) ? $_SESSION['old_input'] : [];
 
-// 清除 Session 错误
+
 unset($_SESSION['errors']);
 unset($_SESSION['old_input']);
 
-// --- 设置 Header 参数 ---
+
 $page_title = "Register - Scent Seasons";
 $path = "../../";
 
@@ -43,15 +43,14 @@ require $path . 'includes/header.php';
                 </button>
             </div>
             
-            <!-- 密码强度指示器 -->
+     
             <div class="password-strength-container">
                 <div class="password-strength-bar">
                     <div class="password-strength-fill"></div>
                 </div>
                 <div class="password-strength-text"></div>
             </div>
-            
-            <!-- 密码要求 -->
+       
             <div class="password-requirements">
                 <h4>Password Requirements:</h4>
                 <ul>

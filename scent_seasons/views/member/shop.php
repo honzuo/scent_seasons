@@ -3,20 +3,19 @@ session_start();
 require '../../config/database.php';
 require '../../includes/functions.php';
 
-// 获取分类用于侧边栏筛选
+
 $cats = $pdo->query("SELECT * FROM categories")->fetchAll();
 
-// --- 1. 接收参数 ---
+
 $search = isset($_GET['search']) ? clean_input($_GET['search']) : '';
 $cat_filter = isset($_GET['cat']) ? intval($_GET['cat']) : 0;
-
-// --- 2. 分页配置 ---
-$limit = 12; // 每页显示 18 个
+-
+$limit = 12; 
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 if ($page < 1) $page = 1;
 $offset = ($page - 1) * $limit;
 
-// --- 3. 构建查询条件 (WHERE 子句) ---
+
 $where_sql = "WHERE is_deleted = 0 AND name LIKE ?";
 $params = ["%$search%"];
 
@@ -25,15 +24,13 @@ if ($cat_filter > 0) {
     $params[] = $cat_filter;
 }
 
-// --- 4. 先查询总数量 (用于计算总页数) ---
 $sql_count = "SELECT COUNT(*) FROM products $where_sql";
 $stmt_count = $pdo->prepare($sql_count);
 $stmt_count->execute($params);
 $total_records = $stmt_count->fetchColumn();
 $total_pages = ceil($total_records / $limit);
 
-// --- 5. 再查询当前页的数据 (加上 LIMIT 和 OFFSET) ---
-// 注意：LIMIT 和 OFFSET 直接拼接整数是安全的，且兼容性更好
+
 $sql = "SELECT * FROM products $where_sql LIMIT $limit OFFSET $offset";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);

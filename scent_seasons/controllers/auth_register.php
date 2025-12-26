@@ -5,16 +5,16 @@ require '../includes/functions.php';
 
 $errors = [];
 
-// 只有 POST 请求才处理
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // 1. 接收并清洗数据
+   
     $name = clean_input($_POST['full_name']);
     $email = clean_input($_POST['email']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
-    // 2. 服务器端验证
+  
     if (empty($name)) {
         $errors['name'] = "Name is required.";
     }
@@ -25,11 +25,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors['email'] = "Invalid email format.";
     }
 
-    // 密码验证
+    
     if (empty($password)) {
         $errors['password'] = "Password is required.";
     } else {
-        // 使用强密码验证
+       
         $validation = validate_password_strength($password);
         if (!$validation['valid']) {
             $errors['password'] = implode(' ', $validation['errors']);
@@ -40,14 +40,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors['confirm_password'] = "Passwords do not match.";
     }
 
-    // 检查邮箱是否已存在
+
     $stmt = $pdo->prepare("SELECT user_id FROM users WHERE email = ?");
     $stmt->execute([$email]);
     if ($stmt->rowCount() > 0) {
         $errors['email'] = "Email already registered.";
     }
 
-    // 3. 处理头像上传
+ 
     $photo_name = 'default.jpg';
     if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] == 0) {
         $allowed = ['jpg', 'jpeg', 'png', 'gif'];
@@ -68,7 +68,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // 4. 如果没有错误，写入数据库
+
     if (empty($errors)) {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
@@ -77,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$name, $email, $hashed_password, $photo_name]);
 
-            // 注册成功，跳转到登录页
+       
             $_SESSION['success_msg'] = "Registration successful! Please login.";
             header("Location: ../views/public/login.php");
             exit();
@@ -85,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $errors['db'] = "Database error: " . $e->getMessage();
         }
     } else {
-        // 如果有错误，把错误信息存入 Session 传回页面显示
+       
         $_SESSION['errors'] = $errors;
         $_SESSION['old_input'] = $_POST;
         header("Location: ../views/public/register.php");
