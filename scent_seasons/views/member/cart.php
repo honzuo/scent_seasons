@@ -322,7 +322,8 @@ require $path . 'includes/header.php';
                                     selected_items: selectedIds,
                                     transaction_id: details.id, 
                                     promotion_code: currentPromoCode || null,
-                                    discount_amount: discountAmount || 0
+                                    discount_amount: discountAmount || 0,
+                                    address: window.finalAddress
                                 })
                             })
                                 .then(response => response.json())
