@@ -4,21 +4,19 @@ require '../../config/database.php';
 require '../../includes/functions.php';
 
 // Get popular products based on total quantity sold
-// First check if there are any order_items, if not, just show random products
 $check_orders_sql = "SELECT COUNT(*) as count FROM order_items";
 $stmt = $pdo->query($check_orders_sql);
 $has_orders = $stmt->fetch()['count'] > 0;
 
 if ($has_orders) {
-    // If there are orders, get popular items based on sales
     $popular_sql = "SELECT p.product_id, p.name, p.price, p.image_path, p.description, p.category_id, p.stock, 
-                            COALESCE(SUM(oi.quantity), 0) as total_sold 
-                     FROM products p 
-                     LEFT JOIN order_items oi ON p.product_id = oi.product_id 
-                     WHERE p.is_deleted = 0 
-                     GROUP BY p.product_id, p.name, p.price, p.image_path, p.description, p.category_id, p.stock
-                     ORDER BY total_sold DESC, p.product_id ASC 
-                     LIMIT 4";
+                           COALESCE(SUM(oi.quantity), 0) as total_sold 
+                    FROM products p 
+                    LEFT JOIN order_items oi ON p.product_id = oi.product_id 
+                    WHERE p.is_deleted = 0 
+                    GROUP BY p.product_id, p.name, p.price, p.image_path, p.description, p.category_id, p.stock
+                    ORDER BY total_sold DESC, p.product_id ASC 
+                    LIMIT 4";
     try {
         $stmt = $pdo->query($popular_sql);
         $hot_products = $stmt->fetchAll();
@@ -29,57 +27,58 @@ if ($has_orders) {
     $hot_products = [];
 }
 
-// Fallback: If no popular products found, show random products
 if (empty($hot_products)) {
     $fallback_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
     $stmt = $pdo->query($fallback_sql);
     $hot_products = $stmt->fetchAll();
 }
 
-// Row 2: Get personalized recommendations based on member's purchase habits
+// Get recommended products
 $recommended_products = [];
-$user_id = $_SESSION['user_id'];
 
-// First, check if user has any order history
-$check_orders_sql = "SELECT COUNT(*) as order_count FROM orders WHERE user_id = ?";
-$stmt = $pdo->prepare($check_orders_sql);
-$stmt->execute([$user_id]);
-$order_check = $stmt->fetch();
-$has_order_history = $order_check['order_count'] > 0;
+if (is_logged_in()) {
+    $user_id = $_SESSION['user_id'];
 
-if ($has_order_history) {
-    // User has order history: suggest products based on categories from their orders
-    $recommended_sql = "SELECT DISTINCT p.* 
-                        FROM products p 
-                        WHERE p.is_deleted = 0 
-                        AND p.category_id IN (
-                            SELECT DISTINCT p2.category_id 
-                            FROM order_items oi 
-                            JOIN orders o ON oi.order_id = o.order_id 
-                            JOIN products p2 ON oi.product_id = p2.product_id 
-                            WHERE o.user_id = ? 
-                            AND p2.category_id IS NOT NULL
-                        )
-                        AND p.product_id NOT IN (
-                            SELECT DISTINCT oi.product_id 
-                            FROM order_items oi 
-                            JOIN orders o ON oi.order_id = o.order_id 
-                            WHERE o.user_id = ?
-                        )
-                        ORDER BY RAND() 
-                        LIMIT 4";
-    $stmt = $pdo->prepare($recommended_sql);
-    $stmt->execute([$user_id, $user_id]);
-    $recommended_products = $stmt->fetchAll();
-    
-    // If no recommendations found (e.g., user bought all products in those categories), show random products
-    if (empty($recommended_products)) {
+    $check_orders_sql = "SELECT COUNT(*) as order_count FROM orders WHERE user_id = ?";
+    $stmt = $pdo->prepare($check_orders_sql);
+    $stmt->execute([$user_id]);
+    $order_check = $stmt->fetch();
+    $has_order_history = $order_check['order_count'] > 0;
+
+    if ($has_order_history) {
+        $recommended_sql = "SELECT DISTINCT p.* FROM products p 
+                            WHERE p.is_deleted = 0 
+                            AND p.category_id IN (
+                                SELECT DISTINCT p2.category_id 
+                                FROM order_items oi 
+                                JOIN orders o ON oi.order_id = o.order_id 
+                                JOIN products p2 ON oi.product_id = p2.product_id 
+                                WHERE o.user_id = ? 
+                                AND p2.category_id IS NOT NULL
+                            )
+                            AND p.product_id NOT IN (
+                                SELECT DISTINCT oi.product_id 
+                                FROM order_items oi 
+                                JOIN orders o ON oi.order_id = o.order_id 
+                                WHERE o.user_id = ?
+                            )
+                            ORDER BY RAND() 
+                            LIMIT 4";
+        $stmt = $pdo->prepare($recommended_sql);
+        $stmt->execute([$user_id, $user_id]);
+        $recommended_products = $stmt->fetchAll();
+
+        if (empty($recommended_products)) {
+            $random_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
+            $stmt = $pdo->query($random_sql);
+            $recommended_products = $stmt->fetchAll();
+        }
+    } else {
         $random_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
         $stmt = $pdo->query($random_sql);
         $recommended_products = $stmt->fetchAll();
     }
 } else {
-    // User has no order history: suggest random products
     $random_sql = "SELECT * FROM products WHERE is_deleted = 0 ORDER BY RAND() LIMIT 4";
     $stmt = $pdo->query($random_sql);
     $recommended_products = $stmt->fetchAll();
@@ -87,17 +86,38 @@ if ($has_order_history) {
 
 $page_title = "Welcome - Scent Seasons";
 $path = "../../";
-$extra_css = "shop.css";
+$extra_css = "shop.css"; // This will be loaded first by header.php
 
 require $path . 'includes/header.php';
 ?>
+
+<link rel="stylesheet" href="<?php echo $path; ?>css/home.css">
 <link rel="stylesheet" href="<?php echo $path; ?>css/memberchat.css">
 
-<div class="hero-banner">
-    <div class="hero-content">
-        <h1>Discover Your Signature Scent</h1>
-        <p>Experience the essence of luxury with our exclusive collection.</p>
-        <a href="shop.php" class="btn-hero">Shop Now</a>
+<div class="hero-section">
+    <div class="hero-slideshow">
+        <div class="hero-slide active">
+            <img src="../../images/products/jennie.png" alt="Slide 1" class="hero-image">
+        </div>
+        <div class="hero-slide">
+            <img src="../../images/products/chanel.jpg" alt="Slide 2" class="hero-image">
+        </div>
+        <div class="hero-slide">
+            <img src="../../images/products/chanel2.png" alt="Slide 3" class="hero-image">
+        </div>
+    </div>
+
+    <div class="hero-overlay-content">
+        <a href="shop.php" class="btn-hero-shopnow">Shop Now</a>
+    </div>
+
+    <button class="hero-arrow hero-arrow-left" aria-label="Previous slide">‹</button>
+    <button class="hero-arrow hero-arrow-right" aria-label="Next slide">›</button>
+
+    <div class="hero-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
     </div>
 </div>
 
@@ -116,6 +136,31 @@ require $path . 'includes/header.php';
     </div>
 </div>
 
+<?php
+// 获取首页视频 (如果要强制指定视频，请把下面这行取消注释并填入ID)
+// $homeVideo = ['video_id' => 'JLpKktJPE7k'];
+
+// 默认逻辑：从数据库获取最新一条
+if (!isset($homeVideo)) {
+    $stmt_home_video = $pdo->query("SELECT video_id FROM youtube_videos ORDER BY id DESC LIMIT 1");
+    $homeVideo = $stmt_home_video->fetch();
+}
+?>
+
+<?php if ($homeVideo): ?>
+    <section class="home-video" style="margin: 40px auto; max-width: 800px; padding: 0 20px;">
+        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <iframe 
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                src="https://www.youtube.com/embed/<?php echo htmlspecialchars($homeVideo['video_id']); ?>?autoplay=1&mute=1&controls=1" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+            </iframe>
+        </div>
+    </section>
+<?php endif; ?>
+
 <div class="container" style="margin-top: 50px;">
     <h2 style="text-align:center; margin-bottom: 30px;">Popular Items</h2>
 
@@ -126,9 +171,9 @@ require $path . 'includes/header.php';
             <?php foreach ($hot_products as $p): ?>
                 <div class="product-card">
                     <a href="product_detail.php?id=<?php echo $p['product_id']; ?>">
-                        <img src="../../images/products/<?php echo htmlspecialchars($p['image_path']); ?>" 
-                             alt="<?php echo htmlspecialchars($p['name']); ?>"
-                             onerror="this.src='../../images/products/default_product.jpg'">
+                        <img src="../../images/products/<?php echo htmlspecialchars($p['image_path']); ?>"
+                            alt="<?php echo htmlspecialchars($p['name']); ?>"
+                            onerror="this.src='../../images/products/default_product.jpg'">
                     </a>
                     <div class="p-info">
                         <h4><?php echo htmlspecialchars($p['name']); ?></h4>
@@ -139,10 +184,8 @@ require $path . 'includes/header.php';
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
-
 </div>
 
-<!-- Row 2: Recommended for You (Based on Purchase Habits) -->
 <div class="container" style="margin-top: 50px;">
     <h2 style="text-align:center; margin-bottom: 30px;">Recommended for You</h2>
 
@@ -153,15 +196,15 @@ require $path . 'includes/header.php';
             <?php foreach ($recommended_products as $product): ?>
                 <div class="product-card">
                     <a href="product_detail.php?id=<?php echo $product['product_id']; ?>">
-                        <img src="../../images/products/<?php echo htmlspecialchars($product['image_path']); ?>" 
-                             alt="<?php echo htmlspecialchars($product['name']); ?>"
-                             onerror="this.src='../../images/products/default_product.jpg'">
+                        <img src="../../images/products/<?php echo htmlspecialchars($product['image_path']); ?>"
+                            alt="<?php echo htmlspecialchars($product['name']); ?>"
+                            onerror="this.src='../../images/products/default_product.jpg'">
                     </a>
                     <div class="p-info">
                         <h4><?php echo htmlspecialchars($product['name']); ?></h4>
                         <p class="p-price">$<?php echo number_format($product['price'], 2); ?></p>
-                        <a href="product_detail.php?id=<?php echo $product['product_id']; ?>" 
-                           class="btn-add">View Details</a>
+                        <a href="product_detail.php?id=<?php echo $product['product_id']; ?>"
+                            class="btn-add">View Details</a>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -175,7 +218,8 @@ require $path . 'includes/header.php';
 
 <?php require $path . 'includes/footer.php'; ?>
 
-<!-- Floating Chat -->
+<script src="<?php echo $path; ?>js/hero_slider.js"></script>
+
 <div class="chat-fab" id="chatFab" title="Chat with admin">💬</div>
 <div class="chat-window" id="chatWindow">
     <div class="chat-header">
@@ -192,86 +236,94 @@ require $path . 'includes/header.php';
 </div>
 
 <script>
-(function() {
-    'use strict';
+    (function() {
+        'use strict';
 
-    const fab = document.getElementById('chatFab');
-    const win = document.getElementById('chatWindow');
-    const closeBtn = document.getElementById('chatClose');
-    const msgBox = document.getElementById('chatMessages');
-    const input = document.getElementById('chatInput');
-    const sendBtn = document.getElementById('chatSend');
+        const fab = document.getElementById('chatFab');
+        const win = document.getElementById('chatWindow');
+        const closeBtn = document.getElementById('chatClose');
+        const msgBox = document.getElementById('chatMessages');
+        const input = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('chatSend');
 
-    let poller = null;
+        let poller = null;
 
-    function toggleChat(open) {
-        win.style.display = open ? 'flex' : 'none';
-        if (open) {
-            fetchMessages();
-            if (poller) clearInterval(poller);
-            poller = setInterval(fetchMessages, 5000);
-        } else {
-            if (poller) clearInterval(poller);
-        }
-    }
-
-    function renderMessages(messages) {
-        msgBox.innerHTML = '';
-        if (!messages || messages.length === 0) {
-            msgBox.innerHTML = '<div style="text-align:center;color:#6e6e73;font-size:13px;">No messages yet.</div>';
-            return;
-        }
-        messages.forEach(function(m) {
-            const div = document.createElement('div');
-            div.className = 'bubble ' + (m.is_admin == 1 ? 'them' : 'me');
-            div.innerHTML = escapeHtml(m.message) + '<span class="time">' + m.created_at + '</span>';
-            msgBox.appendChild(div);
-        });
-        msgBox.scrollTop = msgBox.scrollHeight;
-    }
-
-    function escapeHtml(str) {
-        const div = document.createElement('div');
-        div.innerText = str;
-        return div.innerHTML;
-    }
-
-    function fetchMessages() {
-        fetch('../../controllers/chat_controller.php?action=fetch_member')
-            .then(r => r.json())
-            .then(res => {
-                if (res.status === 'success') {
-                    renderMessages(res.messages);
-                }
-            }).catch(() => {});
-    }
-
-    function sendMessage() {
-        const text = input.value.trim();
-        if (!text) return;
-        sendBtn.disabled = true;
-        fetch('../../controllers/chat_controller.php?action=send_member', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'message=' + encodeURIComponent(text)
-        }).then(r => r.json())
-          .then(res => {
-            sendBtn.disabled = false;
-            if (res.status === 'success') {
-                input.value = '';
+        function toggleChat(open) {
+            win.style.display = open ? 'flex' : 'none';
+            if (open) {
                 fetchMessages();
+                if (poller) clearInterval(poller);
+                poller = setInterval(fetchMessages, 5000);
+            } else {
+                if (poller) clearInterval(poller);
             }
-        }).catch(() => { sendBtn.disabled = false; });
-    }
-
-    fab.addEventListener('click', function() { toggleChat(true); });
-    closeBtn.addEventListener('click', function() { toggleChat(false); });
-    sendBtn.addEventListener('click', sendMessage);
-    input.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
         }
-    });
-})();
+
+        function renderMessages(messages) {
+            msgBox.innerHTML = '';
+            if (!messages || messages.length === 0) {
+                msgBox.innerHTML = '<div style="text-align:center;color:#6e6e73;font-size:13px;">No messages yet.</div>';
+                return;
+            }
+            messages.forEach(function(m) {
+                const div = document.createElement('div');
+                div.className = 'bubble ' + (m.is_admin == 1 ? 'them' : 'me');
+                div.innerHTML = escapeHtml(m.message) + '<span class="time">' + m.created_at + '</span>';
+                msgBox.appendChild(div);
+            });
+            msgBox.scrollTop = msgBox.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.innerText = str;
+            return div.innerHTML;
+        }
+
+        function fetchMessages() {
+            fetch('../../controllers/chat_controller.php?action=fetch_member')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        renderMessages(res.messages);
+                    }
+                }).catch(() => {});
+        }
+
+        function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+            sendBtn.disabled = true;
+            fetch('../../controllers/chat_controller.php?action=send_member', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'message=' + encodeURIComponent(text)
+                }).then(r => r.json())
+                .then(res => {
+                    sendBtn.disabled = false;
+                    if (res.status === 'success') {
+                        input.value = '';
+                        fetchMessages();
+                    }
+                }).catch(() => {
+                    sendBtn.disabled = false;
+                });
+        }
+
+        fab.addEventListener('click', function() {
+            toggleChat(true);
+        });
+        closeBtn.addEventListener('click', function() {
+            toggleChat(false);
+        });
+        sendBtn.addEventListener('click', sendMessage);
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    })();
 </script>

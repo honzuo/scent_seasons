@@ -36,9 +36,16 @@ require $path . 'includes/header.php';
     <?php if (isset($_GET['msg'])): ?>
         <div class="alert alert-success">
             <?php
-            if ($_GET['msg'] == 'info_updated') echo "Profile updated successfully!";
-            elseif ($_GET['msg'] == 'password_changed') echo "Password changed successfully!";
-            elseif ($_GET['msg'] == 'wishlist_removed') echo "Item removed from wishlist.";
+            if ($_GET['msg'] == 'info_updated')
+                echo "Profile updated successfully!";
+            elseif ($_GET['msg'] == 'password_changed')
+                echo "Password changed successfully!";
+            elseif ($_GET['msg'] == 'wishlist_removed')
+                echo "Item removed from wishlist.";
+            elseif ($_GET['msg'] == 'address_added')
+                echo "New address added successfully!";
+            elseif ($_GET['msg'] == 'address_deleted')
+                echo "Address deleted successfully!";
             ?>
         </div>
     <?php endif; ?>
@@ -46,10 +53,14 @@ require $path . 'includes/header.php';
     <?php if (isset($_GET['error'])): ?>
         <div class="alert alert-error">
             <?php
-            if ($_GET['error'] == 'wrong_password') echo "Current password is incorrect.";
-            elseif ($_GET['error'] == 'password_mismatch') echo "New passwords do not match.";
-            elseif ($_GET['error'] == 'password_short') echo "Password must be at least 6 characters.";
-            else echo "An error occurred.";
+            if ($_GET['error'] == 'wrong_password')
+                echo "Current password is incorrect.";
+            elseif ($_GET['error'] == 'password_mismatch')
+                echo "New passwords do not match.";
+            elseif ($_GET['error'] == 'password_short')
+                echo "Password must be at least 6 characters.";
+            else
+                echo "An error occurred.";
             ?>
         </div>
     <?php endif; ?>
@@ -64,9 +75,11 @@ require $path . 'includes/header.php';
                 <div class="profile-avatar-container">
                     <img src="../../images/uploads/<?php echo $user['profile_photo']; ?>" class="profile-avatar">
                     <br>
-                    <label class="mt-10" style="cursor: pointer; color: #0071e3; font-size: 0.9em; display: inline-block;">
+                    <label class="mt-10"
+                        style="cursor: pointer; color: #0071e3; font-size: 0.9em; display: inline-block;">
                         Change Photo
-                        <input type="file" name="profile_photo" accept="image/*" style="display: none;" onchange="alert('Photo selected! Click Update to save.')">
+                        <input type="file" name="profile_photo" accept="image/*" style="display: none;"
+                            onchange="alert('Photo selected! Click Update to save.')">
                     </label>
                 </div>
 
@@ -82,7 +95,8 @@ require $path . 'includes/header.php';
 
                 <div class="form-group">
                     <label>Role:</label>
-                    <input type="text" value="<?php echo ucfirst($user['role']); ?>" disabled style="background: #f5f5f7; cursor: not-allowed; color: #86868b;">
+                    <input type="text" value="<?php echo ucfirst($user['role']); ?>" disabled
+                        style="background: #f5f5f7; cursor: not-allowed; color: #86868b;">
                 </div>
 
                 <button type="submit" class="btn-blue w-100">Update Profile</button>
@@ -111,12 +125,45 @@ require $path . 'includes/header.php';
         </div>
     </div>
 
+    <div class="profile-card" style="margin-top: 20px; width: 100%;">
+        <h3>My Address Book</h3>
+        <?php
+        $stmt = $pdo->prepare("SELECT * FROM user_addresses WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $saved_addresses = $stmt->fetchAll();
+        ?>
+        <ul class="list-group">
+            <?php foreach ($saved_addresses as $addr): ?>
+                <li style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;">
+                    <span><?php echo htmlspecialchars($addr['address_text']); ?></span>
+                    <form action="../../controllers/profile_controller.php" method="POST"
+                        onsubmit="return confirm('Delete this address?')">
+                        <input type="hidden" name="action" value="delete_address">
+                        <input type="hidden" name="address_id" value="<?php echo $addr['address_id']; ?>">
+                        <button type="submit"
+                            style="color:red; border:none; background:none; cursor:pointer;">Delete</button>
+                    </form>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+
+        <form action="../../controllers/profile_controller.php" method="POST" style="margin-top:15px;">
+            <input type="hidden" name="action" value="add_address">
+            <div class="form-group">
+                <textarea name="address" placeholder="Enter new address..." required
+                    style="width:100%; height:60px;"></textarea>
+            </div>
+            <button type="submit" class="btn-blue">Add New Address</button>
+        </form>
+    </div>
+
     <!-- Wishlist 区域 -->
     <div class="wishlist-section" style="margin-top: 60px;">
         <div class="flex-between mb-20">
             <div>
                 <h2 style="margin-bottom: 8px;">My Wishlist</h2>
-                <p class="text-muted" style="margin-top: 0;">Items you've saved for later (<?php echo count($wishlist_items); ?>)</p>
+                <p class="text-muted" style="margin-top: 0;">Items you've saved for later
+                    (<?php echo count($wishlist_items); ?>)</p>
             </div>
         </div>
 
@@ -135,8 +182,7 @@ require $path . 'includes/header.php';
                         <div class="wishlist-item-content">
                             <a href="product_detail.php?id=<?php echo $item['product_id']; ?>">
                                 <img src="../../images/products/<?php echo $item['image_path']; ?>"
-                                    alt="<?php echo $item['name']; ?>"
-                                    class="wishlist-item-img">
+                                    alt="<?php echo $item['name']; ?>" class="wishlist-item-img">
                             </a>
 
                             <div class="wishlist-item-info">
@@ -160,8 +206,7 @@ require $path . 'includes/header.php';
                                     </span>
                                 </div>
 
-                                <a href="product_detail.php?id=<?php echo $item['product_id']; ?>"
-                                    class="btn-view-product">
+                                <a href="product_detail.php?id=<?php echo $item['product_id']; ?>" class="btn-view-product">
                                     View Product
                                 </a>
                             </div>

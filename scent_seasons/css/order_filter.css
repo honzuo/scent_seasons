@@ -1,0 +1,308 @@
+/* css/order_filter.css - Order Management Filter Styles */
+
+/* ========== 筛选容器 ========== */
+.filter-container {
+    background: white;
+    padding: 24px;
+    border-radius: 18px;
+    margin-bottom: 32px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* ========== 状态标签筛选 ========== */
+.filter-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.filter-tab {
+    padding: 10px 20px;
+    background: #f5f5f7;
+    border: 2px solid transparent;
+    border-radius: 980px;
+    text-decoration: none;
+    color: #1d1d1f;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-tab:hover {
+    background: #e8e8ed;
+}
+
+.filter-tab.active {
+    background: #0071e3;
+    color: white;
+    border-color: #0071e3;
+}
+
+.filter-tab .count {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.filter-tab.active .count {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ========== 搜索栏 ========== */
+.search-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 250px;
+    padding: 12px 16px;
+    border: 1px solid #d2d2d7;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: inherit;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #0071e3;
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+}
+
+/* ========== 排序选择器 ========== */
+.sort-select {
+    padding: 12px 16px;
+    border: 1px solid #d2d2d7;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    cursor: pointer;
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: #0071e3;
+}
+
+/* ========== 筛选按钮组 ========== */
+.filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-search {
+    padding: 12px 24px;
+    background: #0071e3;
+    color: white;
+    border: none;
+    border-radius: 980px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-search:hover {
+    background: #0077ed;
+}
+
+.btn-clear {
+    padding: 12px 24px;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    border: none;
+    border-radius: 980px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.btn-clear:hover {
+    background: #e8e8ed;
+}
+
+/* ========== 活动筛选条件 ========== */
+.active-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.filter-badge {
+    background: #e5f3ff;
+    color: #0071e3;
+    padding: 6px 12px;
+    border-radius: 980px;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-badge .remove {
+    cursor: pointer;
+    font-weight: bold;
+    color: #0071e3;
+    text-decoration: none;
+}
+
+.filter-badge .remove:hover {
+    color: #0077ed;
+}
+
+/* ========== 结果计数 ========== */
+.results-count {
+    color: #6e6e73;
+    font-size: 14px;
+    margin-top: 16px;
+}
+
+.results-count strong {
+    color: #1d1d1f;
+    font-weight: 600;
+}
+
+/* ========== 分页样式 ========== */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 32px;
+    padding: 20px;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.pagination a, 
+.pagination span {
+    padding: 10px 16px;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.pagination a:hover {
+    background: #e8e8ed;
+}
+
+.pagination .active {
+    background: #0071e3;
+    color: white;
+}
+
+.pagination .disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ========== 空状态 ========== */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    color: #1d1d1f;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: #6e6e73;
+    margin-bottom: 20px;
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 768px) {
+    .filter-container {
+        padding: 16px;
+    }
+
+    .filter-tabs {
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .filter-tab {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .search-bar {
+        flex-direction: column;
+    }
+
+    .search-input {
+        min-width: 100%;
+    }
+
+    .filter-actions {
+        width: 100%;
+    }
+
+    .btn-search,
+    .btn-clear {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .pagination {
+        padding: 16px;
+        gap: 6px;
+    }
+
+    .pagination a,
+    .pagination span {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .filter-tab {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .filter-tab .count {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+
+    .results-count {
+        font-size: 13px;
+    }
+
+    .empty-icon {
+        font-size: 48px;
+    }
+}

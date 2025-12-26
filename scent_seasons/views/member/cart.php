@@ -19,6 +19,10 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute([$user_id]);
 $cart_items = $stmt->fetchAll();
 
+$stmt_addr = $pdo->prepare("SELECT * FROM user_addresses WHERE user_id = ?");
+$stmt_addr->execute([$user_id]);
+$my_addresses = $stmt_addr->fetchAll();
+
 $page_title = "My Shopping Cart";
 $path = "../../";
 $extra_css = "shop.css";
@@ -48,13 +52,15 @@ require $path . 'includes/header.php';
         <tbody>
             <?php foreach ($cart_items as $item):
                 $subtotal = $item['price'] * $item['cart_qty'];
-            ?>
+                ?>
                 <tr class="cart-item-row">
                     <td style="text-align: center;">
-                        <input type="checkbox" class="item-checkbox" value="<?php echo $item['product_id']; ?>" data-subtotal="<?php echo $subtotal; ?>">
+                        <input type="checkbox" class="item-checkbox" value="<?php echo $item['product_id']; ?>"
+                            data-subtotal="<?php echo $subtotal; ?>">
                     </td>
                     <td>
-                        <img src="../../images/products/<?php echo $item['image_path']; ?>" class="img-small" style="width:50px;">
+                        <img src="../../images/products/<?php echo $item['image_path']; ?>" class="img-small"
+                            style="width:50px;">
                         <?php echo $item['name']; ?>
                     </td>
                     <td>$<?php echo $item['price']; ?></td>
@@ -62,7 +68,8 @@ require $path . 'includes/header.php';
                         <form action="../../controllers/cart_controller.php" method="POST" style="display:inline;">
                             <input type="hidden" name="action" value="update">
                             <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
-                            <input type="number" name="quantity" value="<?php echo $item['cart_qty']; ?>" min="1" style="width: 50px; padding:5px;">
+                            <input type="number" name="quantity" value="<?php echo $item['cart_qty']; ?>" min="1"
+                                style="width: 50px; padding:5px;">
                             <button type="submit" class="btn-blue" style="padding:5px 10px; font-size:0.8em;">Update</button>
                         </form>
                     </td>
@@ -105,13 +112,40 @@ require $path . 'includes/header.php';
             <span>Total:</span>
             <span>$<span id="display-total">0.00</span></span>
         </div>
+
+    <div style="margin-top: 30px; background: #fafafa; padding: 20px; border-radius: 12px; border: 1px solid #eee;">
+        <h3 style="margin-top: 0; font-size: 18px;">Shipping Address</h3>
+
+        <?php if (!empty($my_addresses)): ?>
+            <div class="saved-addresses" style="margin-bottom: 15px;">
+                <p><strong>Select a saved address:</strong></p>
+                <?php foreach ($my_addresses as $addr): ?>
+                    <label style="display: block; margin-bottom: 8px; cursor:pointer;">
+                        <input type="radio" name="address_option" class="addr-radio"
+                            value="<?php echo htmlspecialchars($addr['address_text']); ?>">
+                        <?php echo htmlspecialchars($addr['address_text']); ?>
+                    </label>
+                <?php endforeach; ?>
+                <label style="display: block; cursor:pointer;">
+                    <input type="radio" name="address_option" class="addr-radio" value="new" id="use-new-address">
+                    <em>-- Use a new address --</em>
+                </label>
+            </div>
+        <?php endif; ?>
+
+        <div id="new-address-input" style="<?php echo !empty($my_addresses) ? 'display:none;' : ''; ?>">
+            <p class="text-muted" style="font-size: 14px; margin-bottom: 10px;">Please enter your full delivery address.</p>
+            <textarea id="shipping-address" rows="3" placeholder="Street address, City, State, Zip Code..."
+                style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #d2d2d7;"></textarea>
+        </div>
     </div>
 
     <div style="text-align: right; margin-top: 30px; display: flex; justify-content: flex-end;">
         <div id="paypal-button-container" style="width: 300px;"></div>
     </div>
 
-    <script src="https://www.paypal.com/sdk/js?client-id=Ab91QiHAZkGW1YVrL_60iEZvAraUdaF-BCUFbrxdRw6zmaI3wZP0XlwZAoUQHe0FIE5cuYUZe4X4I0M6&currency=USD"></script>
+    <script
+        src="https://www.paypal.com/sdk/js?client-id=Ab91QiHAZkGW1YVrL_60iEZvAraUdaF-BCUFbrxdRw6zmaI3wZP0XlwZAoUQHe0FIE5cuYUZe4X4I0M6&currency=USD"></script>
 
     <script>
         $(document).ready(function() {
@@ -197,8 +231,7 @@ require $path . 'includes/header.php';
             });
 
             // 监听复选框变化
-            $('.item-checkbox, #select-all').change(function() {
-                // 如果是全选
+            $('.item-checkbox, #select-all').change(function () {
                 if (this.id === 'select-all') {
                     $('.item-checkbox').prop('checked', $(this).prop('checked'));
                 } else if (!$(this).prop('checked')) {
@@ -207,15 +240,27 @@ require $path . 'includes/header.php';
                 calculateTotal();
             });
 
+            // 监听地址单选框切换 (如果你已经按照之前的建议添加了 radio)
+            $(document).on('change', '.addr-radio', function () {
+                if ($(this).val() === 'new') {
+                    $('#new-address-input').slideDown();
+                } else {
+                    $('#new-address-input').slideUp();
+                }
+            });
+
             // 2. 初始化 PayPal 按钮
             paypal.Buttons({
-                // 只有当有商品被选中且金额 > 0 时，才允许点击
-                onInit: function(data, actions) {
-                    // 初始禁用，除非有选中
-                    actions.disable();
+                onInit: function (data, actions) {
+                    // 初始检查：如果购物车已有选中的商品，直接启用
+                    if (calculateTotal() > 0) {
+                        actions.enable();
+                    } else {
+                        actions.disable();
+                    }
 
-                    // 监听 checkbox 变化来启用/禁用按钮
-                    $('.item-checkbox, #select-all').change(function() {
+                    // 监听勾选框实时切换按钮状态
+                    $('.item-checkbox, #select-all').change(function () {
                         if (calculateTotal() > 0) {
                             actions.enable();
                         } else {
@@ -224,37 +269,48 @@ require $path . 'includes/header.php';
                     });
                 },
 
-                // 点击按钮时触发：告诉 PayPal 收多少钱
-                createOrder: function(data, actions) {
-                    let amount = calculateTotal().toFixed(2);
-                    if (amount <= 0) {
-                        alert("Please select items to checkout.");
-                        return false;
+                onClick: function (data, actions) {
+                    let address = '';
+
+                    // 逻辑：优先判断是否有选中的保存地址
+                    const savedAddr = $('input[name="address_option"]:checked');
+
+                    if (savedAddr.length > 0) {
+                        if (savedAddr.val() === 'new') {
+                            address = $('#shipping-address').val().trim();
+                        } else {
+                            address = savedAddr.val().trim();
+                        }
+                    } else {
+                        // 如果没有 radio (旧版本)，直接读 textarea
+                        address = $('#shipping-address').val().trim();
                     }
 
+                    if (address.length === 0) {
+                        alert("Please select or enter a shipping address before proceeding.");
+                        return actions.reject();
+                    }
+
+                    // 存入全局变量供 onApprove 使用
+                    window.finalAddress = address;
+                },
+
+                createOrder: function (data, actions) {
+                    let amount = calculateTotal().toFixed(2);
                     return actions.order.create({
                         purchase_units: [{
-                            amount: {
-                                value: amount
-                            }
+                            amount: { value: amount }
                         }]
                     });
                 },
 
-                // 用户付款成功后触发
-                onApprove: function(data, actions) {
-                    // 1. 捕获资金（完成交易）
-                    return actions.order.capture().then(function(details) {
-
-                        console.log('Transaction completed by ' + details.payer.name.given_name);
-
-                        // 2. 收集选中的商品 ID
+                onApprove: function (data, actions) {
+                    return actions.order.capture().then(function (details) {
                         let selectedIds = [];
-                        $('.item-checkbox:checked').each(function() {
+                        $('.item-checkbox:checked').each(function () {
                             selectedIds.push($(this).val());
                         });
 
-                        // 3. 用 AJAX 发送数据给 PHP 后端保存订单
                         fetch('../../controllers/order_controller.php?action=checkout', {
                                 method: 'POST',
                                 headers: {
@@ -267,28 +323,17 @@ require $path . 'includes/header.php';
                                     discount_amount: discountAmount || 0
                                 })
                             })
+                        })
                             .then(response => response.json())
                             .then(data => {
                                 if (data.success) {
-                                    // 成功！跳转到订单页
                                     window.location.href = "../member/orders.php?msg=success";
                                 } else {
-                                    alert("Payment successful, but failed to save order: " + data.message);
+                                    alert("Order failed: " + data.message);
                                 }
-                            })
-                            .catch((error) => {
-                                console.error('Error:', error);
-                                alert("System error processing order.");
                             });
                     });
-                },
-
-                // 用户取消或出错
-                onError: function(err) {
-                    console.log(err);
-                    alert("Something went wrong with PayPal.");
                 }
-
             }).render('#paypal-button-container');
         });
     </script>
