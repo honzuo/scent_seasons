@@ -4,7 +4,7 @@ require '../../../config/database.php';
 require '../../../includes/functions.php';
 require_admin();
 
-// 联表查询
+
 $sql = "SELECT r.*, u.full_name, p.name as product_name 
         FROM reviews r 
         JOIN users u ON r.user_id = u.user_id 

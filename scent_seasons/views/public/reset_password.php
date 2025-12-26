@@ -2,7 +2,7 @@
 session_start();
 require '../../includes/functions.php';
 
-// 检查是否已验证OTP
+
 if (!isset($_SESSION['reset_verified']) || !$_SESSION['reset_verified']) {
     header("Location: forgot_password.php");
     exit();
@@ -30,7 +30,7 @@ require $path . 'includes/header.php';
                 </button>
             </div>
             
-            <!-- 密码强度指示器 -->
+        
             <div class="password-strength-container">
                 <div class="password-strength-bar">
                     <div class="password-strength-fill"></div>
@@ -38,7 +38,7 @@ require $path . 'includes/header.php';
                 <div class="password-strength-text"></div>
             </div>
             
-            <!-- 密码要求 -->
+
             <div class="password-requirements">
                 <h4>Password Requirements:</h4>
                 <ul>
@@ -70,7 +70,7 @@ require $path . 'includes/header.php';
     </form>
 </div>
 
-<!-- 重要：引入 JavaScript -->
+
 <script src="<?php echo $path; ?>js/password_validation.js"></script>
 
 <?php require $path . 'includes/footer.php'; ?>
