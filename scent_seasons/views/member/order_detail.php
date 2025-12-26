@@ -128,7 +128,7 @@ require $path . 'includes/header.php';
                         </div>
                     </td>
                     <td><?php echo $item['quantity']; ?></td>
-                    <td>$<?php echo number_format($item['price_each'], 2); ?></td>
+                    <td>RM<?php echo number_format($item['price_each'], 2); ?></td>
                     <td style="font-weight:bold;">$<?php echo number_format($item['quantity'] * $item['price_each'], 2); ?></td>
 
                     <?php if ($status == 'completed'): ?>

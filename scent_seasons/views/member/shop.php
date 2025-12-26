@@ -84,7 +84,7 @@ require $path . 'includes/header.php';
                         </a>
                         <div class="p-info">
                             <h4><?php echo $p['name']; ?></h4>
-                            <p class="p-price">$<?php echo $p['price']; ?></p>
+                            <p class="p-price">RM<?php echo $p['price']; ?></p>
                             <a href="product_detail.php?id=<?php echo $p['product_id']; ?>" class="btn-add">View Details</a>
                         </div>
                     </div>

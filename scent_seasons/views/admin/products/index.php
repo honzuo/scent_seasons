@@ -105,7 +105,7 @@ require $path . 'includes/header.php';
                     </td>
                     <td><?php echo $p['name']; ?></td>
                     <td><?php echo $p['category_name']; ?></td>
-                    <td>$<?php echo $p['price']; ?></td>
+                    <td>RM<?php echo $p['price']; ?></td>
                     <td><?php echo $p['stock']; ?></td>
                     <td>
                         <button type="button"

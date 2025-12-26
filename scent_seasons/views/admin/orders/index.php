@@ -330,7 +330,7 @@ require $path . 'includes/header.php';
                         <small class="text-gray"><?php echo htmlspecialchars($o['email']); ?></small>
                     </td>
                     <td><?php echo date('M d, Y H:i', strtotime($o['order_date'])); ?></td>
-                    <td><strong>$<?php echo number_format($o['total_amount'], 2); ?></strong></td>
+                    <td><strong>RM<?php echo number_format($o['total_amount'], 2); ?></strong></td>
                     <td>
                         <?php
                         $s = strtolower($o['status']);

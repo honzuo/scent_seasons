@@ -5,24 +5,6 @@ require '../../includes/functions.php';
 require_admin();
 
 
-try {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS promotion_codes (
-        code_id INT AUTO_INCREMENT PRIMARY KEY,
-        code VARCHAR(50) UNIQUE NOT NULL,
-        discount_type ENUM('percentage', 'fixed') NOT NULL,
-        discount_value DECIMAL(10,2) NOT NULL,
-        min_purchase DECIMAL(10,2) DEFAULT 0,
-        max_discount DECIMAL(10,2) DEFAULT NULL,
-        usage_limit INT DEFAULT NULL,
-        used_count INT DEFAULT 0,
-        start_date DATE DEFAULT NULL,
-        end_date DATE DEFAULT NULL,
-        is_active TINYINT(1) DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )");
-} catch (PDOException $e) {
-
-}
 
 
 $stmt = $pdo->query("SELECT * FROM promotion_codes ORDER BY created_at DESC");

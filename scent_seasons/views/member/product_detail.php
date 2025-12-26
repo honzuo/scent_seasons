@@ -122,7 +122,7 @@ require $path . 'includes/header_member.php';
             <span style="color:#555; font-size:0.9em; margin-left:5px;">(<?php echo $total_reviews; ?> reviews)</span>
         </div>
 
-        <div class="product-price">$<?php echo number_format($product['price'], 2); ?></div>
+        <div class="product-price">RM<?php echo number_format($product['price'], 2); ?></div>
 
         <div style="margin-bottom: 25px; line-height: 1.6; color: #666;">
             <?php echo nl2br(htmlspecialchars($product['description'])); ?>

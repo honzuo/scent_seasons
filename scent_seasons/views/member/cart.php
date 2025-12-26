@@ -3,6 +3,7 @@ session_start();
 require '../../config/database.php';
 require '../../includes/functions.php';
 
+// 强制登录检查
 if (!is_logged_in()) {
     header("Location: ../public/login.php");
     exit();
@@ -10,6 +11,7 @@ if (!is_logged_in()) {
 
 $user_id = $_SESSION['user_id'];
 
+// 获取购物车所有商品
 $sql = "SELECT c.quantity as cart_qty, p.* FROM cart c 
         JOIN products p ON c.product_id = p.product_id 
         WHERE c.user_id = ?";
@@ -17,6 +19,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute([$user_id]);
 $cart_items = $stmt->fetchAll();
 
+// 获取用户保存的地址
 $stmt_addr = $pdo->prepare("SELECT * FROM user_addresses WHERE user_id = ?");
 $stmt_addr->execute([$user_id]);
 $my_addresses = $stmt_addr->fetchAll();
@@ -24,7 +27,6 @@ $my_addresses = $stmt_addr->fetchAll();
 $page_title = "My Shopping Cart";
 $path = "../../";
 $extra_css = "shop.css";
-$extra_css = "cart.css";
 
 require $path . 'includes/header.php';
 ?>
@@ -62,7 +64,7 @@ require $path . 'includes/header.php';
                             style="width:50px;">
                         <?php echo $item['name']; ?>
                     </td>
-                    <td>$<?php echo $item['price']; ?></td>
+                    <td>RM <?php echo $item['price']; ?></td>
                     <td>
                         <form action="../../controllers/cart_controller.php" method="POST" style="display:inline;">
                             <input type="hidden" name="action" value="update">
@@ -72,7 +74,7 @@ require $path . 'includes/header.php';
                             <button type="submit" class="btn-blue" style="padding:5px 10px; font-size:0.8em;">Update</button>
                         </form>
                     </td>
-                    <td class="row-subtotal">$<?php echo number_format($subtotal, 2); ?></td>
+                    <td class="row-subtotal">RM <?php echo number_format($subtotal, 2); ?></td>
                     <td>
                         <form action="../../controllers/cart_controller.php" method="POST">
                             <input type="hidden" name="action" value="remove">
@@ -100,17 +102,17 @@ require $path . 'includes/header.php';
     <div class="cart-total" style="margin-top: 20px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
             <span>Subtotal:</span>
-            <span>$<span id="display-subtotal">0.00</span></span>
+            <span>RM <span id="display-subtotal">0.00</span></span>
         </div>
+        
         <div id="discount-row" style="display: none; justify-content: space-between; margin-bottom: 10px; color: #30d158;">
             <span>Discount (<span id="discount-code-name"></span>):</span>
-            <span>-$<span id="display-discount">0.00</span> <button id="removePromo"
+            <span>-RM <span id="display-discount">0.00</span> <button id="removePromo"
                     style="margin-left: 10px; padding: 2px 8px; font-size: 11px; background: #ff3b30; color: white; border: none; border-radius: 4px; cursor: pointer;">Remove</button></span>
         </div>
-        <div
-            style="display: flex; justify-content: space-between; font-size: 20px; font-weight: 600; padding-top: 10px; border-top: 2px solid #e5e5e7;">
+        <div style="display: flex; justify-content: space-between; font-size: 20px; font-weight: 600; padding-top: 10px; border-top: 2px solid #e5e5e7;">
             <span>Total:</span>
-            <span>$<span id="display-total">0.00</span></span>
+            <span>RM <span id="display-total">0.00</span></span>
         </div>
 
         <div style="margin-top: 30px; background: #fafafa; padding: 20px; border-radius: 12px; border: 1px solid #eee;">
@@ -146,7 +148,7 @@ require $path . 'includes/header.php';
         </div>
 
         <script
-            src="https://www.paypal.com/sdk/js?client-id=Ab91QiHAZkGW1YVrL_60iEZvAraUdaF-BCUFbrxdRw6zmaI3wZP0XlwZAoUQHe0FIE5cuYUZe4X4I0M6&currency=USD"></script>
+            src="https://www.paypal.com/sdk/js?client-id=Ab91QiHAZkGW1YVrL_60iEZvAraUdaF-BCUFbrxdRw6zmaI3wZP0XlwZAoUQHe0FIE5cuYUZe4X4I0M6&currency=MYR"></script>
 
         <script>
             $(document).ready(function () {
@@ -203,7 +205,8 @@ require $path . 'includes/header.php';
                         if (res.status === 'success') {
                             currentPromoCode = code;
                             discountInfo = res;
-                            $('#promoMessage').html('<span style="color: #30d158;">✓ Promotion code applied! Discount: $' + res.discount.toFixed(2) + '</span>');
+                            // 修改 7: 显示 RM 符号
+                            $('#promoMessage').html('<span style="color: #30d158;">✓ Promotion code applied! Discount: RM ' + res.discount.toFixed(2) + '</span>');
                             $('#promoCode').prop('disabled', true);
                             $('#applyPromo').text('Applied').prop('disabled', true);
                             calculateTotal();
@@ -306,10 +309,10 @@ require $path . 'includes/header.php';
                                 },
                                 body: JSON.stringify({
                                     selected_items: selectedIds,
-                                    transaction_id: details.id,
+                                    transaction_id: details.id, 
                                     promotion_code: currentPromoCode || null,
                                     discount_amount: discountAmount || 0,
-                                    address: window.finalAddress
+                                    address: window.finalAddress 
                                 })
                             })
                                 .then(response => response.json())
@@ -326,6 +329,6 @@ require $path . 'includes/header.php';
             });
         </script>
 
-    <?php endif; ?>
+<?php endif; ?>
 
-    <?php require $path . 'includes/footer.php'; ?>
+<?php require $path . 'includes/footer.php'; ?>

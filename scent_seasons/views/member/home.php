@@ -174,7 +174,7 @@ if (!isset($homeVideo)) {
                     </a>
                     <div class="p-info">
                         <h4><?php echo htmlspecialchars($p['name']); ?></h4>
-                        <p class="p-price">$<?php echo number_format($p['price'], 2); ?></p>
+                        <p class="p-price">RM<?php echo number_format($p['price'], 2); ?></p>
                         <a href="product_detail.php?id=<?php echo $p['product_id']; ?>" class="btn-add">View Details</a>
                     </div>
                 </div>
@@ -199,7 +199,7 @@ if (!isset($homeVideo)) {
                     </a>
                     <div class="p-info">
                         <h4><?php echo htmlspecialchars($product['name']); ?></h4>
-                        <p class="p-price">$<?php echo number_format($product['price'], 2); ?></p>
+                        <p class="p-price">RM<?php echo number_format($product['price'], 2); ?></p>
                         <a href="product_detail.php?id=<?php echo $product['product_id']; ?>"
                             class="btn-add">View Details</a>
                     </div>
