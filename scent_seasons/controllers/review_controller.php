@@ -10,7 +10,7 @@ if (!is_logged_in()) {
 
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
-
+// --- 1. 删除 ---
 if ($action == 'delete') {
     require_admin();
     $review_id = intval($_POST['review_id']);
@@ -21,12 +21,12 @@ if ($action == 'delete') {
 }
 
 if ($action == 'reply') {
-    require_admin(); 
+    require_admin(); // 必须是管理员
 
     $review_id = intval($_POST['review_id']);
     $reply_text = clean_input($_POST['admin_reply']);
 
- 
+    // 更新回复内容和时间
     $stmt = $pdo->prepare("UPDATE reviews SET admin_reply = ?, reply_at = NOW() WHERE review_id = ?");
     $stmt->execute([$reply_text, $review_id]);
 
@@ -34,11 +34,11 @@ if ($action == 'reply') {
     exit();
 }
 
-
+// --- 2. 提交评价 ---
 if ($_SERVER["REQUEST_METHOD"] == "POST" && $action != 'delete') {
     $user_id = $_SESSION['user_id'];
     $product_id = intval($_POST['product_id']);
-    $order_id = intval($_POST['order_id']); 
+    $order_id = intval($_POST['order_id']); // 新增
     $rating = intval($_POST['rating']);
     $comment = clean_input($_POST['comment']);
 
@@ -49,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $action != 'delete') {
         die("Comment cannot be empty.");
     }
 
-    
+    // 验证：是否在该订单购买过且未评价
     $sql_check = "SELECT COUNT(*) FROM orders o 
                   JOIN order_items oi ON o.order_id = oi.order_id 
                   WHERE o.user_id = ? AND o.order_id = ? AND oi.product_id = ? AND o.status = 'completed'";
@@ -60,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $action != 'delete') {
         die("Error: Unauthorized review.");
     }
 
-    
+    // 防止重复评价 (按 order_id)
     $sql_exist = "SELECT COUNT(*) FROM reviews WHERE user_id = ? AND product_id = ? AND order_id = ?";
     $stmt = $pdo->prepare($sql_exist);
     $stmt->execute([$user_id, $product_id, $order_id]);
@@ -70,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && $action != 'delete') {
     }
 
     try {
-       
+        // 插入时带上 order_id
         $sql = "INSERT INTO reviews (user_id, product_id, order_id, rating, comment) VALUES (?, ?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$user_id, $product_id, $order_id, $rating, $comment]);

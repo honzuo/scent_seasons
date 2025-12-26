@@ -9,16 +9,17 @@ if (!is_logged_in()) {
 }
 $user_id = $_SESSION['user_id'];
 
-
+// 获取用户信息
 $stmt = $pdo->prepare("SELECT * FROM users WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 
-
+// 获取收藏夹商品
+// 获取收藏夹商品
 $sql = "SELECT w.wishlist_id, w.created_at as added_at, p.* FROM wishlist w 
         JOIN products p ON w.product_id = p.product_id 
         WHERE w.user_id = ? AND p.is_deleted = 0
-        ORDER BY w.created_at DESC"; 
+        ORDER BY w.created_at DESC"; // 已修正为 created_at
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$user_id]);
 $wishlist_items = $stmt->fetchAll();
@@ -65,7 +66,7 @@ require $path . 'includes/header.php';
     <?php endif; ?>
 
     <div class="profile-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
-  
+        <!-- 个人信息卡片 -->
         <div class="profile-card">
             <h3 class="mt-0">Edit Personal Info</h3>
             <form action="../../controllers/profile_controller.php" method="POST" enctype="multipart/form-data">
@@ -102,7 +103,7 @@ require $path . 'includes/header.php';
             </form>
         </div>
 
-
+        <!-- 修改密码卡片 -->
         <div class="profile-card">
             <h3 class="mt-0">Change Password</h3>
             <form action="../../controllers/profile_controller.php" method="POST">
@@ -156,7 +157,7 @@ require $path . 'includes/header.php';
         </form>
     </div>
 
-
+    <!-- Wishlist 区域 -->
     <div class="wishlist-section" style="margin-top: 60px;">
         <div class="flex-between mb-20">
             <div>
@@ -170,7 +171,7 @@ require $path . 'includes/header.php';
             <div class="wishlist-grid">
                 <?php foreach ($wishlist_items as $item): ?>
                     <div class="wishlist-item-card">
-           
+                        <!-- 删除按钮 -->
                         <form action="../../controllers/wishlist_controller.php" method="POST" class="wishlist-remove-form">
                             <input type="hidden" name="action" value="remove">
                             <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">

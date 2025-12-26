@@ -4,15 +4,15 @@ require '../../../config/database.php';
 require '../../../includes/functions.php';
 require_admin();
 
-
+// 1. 获取分类
 $stmt_cats = $pdo->query("SELECT * FROM categories ORDER BY category_name ASC");
 $categories = $stmt_cats->fetchAll();
 
-
+// 1.5 获取所有 YouTube 视频
 $stmt_vids = $pdo->query("SELECT * FROM youtube_videos ORDER BY id DESC");
 $videos = $stmt_vids->fetchAll();
 
-
+// 1.8 [新增] 获取所有产品的相册图片，并按 product_id 分组
 $stmt_imgs = $pdo->query("SELECT * FROM product_images");
 $all_images = $stmt_imgs->fetchAll();
 $gallery_map = [];
@@ -23,10 +23,10 @@ foreach ($all_images as $img) {
     ];
 }
 
-
+// 2. 搜索逻辑
 $search = isset($_GET['search']) ? clean_input($_GET['search']) : '';
 
-
+// 3. 查询【活跃商品】
 $sql = "SELECT p.*, c.category_name 
         FROM products p 
         JOIN categories c ON p.category_id = c.category_id 
@@ -35,7 +35,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute(["%$search%"]);
 $products = $stmt->fetchAll();
 
-
+// 4. 查询【回收站商品】
 $sql_trash = "SELECT p.*, c.category_name 
               FROM products p 
               JOIN categories c ON p.category_id = c.category_id 
@@ -92,7 +92,7 @@ require $path . 'includes/header.php';
     <tbody>
         <?php if (count($products) > 0): ?>
             <?php foreach ($products as $p): 
-                
+                // [新增] 获取当前产品的相册数据并转为 JSON
                 $p_gallery = isset($gallery_map[$p['product_id']]) ? json_encode($gallery_map[$p['product_id']]) : '[]';
             ?>
                 <tr>
@@ -303,11 +303,11 @@ require $path . 'includes/header.php';
 
 <script>
     $(document).ready(function() {
-      
+        // --- 1. 打开模态框逻辑 ---
         $('#btn-open-create').on('click', function() { $('#createProductModal').css('display', 'flex'); });
         $('#btn-open-recycle').on('click', function() { $('#recycleBinModal').css('display', 'flex'); });
 
-        
+        // 打开 "Edit"
         $(document).on('click', '.js-open-edit', function() {
             let btn = $(this);
             $('#edit_product_id').val(btn.data('id'));
@@ -321,7 +321,8 @@ require $path . 'includes/header.php';
             let img = btn.data('img');
             $('#edit_current_img_name').text(img ? "(" + img + ")" : "(No Image)");
 
-            let galleryData = btn.data('gallery'); 
+            // [新增] 渲染相册图片
+            let galleryData = btn.data('gallery'); // 这里会自动解析 JSON
             let galleryHtml = '';
             
             if (galleryData && galleryData.length > 0) {
@@ -342,7 +343,7 @@ require $path . 'includes/header.php';
             $('#editProductModal').css('display', 'flex');
         });
 
-    
+        // [新增] 处理相册图片删除 (AJAX)
         $(document).on('click', '.btn-remove-img', function() {
             let imgId = $(this).data('id');
             let parentDiv = $(this).parent();

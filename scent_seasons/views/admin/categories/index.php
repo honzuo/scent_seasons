@@ -152,7 +152,7 @@ require $path . 'includes/header.php';
         document.getElementById('deleteCategoryModal').style.display = 'none';
     }
 
- 
+    // Auto Open & Outside Click
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('open_create')) openCreateModal();
     window.onclick = function(event) {

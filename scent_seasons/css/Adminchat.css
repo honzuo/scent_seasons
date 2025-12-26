@@ -1,4 +1,4 @@
-
+/* Admin chat styles */
 .chat-layout {
     display: grid;
     grid-template-columns: 280px 1fr;
@@ -130,7 +130,7 @@
     font-size: 13px;
 }
 
-
+/* ========== 未读消息徽章样式（红点在名字旁边）========== */
 .chat-unread-badge {
     display: inline-flex;
     align-items: center;
@@ -148,6 +148,7 @@
     flex-shrink: 0;
 }
 
+/* 脉动动画效果 */
 @keyframes badgePulse {
     0%, 100% {
         transform: scale(1);
@@ -164,7 +165,7 @@
     min-width: 20px;
 }
 
-
+/* 有未读消息的列表项高亮 */
 .chat-list-item.has-unread {
     background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
     border-left: 3px solid #ff3b30;
@@ -178,7 +179,7 @@
     color: #666;
 }
 
-
+/* 选中后移除未读样式 */
 .chat-list-item.active.has-unread {
     background: #0071e3;
     border-left: 3px solid #0071e3;
@@ -192,7 +193,7 @@
     color: rgba(255, 255, 255, 0.8);
 }
 
-
+/* 响应式调整 */
 @media (max-width: 768px) {
     .chat-layout {
         grid-template-columns: 1fr;

@@ -14,7 +14,7 @@ function json_response($data)
 
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
-
+// Member: send message
 if ($action === 'send_member') {
     if (!is_logged_in()) json_response(['status' => 'error', 'message' => 'Unauthorized']);
     $message = trim($_POST['message'] ?? '');
@@ -25,7 +25,7 @@ if ($action === 'send_member') {
     json_response(['status' => 'success']);
 }
 
-
+// Member: fetch conversation with admin
 if ($action === 'fetch_member') {
     if (!is_logged_in()) json_response(['status' => 'error', 'message' => 'Unauthorized']);
     $user_id = $_SESSION['user_id'];
@@ -38,11 +38,11 @@ if ($action === 'fetch_member') {
     json_response(['status' => 'success', 'messages' => $messages]);
 }
 
-
+// Admin: list members with conversations + unread count
 if ($action === 'admin_list_members') {
     require_admin();
     
- 
+    // 获取所有发过消息的用户
     $sql = "SELECT DISTINCT m.sender_id as user_id, u.full_name, u.email 
             FROM messages m 
             JOIN users u ON m.sender_id = u.user_id 
@@ -51,7 +51,7 @@ if ($action === 'admin_list_members') {
     $stmt = $pdo->query($sql);
     $members = $stmt->fetchAll();
     
- 
+    // 为每个用户统计未读消息数（使用 admin_read 字段）
     foreach ($members as &$member) {
         $sql_unread = "SELECT COUNT(*) as unread_count 
                        FROM messages 
@@ -67,7 +67,7 @@ if ($action === 'admin_list_members') {
     json_response(['status' => 'success', 'members' => $members]);
 }
 
-
+// Admin: fetch conversation with a member
 if ($action === 'admin_fetch') {
     require_admin();
     $member_id = intval($_GET['member_id'] ?? 0);
@@ -82,7 +82,7 @@ if ($action === 'admin_fetch') {
     json_response(['status' => 'success', 'messages' => $messages]);
 }
 
-
+// Admin: send message to member
 if ($action === 'admin_send') {
     require_admin();
     $member_id = intval($_POST['member_id'] ?? 0);
@@ -95,7 +95,7 @@ if ($action === 'admin_send') {
     json_response(['status' => 'success']);
 }
 
-
+// Admin: mark messages as read
 if ($action === 'mark_read') {
     require_admin();
     $member_id = intval($_POST['member_id'] ?? 0);
@@ -104,7 +104,7 @@ if ($action === 'mark_read') {
         json_response(['status' => 'error', 'message' => 'Invalid member']);
     }
     
-  
+    // 将该用户发送给管理员的所有未读消息标记为已读
     $stmt = $pdo->prepare("
         UPDATE messages 
         SET admin_read = 1 
@@ -123,5 +123,5 @@ if ($action === 'mark_read') {
     ]);
 }
 
-
+// Default
 json_response(['status' => 'error', 'message' => 'Invalid action']);

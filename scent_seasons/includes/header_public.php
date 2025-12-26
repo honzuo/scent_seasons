@@ -1,5 +1,6 @@
 <?php
-
+// includes/header_public.php - Public Navigation (Not Logged In)
+// This header is for non-logged-in users
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -27,6 +28,7 @@ if (!isset($page_title)) $page_title = "Scent Seasons";
             <a href="<?php echo $path; ?>index.php" class="logo">Scent Seasons</a>
 
             <ul>
+                <!-- Public navigation - for non-logged-in users -->
                 <li><a href="<?php echo $path; ?>index.php">Home</a></li>
                 <li><a href="<?php echo $path; ?>views/public/login.php">Login</a></li>
                 <li><a href="<?php echo $path; ?>views/public/register.php">Register</a></li>

@@ -13,7 +13,7 @@ require $path . 'includes/header.php';
 
 <link rel="stylesheet" href="<?php echo $path; ?>css/Adminchat.css">
 <style>
-
+/* 确保红点样式正确显示 */
 .chat-unread-badge {
     display: inline-flex !important;
     align-items: center;
@@ -48,7 +48,7 @@ require $path . 'includes/header.php';
     min-width: 20px;
 }
 
-
+/* 有未读消息的列表项高亮 */
 .chat-list-item.has-unread {
     background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
     border-left: 3px solid #ff3b30;
@@ -62,7 +62,7 @@ require $path . 'includes/header.php';
     color: #666;
 }
 
-
+/* 选中后移除未读样式 */
 .chat-list-item.active.has-unread {
     background: #0071e3;
     border-left: 3px solid #0071e3;
@@ -133,7 +133,7 @@ require $path . 'includes/header.php';
             const nameText = $('<span></span>').text(m.full_name || ('User #' + m.user_id));
             nameDiv.append(nameText);
             
-            
+            // 如果有未读消息且不是当前选中的用户，在名字旁边添加红色徽章
             if (m.unread_count && m.unread_count > 0 && wasSelected !== m.user_id) {
                 console.log('👉 Adding badge for', m.full_name, 'with', m.unread_count, 'unread');
                 
@@ -157,14 +157,14 @@ require $path . 'includes/header.php';
             item.append(nameDiv);
             item.append(emailDiv);
             
-         
+            // 点击事件
             item.on('click', function() {
                 const clickedUserId = $(this).data('member-id');
                 
                 $('.chat-list-item').removeClass('active');
                 $(this).addClass('active');
                 
-              
+                // 立即移除未读标记和红点
                 $(this).removeClass('has-unread');
                 $(this).find('.chat-unread-badge').fadeOut(150, function() {
                     $(this).remove();
@@ -174,7 +174,7 @@ require $path . 'includes/header.php';
                 $('#chatWith').text('Chat with ' + (m.full_name || ('User #' + clickedUserId)));
                 $('#chatInput, #chatSend').prop('disabled', false);
                 
-                
+                // 标记为已读（发送请求到服务器）
                 markAsRead(clickedUserId);
                 
                 fetchMessages();
@@ -189,7 +189,7 @@ require $path . 'includes/header.php';
         console.log('✅ Rendered', members.length, 'members');
     }
 
-   
+    // 标记消息为已读
     function markAsRead(memberId) {
         console.log('🔵 Marking messages as read for user', memberId);
         
@@ -302,7 +302,7 @@ require $path . 'includes/header.php';
         });
     }
 
-
+    // 事件绑定
     $('#chatSend').on('click', sendMessage);
     $('#chatInput').on('keypress', function(e) {
         if (e.which === 13 && !e.shiftKey) {
@@ -311,17 +311,17 @@ require $path . 'includes/header.php';
         }
     });
 
-  
+    // 初始加载
     console.log('🚀 Initializing chat...');
     fetchMembers();
     
- 
+    // 每10秒刷新成员列表
     memberListInterval = setInterval(function() {
         console.log('🔄 Auto-refreshing members...');
         fetchMembers();
     }, 10000);
     
-  
+    // 清理
     $(window).on('beforeunload', function() {
         if (pollInterval) clearInterval(pollInterval);
         if (memberListInterval) clearInterval(memberListInterval);
