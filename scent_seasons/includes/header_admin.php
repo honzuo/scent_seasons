@@ -41,6 +41,7 @@ if (!is_admin()) {
                 <li><a href="<?php echo $path; ?>views/admin/dashboard.php">Dashboard</a></li>
                 <li><a href="<?php echo $path; ?>views/admin/products/index.php">Products</a></li>
                 <li><a href="<?php echo $path; ?>views/admin/orders/index.php">Orders</a></li>
+                <li><a href="<?php echo $path; ?>views/admin/promotion.php">Promotions</a></li>
                 <li><a href="<?php echo $path; ?>views/admin/chat/index.php">Chat</a></li>
                 <li><a href="<?php echo $path; ?>views/admin/reports/index.php">Reports</a></li>
                 <li><a href="<?php echo $path; ?>logout.php">Logout</a></li>

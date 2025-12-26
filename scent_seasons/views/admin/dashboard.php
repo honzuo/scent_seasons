@@ -111,6 +111,12 @@ require $path . 'includes/header.php';
         <a href="reports/index.php" style="color:#0071e3;">View Reports &rarr;</a>
     </div>
 
+    <div class="card" style="border-top: 4px solid #ff9500;">
+        <h3 style="color:#ff9500;">Promotions</h3>
+        <p>Manage discount codes & offers.</p>
+        <a href="promotion.php" style="color:#ff9500;">Manage Promotions &rarr;</a>
+    </div>
+
     <?php if (is_superadmin()): ?>
         <div class="card" style="border-top: 4px solid #8e44ad;">
             <h3 style="color:#8e44ad;">Admin Maintenance</h3>
