@@ -3,14 +3,12 @@ session_start();
 require '../../config/database.php';
 require '../../includes/functions.php';
 
-
 if (!is_logged_in()) {
     header("Location: ../public/login.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
-
 
 $sql = "SELECT c.quantity as cart_qty, p.* FROM cart c 
         JOIN products p ON c.product_id = p.product_id 
@@ -26,6 +24,7 @@ $my_addresses = $stmt_addr->fetchAll();
 $page_title = "My Shopping Cart";
 $path = "../../";
 $extra_css = "shop.css";
+$extra_css = "cart.css";
 
 require $path . 'includes/header.php';
 ?>
@@ -155,7 +154,6 @@ require $path . 'includes/header.php';
                 let discountAmount = 0;
                 let discountInfo = null;
 
-              
                 function calculateTotal() {
                     let subtotal = 0;
                     let count = 0;
@@ -166,7 +164,6 @@ require $path . 'includes/header.php';
 
                     $('#display-subtotal').text(subtotal.toFixed(2));
 
-                  
                     let finalTotal = subtotal;
                     if (currentPromoCode && discountInfo) {
                         discountAmount = parseFloat(discountInfo.discount);
@@ -185,7 +182,6 @@ require $path . 'includes/header.php';
                     return finalTotal;
                 }
 
-               
                 $('#applyPromo').on('click', function () {
                     const code = $('#promoCode').val().trim().toUpperCase();
                     if (!code) {
@@ -222,7 +218,6 @@ require $path . 'includes/header.php';
                     });
                 });
 
-             
                 $(document).on('click', '#removePromo', function () {
                     currentPromoCode = null;
                     discountInfo = null;
@@ -232,7 +227,6 @@ require $path . 'includes/header.php';
                     calculateTotal();
                 });
 
-               
                 $('.item-checkbox, #select-all').change(function () {
                     if (this.id === 'select-all') {
                         $('.item-checkbox').prop('checked', $(this).prop('checked'));
@@ -242,7 +236,6 @@ require $path . 'includes/header.php';
                     calculateTotal();
                 });
 
-              
                 $(document).on('change', '.addr-radio', function () {
                     if ($(this).val() === 'new') {
                         $('#new-address-input').slideDown();
@@ -251,17 +244,14 @@ require $path . 'includes/header.php';
                     }
                 });
 
-               
                 paypal.Buttons({
                     onInit: function (data, actions) {
-                       
                         if (calculateTotal() > 0) {
                             actions.enable();
                         } else {
                             actions.disable();
                         }
 
-                     
                         $('.item-checkbox, #select-all').change(function () {
                             if (calculateTotal() > 0) {
                                 actions.enable();
@@ -273,8 +263,6 @@ require $path . 'includes/header.php';
 
                     onClick: function (data, actions) {
                         let address = '';
-
-                       
                         const savedAddr = $('input[name="address_option"]:checked');
 
                         if (savedAddr.length > 0) {
@@ -284,7 +272,6 @@ require $path . 'includes/header.php';
                                 address = savedAddr.val().trim();
                             }
                         } else {
-                           
                             address = $('#shipping-address').val().trim();
                         }
 
@@ -293,7 +280,6 @@ require $path . 'includes/header.php';
                             return actions.reject();
                         }
 
-                      
                         window.finalAddress = address;
                     },
 
@@ -320,7 +306,7 @@ require $path . 'includes/header.php';
                                 },
                                 body: JSON.stringify({
                                     selected_items: selectedIds,
-                                    transaction_id: details.id, 
+                                    transaction_id: details.id,
                                     promotion_code: currentPromoCode || null,
                                     discount_amount: discountAmount || 0,
                                     address: window.finalAddress
