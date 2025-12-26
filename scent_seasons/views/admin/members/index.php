@@ -4,14 +4,14 @@ require '../../../config/database.php';
 require '../../../includes/functions.php';
 require_admin();
 
-// 1. 搜索逻辑
+
 $search = isset($_GET['search']) ? clean_input($_GET['search']) : '';
 $sql = "SELECT * FROM users WHERE role = 'member' AND (full_name LIKE ? OR email LIKE ?)";
 $stmt = $pdo->prepare($sql);
 $stmt->execute(["%$search%", "%$search%"]);
 $members = $stmt->fetchAll();
 
-// 2. 预加载订单数据 (为了 Orders 弹窗)
+
 $stmt_orders = $pdo->query("SELECT * FROM orders ORDER BY order_date DESC");
 $all_orders_raw = $stmt_orders->fetchAll();
 $orders_by_user = [];
@@ -19,7 +19,7 @@ foreach ($all_orders_raw as $o) {
     $orders_by_user[$o['user_id']][] = $o;
 }
 
-// 3. 预加载订单详情 (Items)
+
 $stmt_items = $pdo->query("SELECT oi.*, p.name, p.image_path 
                            FROM order_items oi 
                            JOIN products p ON oi.product_id = p.product_id");
@@ -248,7 +248,7 @@ require $path . 'includes/header.php';
         document.getElementById('userOrdersModal').style.display = 'none';
     }
 
-    // --- Block/Unblock Modal Logic ---
+  
     function openBlockModal(id, currentStatus, name) {
         let newStatus = (currentStatus == 1) ? 0 : 1;
         let title = document.getElementById('blockModalTitle');

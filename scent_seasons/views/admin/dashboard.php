@@ -2,14 +2,12 @@
 session_start();
 require '../../includes/functions.php';
 require '../../config/database.php';
-require_admin(); // 强制检查是否是管理员
-
-// 统计待处理的退货请求数量
+require_admin(); 
 $stmt_returns = $pdo->query("SELECT COUNT(*) as return_count FROM orders WHERE status = 'returned'");
 $return_data = $stmt_returns->fetch();
 $pending_returns = $return_data['return_count'];
 
-// 统计未读的用户消息数量（使用 admin_read 字段）
+
 $sql_unread = "
     SELECT COUNT(*) as total_unread 
     FROM messages 
@@ -45,7 +43,6 @@ require $path . 'includes/header.php';
         <a href="members/index.php">Go to Members &rarr;</a>
     </div>
 
-    <!-- Orders Card with Notification Badge -->
     <div class="card <?php echo ($pending_returns > 0) ? 'has-notification' : ''; ?>">
         <?php if ($pending_returns > 0): ?>
             <span class="notification-badge <?php echo ($pending_returns > 99) ? 'large' : ''; ?>">
@@ -84,7 +81,7 @@ require $path . 'includes/header.php';
         <a href="logs/index.php">View Logs &rarr;</a>
     </div>
 
-    <!-- Chat Card with Notification Badge -->
+
     <div class="card <?php echo ($unread_messages > 0) ? 'has-notification' : ''; ?>" style="border-top: 4px solid #0c9ef5;">
         <?php if ($unread_messages > 0): ?>
             <span class="notification-badge <?php echo ($unread_messages > 99) ? 'large' : ''; ?>">

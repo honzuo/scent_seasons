@@ -3,19 +3,19 @@ session_start();
 require '../config/database.php';
 require '../includes/functions.php';
 
-// 只有超级管理员可以访问
+
 require_superadmin();
 
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
-// --- 1. 创建新的 Admin ---
+// --- 1. create Admin ---
 if ($action == 'create_admin') {
     $full_name = clean_input($_POST['full_name']);
     $email = clean_input($_POST['email']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
-    // [修改跳转] 错误时跳回 index.php 并带上参数
+    
     if (empty($full_name) || empty($email) || empty($password)) {
         header("Location: ../views/admin/users/index.php?error=empty");
         exit();
@@ -26,7 +26,7 @@ if ($action == 'create_admin') {
         exit();
     }
 
-    // 检查邮箱
+    
     $stmt = $pdo->prepare("SELECT user_id FROM users WHERE email = ?");
     $stmt->execute([$email]);
     if ($stmt->rowCount() > 0) {
@@ -42,7 +42,7 @@ if ($action == 'create_admin') {
 
     if ($stmt->execute([$full_name, $email, $hashed_password, $photo_name])) {
         log_activity($pdo, "Create Admin", "Created admin: $email");
-        // [修改跳转] 成功时跳回 index.php
+       
         header("Location: ../views/admin/users/index.php?msg=created");
     } else {
         die("Database error");
@@ -50,7 +50,7 @@ if ($action == 'create_admin') {
     exit();
 }
 
-// --- 2. 删除 Admin ---
+// --- 2. delete Admin ---
 if ($action == 'delete') {
     $user_id = intval($_POST['user_id']);
 
@@ -66,7 +66,7 @@ if ($action == 'delete') {
     exit();
 }
 
-// --- 3. 封禁/解封 Admin ---
+
 if ($action == 'toggle_block') {
     $user_id = intval($_POST['user_id']);
     $block_status = intval($_POST['is_blocked']);
@@ -85,14 +85,14 @@ if ($action == 'toggle_block') {
     exit();
 }
 
-// --- 4. 更新 Admin 资料 ---
+// 4. update Admin information
 if ($action == 'update_admin') {
     $user_id = intval($_POST['user_id']);
     $full_name = clean_input($_POST['full_name']);
     $email = clean_input($_POST['email']);
-    $password = $_POST['password']; // 可选
+    $password = $_POST['password']; 
 
-    // 如果填了密码，就更新密码；没填就不改
+  
     if (!empty($password)) {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         $sql = "UPDATE users SET full_name = ?, email = ?, password = ? WHERE user_id = ? AND role = 'admin'";

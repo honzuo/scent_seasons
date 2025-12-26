@@ -1,6 +1,6 @@
 /* css/promotion.css - Promotion Codes Page Styling */
 
-/* ========== HEADER ========== */
+
 .promotions-header {
     display: flex;
     justify-content: space-between;
@@ -14,13 +14,13 @@
     margin: 0;
 }
 
-/* ========== TABLE STYLING ========== */
+
 .table-list tbody tr:hover {
     background-color: #fafafa;
     transition: background 0.2s;
 }
 
-/* ========== PROMOTION CODE BADGE ========== */
+
 .promo-code-badge {
     display: inline-block;
     background: linear-gradient(135deg, #0071e3, #00c7be);
@@ -33,7 +33,7 @@
     font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
 }
 
-/* ========== DISCOUNT DISPLAY ========== */
+
 .discount-display {
     font-weight: 600;
     color: #1d1d1f;
@@ -53,7 +53,7 @@
     margin-top: 4px;
 }
 
-/* ========== STATUS BADGE ========== */
+
 .status-badge {
     display: inline-block;
     padding: 4px 12px;
@@ -82,7 +82,7 @@
     color: #b8860b;
 }
 
-/* ========== MODAL ========== */
+
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -144,7 +144,6 @@
     letter-spacing: -0.01em;
 }
 
-/* Smooth scrollbar for modal */
 .modal-box::-webkit-scrollbar {
     width: 8px;
 }
@@ -162,7 +161,7 @@
     background: #b8b8bd;
 }
 
-/* ========== PROMOTION FORM ========== */
+
 .promotion-form .form-group {
     margin-bottom: 24px;
 }
@@ -257,7 +256,7 @@
     flex: 1;
 }
 
-/* ========== ACTION BUTTONS IN TABLE ========== */
+
 .action-buttons {
     display: flex;
     gap: 8px;
@@ -272,7 +271,7 @@
     border-radius: 980px;
 }
 
-/* ========== EMPTY STATE ========== */
+
 .promotions-empty {
     text-align: center;
     padding: 60px 20px;
@@ -284,21 +283,20 @@
     margin-bottom: 16px;
 }
 
-/* ========== CHATBOT POSITIONING ========== */
-/* Ensure chatbot doesn't interfere with promotion page content */
+
 .chat-fab,
 .chat-window {
     position: fixed !important;
     z-index: 1500 !important;
 }
 
-/* When modal is open, ensure chatbot is below it */
+
 .modal-overlay ~ .chat-fab,
 .modal-overlay ~ .chat-window {
     z-index: 1400 !important;
 }
 
-/* ========== RESPONSIVE ========== */
+
 @media (max-width: 768px) {
     .promotions-header {
         flex-direction: column;
@@ -339,41 +337,37 @@
     
     .promotion-form .form-group input,
     .promotion-form .form-group select {
-        font-size: 16px; /* Prevent zoom on iOS */
+        font-size: 16px; 
     }
-    /* ========== BUG FIX: CHECKBOX VISIBILITY ========== */
-
-/* ========== FINAL FIX FOR ACTIVE CHECKBOX ========== */
-
-/* 1. Target the specific element with high priority */
+ 
 input#edit_is_active {
-    /* Restore the standard system "tick" box */
+
     -webkit-appearance: checkbox !important;
     -moz-appearance: checkbox !important;
     appearance: checkbox !important;
     
-    /* REMOVE the "Text Box" styling (padding is the main culprit) */
+    
     padding: 0 !important;
     border: none !important;
     border-radius: 0 !important;
     background: transparent !important;
     
-    /* Fix sizing so it isn't huge */
+   
     width: 18px !important;
     height: 18px !important;
     
-    /* Fix positioning */
+
     display: inline-block !important;
     margin-right: 10px !important;
     cursor: pointer !important;
     position: static !important;
     
-    /* Ensure it is visible */
+
     opacity: 1 !important;
     z-index: 9999 !important;
 }
 
-/* 2. Remove the blue glow when you click it */
+
 input#edit_is_active:focus {
     box-shadow: none !important;
     outline: none !important;
@@ -382,7 +376,7 @@ input#edit_is_active:focus {
 
 }
 
-/* Added styles moved from promotion.php inline attributes */
+
 .text-gray {
     color: #86868b;
 }

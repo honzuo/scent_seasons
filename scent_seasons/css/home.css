@@ -1,6 +1,6 @@
 /* css/home.css - Complete Home Page Styles */
 
-/* ========== HERO SECTION - 纯图片轮播 ========== */
+
 .hero-section {
     position: relative;
     width: 100%;
@@ -39,7 +39,7 @@
     display: block;
 }
 
-/* 覆盖层内容 - 只显示 Shop Now 按钮 */
+
 .hero-overlay-content {
     position: absolute;
     top: 83%;
@@ -50,7 +50,7 @@
 }
 
 
-/* Shop Now 按钮 - 透明简洁设计 */
+
 .btn-hero-shopnow {
     display: inline-block;
     padding: 14px 40px;
@@ -73,7 +73,7 @@
     border-color: rgba(255, 255, 255, 1);
     backdrop-filter: blur(2px);
 }
-/* Navigation Dots */
+
 .hero-dots {
     position: absolute;
     bottom: 30px;
