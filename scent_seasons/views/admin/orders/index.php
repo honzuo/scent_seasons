@@ -4,7 +4,7 @@ require '../../../config/database.php';
 require '../../../includes/functions.php';
 require_admin();
 
-// ========== 接收筛选参数 ==========
+
 $filter_user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
 $filter_status = isset($_GET['status']) ? trim($_GET['status']) : '';
 $search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -12,7 +12,7 @@ $sort_by = isset($_GET['sort']) ? $_GET['sort'] : 'date_desc';
 $current_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = 20;
 
-// ========== 构建 SQL 查询 ==========
+
 $sql = "SELECT o.*, u.full_name, u.email 
         FROM orders o 
         JOIN users u ON o.user_id = u.user_id 
@@ -20,19 +20,19 @@ $sql = "SELECT o.*, u.full_name, u.email
 
 $params = [];
 
-// 用户筛选
+
 if ($filter_user_id > 0) {
     $sql .= " AND o.user_id = ?";
     $params[] = $filter_user_id;
 }
 
-// 状态筛选
+
 if (!empty($filter_status)) {
     $sql .= " AND LOWER(o.status) = ?";
     $params[] = strtolower($filter_status);
 }
 
-// 搜索功能
+
 if (!empty($search_query)) {
     $sql .= " AND (u.full_name LIKE ? OR u.email LIKE ? OR o.order_id LIKE ?)";
     $search_param = "%{$search_query}%";
@@ -41,7 +41,7 @@ if (!empty($search_query)) {
     $params[] = $search_param;
 }
 
-// 计算总记录数
+
 $count_sql = str_replace("o.*, u.full_name, u.email", "COUNT(*) as total", $sql);
 if (!empty($params)) {
     $count_stmt = $pdo->prepare($count_sql);
@@ -52,7 +52,7 @@ if (!empty($params)) {
 $total_records = $count_stmt->fetch()['total'];
 $total_pages = ceil($total_records / $per_page);
 
-// 排序
+
 switch ($sort_by) {
     case 'date_asc':
         $sql .= " ORDER BY o.order_date ASC";
@@ -73,16 +73,16 @@ switch ($sort_by) {
         $sql .= " ORDER BY o.order_date DESC";
 }
 
-// 分页
+
 $offset = ($current_page - 1) * $per_page;
 $sql .= " LIMIT $per_page OFFSET $offset";
 
-// 执行查询
+
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $orders = $stmt->fetchAll();
 
-// ========== 统计各状态订单数量 ==========
+
 $status_counts = [
     'all' => 0,
     'pending' => 0,
@@ -134,7 +134,7 @@ while ($row = $count_stmt->fetch()) {
     $status_counts[strtolower($row['status'])] = (int)$row['count'];
 }
 
-// ========== 预加载订单详情 ==========
+
 $stmt_items = $pdo->query("SELECT oi.*, p.name, p.image_path 
                            FROM order_items oi 
                            JOIN products p ON oi.product_id = p.product_id");
@@ -145,7 +145,7 @@ foreach ($all_items_raw as $item) {
     $items_by_order[$item['order_id']][] = $item;
 }
 
-// ========== URL 构建函数 ==========
+
 function build_filter_url($params_to_update = []) {
     global $filter_user_id, $filter_status, $search_query, $sort_by, $current_page;
     
@@ -191,7 +191,7 @@ $extra_css = "admin.css";
 require $path . 'includes/header.php';
 ?>
 
-<!-- 加载订单筛选样式 -->
+
 <link rel="stylesheet" href="<?php echo $path; ?>css/order_filter.css">
 <link rel="stylesheet" href="<?php echo $path; ?>css/order_modals.css">
 
@@ -208,9 +208,9 @@ require $path . 'includes/header.php';
     <div class="alert alert-success">✅ Order status updated successfully.</div>
 <?php endif; ?>
 
-<!-- ========== 筛选器界面 ========== -->
+
 <div class="filter-container">
-    <!-- 状态标签筛选 -->
+ 
     <div class="filter-tabs">
         <?php
         $statuses = [
@@ -234,7 +234,7 @@ require $path . 'includes/header.php';
         <?php endforeach; ?>
     </div>
 
-    <!-- 搜索和排序 -->
+   
     <form method="GET" action="index.php" class="search-bar">
         <?php if ($filter_user_id > 0): ?>
             <input type="hidden" name="user_id" value="<?php echo $filter_user_id; ?>">
@@ -268,7 +268,7 @@ require $path . 'includes/header.php';
         </div>
     </form>
 
-    <!-- 当前筛选条件 -->
+ 
     <?php if (!empty($filter_status) || !empty($search_query) || $filter_user_id > 0): ?>
         <div class="active-filters">
             <span style="color: #6e6e73; font-size: 13px; font-weight: 600;">Active Filters:</span>
@@ -308,7 +308,7 @@ require $path . 'includes/header.php';
     </div>
 </div>
 
-<!-- ========== 订单列表 ========== -->
+
 <?php if (count($orders) > 0): ?>
     <table class="table-list">
         <thead>
@@ -355,7 +355,7 @@ require $path . 'includes/header.php';
         </tbody>
     </table>
 
-    <!-- ========== 分页 ========== -->
+  
     <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($current_page > 1): ?>
@@ -398,7 +398,7 @@ require $path . 'includes/header.php';
     </div>
 <?php endif; ?>
 
-<!-- ========== 管理订单模态框 ========== -->
+
 <div id="manageOrderModal" class="modal-overlay">
     <div class="modal-box medium">
         <div class="modal-header">

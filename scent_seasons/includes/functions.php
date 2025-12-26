@@ -57,38 +57,38 @@ function log_activity($pdo, $action, $details = "")
     }
 }
 
-// ========== 新增：密码强度验证函数 ==========
+
 
 /**
- * 验证密码强度
- * @param string $password 要验证的密码
+ * 
+ * @param string $password 
  * @return array ['valid' => bool, 'errors' => array]
  */
 function validate_password_strength($password)
 {
     $errors = [];
 
-    // 最小长度检查
+
     if (strlen($password) < 8) {
         $errors[] = "Password must be at least 8 characters long.";
     }
 
-    // 大写字母检查
+
     if (!preg_match('/[A-Z]/', $password)) {
         $errors[] = "Password must contain at least one uppercase letter.";
     }
 
-    // 小写字母检查
+
     if (!preg_match('/[a-z]/', $password)) {
         $errors[] = "Password must contain at least one lowercase letter.";
     }
 
-    // 数字检查
+
     if (!preg_match('/[0-9]/', $password)) {
         $errors[] = "Password must contain at least one number.";
     }
 
-    // 特殊字符检查
+
     if (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) {
         $errors[] = "Password must contain at least one special character (!@#$%^&*).";
     }
@@ -100,7 +100,7 @@ function validate_password_strength($password)
 }
 
 /**
- * 获取密码强度等级
+ * 
  * @param string $password
  * @return string 'weak', 'medium', 'strong'
  */
@@ -123,7 +123,7 @@ function get_password_strength($password)
     }
 }
 
-// 提取 YouTube Video ID 的函数
+
 function getYoutubeId($url) {
     $pattern = '%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})%i';
     if (preg_match($pattern, $url, $match)) {

@@ -15,11 +15,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
-    // 验证密码
+    
     if (empty($password)) {
         $errors['password'] = "Password is required.";
     } else {
-        // 使用密码强度验证
+        
         $validation = validate_password_strength($password);
         if (!$validation['valid']) {
             $errors['password'] = implode(' ', $validation['errors']);
@@ -31,16 +31,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if (empty($errors)) {
-        // 更新密码
+        
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE email = ?");
         
         if ($stmt->execute([$hashed_password, $email])) {
-            // 重置失败登录次数和锁定状态
+            
             $stmt = $pdo->prepare("UPDATE users SET failed_attempts = 0, lock_until = NULL WHERE email = ?");
             $stmt->execute([$email]);
 
-            // 清除会话
+            
             unset($_SESSION['reset_email']);
             unset($_SESSION['reset_verified']);
 

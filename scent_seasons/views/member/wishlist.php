@@ -11,7 +11,7 @@ if (!is_logged_in()) {
 
 $user_id = $_SESSION['user_id'];
 
-// 获取收藏夹所有商品
+
 $sql = "SELECT w.wishlist_id, w.added_at, p.* 
         FROM wishlist w 
         JOIN products p ON w.product_id = p.product_id 
@@ -39,7 +39,6 @@ require $path . 'includes/header.php';
     <div class="product-grid" style="margin-top: 32px;">
         <?php foreach ($wishlist_items as $item): ?>
             <div class="product-card wishlist-card">
-                <!-- 删除按钮 -->
                 <form action="../../controllers/wishlist_controller.php" method="POST" class="wishlist-remove-form">
                     <input type="hidden" name="action" value="remove">
                     <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">

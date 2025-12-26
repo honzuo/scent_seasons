@@ -7,34 +7,34 @@
     margin: 0 auto;
 }
 
-/* 左侧：轮播图区域 */
+
 .product-gallery {
     flex: 1;
     max-width: 500px;
     position: relative;
 }
 
-/* 轮播容器 */
+
 .slider-container {
     width: 100%;
-    height: 500px; /* 固定高度，形成正方形区域 */
+    height: 500px; 
     position: relative;
-    overflow: hidden; /* 隐藏溢出的图片 */
+    overflow: hidden; 
     border: 1px solid #eee;
     border-radius: 8px;
     background: #fff;
 }
 
-/* 包裹所有图片的轨道 */
+
 .slider-wrapper {
     display: flex;
     height: 100%;
-    transition: transform 0.4s ease-in-out; /* 平滑滑动效果 */
+    transition: transform 0.4s ease-in-out;
 }
 
-/* 单张幻灯片 */
+
 .slide {
-    min-width: 100%; /* 这里的 100% 对应 container 的宽度 */
+    min-width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
@@ -44,10 +44,10 @@
 .slide img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* 填满容器，如果要完整显示不裁剪可用 contain */
+    object-fit: cover; 
 }
 
-/* 左右切换按钮 */
+
 .prev-btn, .next-btn {
     position: absolute;
     top: 50%;
@@ -76,7 +76,7 @@
 .prev-btn { left: 15px; }
 .next-btn { right: 15px; }
 
-/* 底部指示点 (Dots) */
+
 .slider-dots {
     position: absolute;
     bottom: 20px;
@@ -97,10 +97,10 @@
 }
 
 .dot.active {
-    background-color: #ee4d2d; /* 激活颜色 (Shopee Orange) */
+    background-color: #ee4d2d;
 }
 
-/* 右侧：信息区域 (保持不变) */
+
 .product-info {
     flex: 1.5;
 }
@@ -146,7 +146,7 @@
     color: white;
 }
 
-/* 视频按钮 */
+
 .btn-video-modal {
     margin-top: 15px;
     display: block;
@@ -156,7 +156,7 @@
     font-size: 0.9em;
 }
 
-/* 响应式调整 */
+
 @media (max-width: 768px) {
     .product-container {
         flex-direction: column;
@@ -167,6 +167,6 @@
         max-width: 100%;
     }
     .slider-container {
-        height: 350px; /* 手机上稍微矮一点 */
+        height: 350px; 
     }
 }

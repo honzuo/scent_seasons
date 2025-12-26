@@ -5,7 +5,6 @@ require '../../includes/functions.php';
 
 if (!is_logged_in()) { header("Location: ../public/login.php"); exit(); }
 
-// 必须同时有 product_id 和 order_id
 if (!isset($_GET['product_id']) || !isset($_GET['order_id'])) {
     header("Location: orders.php");
     exit();
@@ -13,9 +12,9 @@ if (!isset($_GET['product_id']) || !isset($_GET['order_id'])) {
 
 $user_id = $_SESSION['user_id'];
 $product_id = intval($_GET['product_id']);
-$order_id = intval($_GET['order_id']); // 新增
+$order_id = intval($_GET['order_id']); 
 
-// 1. 验证：必须是这一单里的这个商品，且已完成
+
 $sql_check = "SELECT COUNT(*) FROM orders o 
               JOIN order_items oi ON o.order_id = oi.order_id 
               WHERE o.user_id = ? AND o.order_id = ? AND oi.product_id = ? AND o.status = 'completed'";
@@ -26,7 +25,7 @@ if ($stmt->fetchColumn() == 0) {
     die("Error: Invalid order or product.");
 }
 
-// 2. 验证：这一单的这个商品是否已评价 (按 order_id 查)
+
 $sql_exist = "SELECT COUNT(*) FROM reviews WHERE user_id = ? AND product_id = ? AND order_id = ?";
 $stmt = $pdo->prepare($sql_exist);
 $stmt->execute([$user_id, $product_id, $order_id]);
