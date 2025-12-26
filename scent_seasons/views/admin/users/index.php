@@ -6,7 +6,6 @@ require_superadmin();
 
 $search = isset($_GET['search']) ? clean_input($_GET['search']) : '';
 
-
 $sql = "SELECT * FROM users WHERE role = 'admin' AND (full_name LIKE ? OR email LIKE ?)";
 $stmt = $pdo->prepare($sql);
 $stmt->execute(["%$search%", "%$search%"]);
@@ -124,7 +123,7 @@ require $path . 'includes/header.php';
         <h3 class="mt-0">Create New Admin</h3>
         <p class="text-gray mb-20">Enter details for the new administrator.</p>
 
-        <form action="../../../controllers/admin_user_controller.php" method="POST">
+        <form action="../../../controllers/admin_user_controller.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="action" value="create_admin">
 
             <div class="form-group">
@@ -135,6 +134,11 @@ require $path . 'includes/header.php';
             <div class="form-group">
                 <label>Email:</label>
                 <input type="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Profile Photo:</label>
+                <input type="file" name="profile_photo" accept="image/*">
             </div>
 
             <div class="form-group">
@@ -159,7 +163,7 @@ require $path . 'includes/header.php';
     <div class="modal-box small">
         <h3 class="mt-0">Edit Admin</h3>
 
-        <form action="../../../controllers/admin_user_controller.php" method="POST">
+        <form action="../../../controllers/admin_user_controller.php" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="action" value="update_admin">
             <input type="hidden" name="user_id" id="edit_user_id">
 
@@ -171,6 +175,11 @@ require $path . 'includes/header.php';
             <div class="form-group">
                 <label>Email:</label>
                 <input type="email" name="email" id="edit_email" required>
+            </div>
+
+            <div class="form-group">
+                <label>New Profile Photo (Optional):</label>
+                <input type="file" name="profile_photo" accept="image/*">
             </div>
 
             <div class="form-group">
