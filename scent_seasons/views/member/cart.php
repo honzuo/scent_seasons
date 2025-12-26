@@ -3,7 +3,6 @@ session_start();
 require '../../config/database.php';
 require '../../includes/functions.php';
 
-// 强制登录检查
 if (!is_logged_in()) {
     header("Location: ../public/login.php");
     exit();
@@ -11,7 +10,6 @@ if (!is_logged_in()) {
 
 $user_id = $_SESSION['user_id'];
 
-// 获取购物车所有商品
 $sql = "SELECT c.quantity as cart_qty, p.* FROM cart c 
         JOIN products p ON c.product_id = p.product_id 
         WHERE c.user_id = ?";
@@ -19,7 +17,6 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute([$user_id]);
 $cart_items = $stmt->fetchAll();
 
-// 获取用户保存的地址
 $stmt_addr = $pdo->prepare("SELECT * FROM user_addresses WHERE user_id = ?");
 $stmt_addr->execute([$user_id]);
 $my_addresses = $stmt_addr->fetchAll();
@@ -27,6 +24,7 @@ $my_addresses = $stmt_addr->fetchAll();
 $page_title = "My Shopping Cart";
 $path = "../../";
 $extra_css = "shop.css";
+$extra_css = "cart.css";
 
 require $path . 'includes/header.php';
 ?>
