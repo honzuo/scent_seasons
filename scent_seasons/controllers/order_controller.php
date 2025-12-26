@@ -3,7 +3,7 @@ session_start();
 require '../config/database.php';
 require '../includes/functions.php';
 
-
+// 验证登录
 if (!is_logged_in()) {
     header("Location: ../views/public/login.php");
     exit();
@@ -11,21 +11,23 @@ if (!is_logged_in()) {
 
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
-
+// ============================================
+// 1. [Admin] 更新订单状态 - 保持所有筛选参数
+// ============================================
 if ($action == 'update_status') {
     require_admin();
 
     $order_id = intval($_POST['order_id'] ?? 0);
     $new_status = trim($_POST['status'] ?? '');
     
-
+    // 验证输入
     if ($order_id <= 0 || empty($new_status)) {
         $_SESSION['error'] = "Invalid order ID or status.";
         header("Location: ../views/admin/orders/index.php");
         exit();
     }
     
-
+    // 验证状态值
     $valid_statuses = ['pending', 'completed', 'cancelled', 'returned', 'refunded'];
     if (!in_array($new_status, $valid_statuses)) {
         $_SESSION['error'] = "Invalid status value.";
@@ -34,7 +36,7 @@ if ($action == 'update_status') {
     }
 
     try {
- 
+        // 获取旧状态
         $stmt = $pdo->prepare("SELECT status FROM orders WHERE order_id = ?");
         $stmt->execute([$order_id]);
         $order = $stmt->fetch();
@@ -47,42 +49,42 @@ if ($action == 'update_status') {
         
         $old_status = $order['status'];
         
-       
+        // 更新订单状态
         $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE order_id = ?");
         $stmt->execute([$new_status, $order_id]);
         
-        
+        // 记录日志
         log_activity($pdo, "Update Order Status", "Order #$order_id: $old_status → $new_status");
         
-       
+        // 构建重定向 URL 保持所有筛选参数
         $redirect_params = ['msg' => 'updated'];
         
-       
+        // 保持用户筛选
         if (!empty($_POST['filter_user_id']) && intval($_POST['filter_user_id']) > 0) {
             $redirect_params['user_id'] = intval($_POST['filter_user_id']);
         }
         
-
+        // 保持状态筛选
         if (!empty($_POST['filter_status'])) {
             $redirect_params['status'] = clean_input($_POST['filter_status']);
         }
         
-       
+        // 保持搜索关键词
         if (!empty($_POST['search'])) {
             $redirect_params['search'] = clean_input($_POST['search']);
         }
         
-       
+        // 保持排序方式
         if (!empty($_POST['sort'])) {
             $redirect_params['sort'] = clean_input($_POST['sort']);
         }
         
-  
+        // 保持分页
         if (!empty($_POST['page']) && intval($_POST['page']) > 1) {
             $redirect_params['page'] = intval($_POST['page']);
         }
         
-      
+        // 构建 URL
         $redirect_url = "../views/admin/orders/index.php?" . http_build_query($redirect_params);
         
         header("Location: $redirect_url");
@@ -96,14 +98,16 @@ if ($action == 'update_status') {
     }
 }
 
-
+// ============================================
+// 2. [Member] 结账 (Checkout & PayPal)
+// ============================================
 if ($action == 'checkout') {
     $user_id = $_SESSION['user_id'];
     $selected_ids = [];
     $paypal_tx_id = null;
     $address = ''; 
 
-  
+    // 接收 JSON 数据
     $contentType = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
     if ($contentType === "application/json") {
         $content = trim(file_get_contents("php://input"));
@@ -115,7 +119,7 @@ if ($action == 'checkout') {
         }
     }
 
-
+    // 验证
     if (empty($selected_ids)) {
         echo json_encode(['success' => false, 'message' => 'No items selected']);
         exit();
@@ -143,7 +147,7 @@ if ($action == 'checkout') {
 
         $pdo->beginTransaction();
 
-       
+        // 计算总额
         $total_amount = 0;
         foreach ($cart_items as $item) {
             $total_amount += ($item['price'] * $item['quantity']);
@@ -151,12 +155,12 @@ if ($action == 'checkout') {
       
         $status = 'pending'; 
 
-      
+        // 创建订单
         $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_amount, address, status, transaction_id, order_date) VALUES (?, ?, ?, ?, ?, NOW())");
         $stmt->execute([$user_id, $total_amount, $address, $status, $paypal_tx_id]);
         $order_id = $pdo->lastInsertId();
 
-        
+        // 插入订单项目和更新库存
         $sql_item = "INSERT INTO order_items (order_id, product_id, quantity, price_each) VALUES (?, ?, ?, ?)";
         $stmt_item = $pdo->prepare($sql_item);
         $sql_stock = "UPDATE products SET stock = stock - ? WHERE product_id = ?";
@@ -167,7 +171,7 @@ if ($action == 'checkout') {
             $stmt_stock->execute([$item['quantity'], $item['product_id']]);
         }
 
-      
+        // 清空购物车和心愿单
         $sql_delete = "DELETE FROM cart WHERE user_id = ? AND product_id IN ($placeholders)";
         $stmt_delete = $pdo->prepare($sql_delete);
         $stmt_delete->execute($params);
@@ -178,7 +182,7 @@ if ($action == 'checkout') {
 
         $pdo->commit();
 
-       
+        // 发送订单收据邮件
         try {
             if (file_exists(__DIR__ . '/../includes/mailer.php')) {
                 require_once __DIR__ . '/../includes/mailer.php';
@@ -214,7 +218,7 @@ if ($action == 'checkout') {
             error_log("Email error in checkout: " . $email_error->getMessage());
         }
 
-       
+        // 返回结果
         if ($contentType === "application/json") {
             echo json_encode(['success' => true, 'order_id' => $order_id]);
             exit();
@@ -236,17 +240,19 @@ if ($action == 'checkout') {
     }
 }
 
-
+// ============================================
+// 3. [Member] 取消订单
+// ============================================
 if ($action == 'cancel') {
     $user_id = $_SESSION['user_id'];
     $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : 0;
     
-  
+    // 获取取消原因
     $reason_select = isset($_POST['cancel_reason']) ? clean_input($_POST['cancel_reason']) : '';
     $custom_reason = isset($_POST['custom_reason']) ? clean_input($_POST['custom_reason']) : '';
     $final_reason = ($reason_select === 'Other' && !empty($custom_reason)) ? $custom_reason : $reason_select;
 
-
+    // 验证订单
     $stmt = $pdo->prepare("SELECT * FROM orders WHERE order_id = ? AND user_id = ?");
     $stmt->execute([$order_id, $user_id]);
     $order = $stmt->fetch();
@@ -266,7 +272,7 @@ if ($action == 'cancel') {
     try {
         $pdo->beginTransaction();
 
-       
+        // 获取订单商品详情
         $sql_items = "SELECT oi.quantity, oi.product_id, p.name as product_name 
                       FROM order_items oi 
                       JOIN products p ON oi.product_id = p.product_id 
@@ -275,7 +281,7 @@ if ($action == 'cancel') {
         $stmt_items->execute([$order_id]);
         $items = $stmt_items->fetchAll();
 
-        
+        // 恢复库存
         $sql_restore = "UPDATE products SET stock = stock + ? WHERE product_id = ?";
         $stmt_restore = $pdo->prepare($sql_restore);
 
@@ -283,7 +289,7 @@ if ($action == 'cancel') {
             $stmt_restore->execute([$item['quantity'], $item['product_id']]);
         }
 
-       
+        // 更新订单状态
         $stmt_update = $pdo->prepare("UPDATE orders SET status = 'cancelled' WHERE order_id = ?");
         $stmt_update->execute([$order_id]);
 
@@ -301,12 +307,14 @@ if ($action == 'cancel') {
     }
 }
 
-
+// ============================================
+// 4. [Member] 退货订单
+// ============================================
 if ($action == 'return') {
     $user_id = $_SESSION['user_id'];
     $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : 0;
     
-
+    // 获取退货原因
     $return_reason_select = isset($_POST['return_reason']) ? clean_input($_POST['return_reason']) : '';
     $custom_return_reason = isset($_POST['custom_return_reason']) ? clean_input($_POST['custom_return_reason']) : '';
     $return_notes = isset($_POST['return_notes']) ? clean_input($_POST['return_notes']) : '';
@@ -315,7 +323,7 @@ if ($action == 'return') {
                           ? $custom_return_reason 
                           : $return_reason_select;
 
-  
+    // 验证订单
     $stmt = $pdo->prepare("SELECT * FROM orders WHERE order_id = ? AND user_id = ?");
     $stmt->execute([$order_id, $user_id]);
     $order = $stmt->fetch();
@@ -335,7 +343,7 @@ if ($action == 'return') {
     try {
         $pdo->beginTransaction();
 
-      
+        // 获取订单商品详情
         $sql_items = "SELECT oi.quantity, oi.product_id, p.name as product_name 
                       FROM order_items oi 
                       JOIN products p ON oi.product_id = p.product_id 
@@ -348,7 +356,7 @@ if ($action == 'return') {
             throw new Exception("No items found for order #$order_id");
         }
 
-      
+        // 恢复库存
         $sql_restore = "UPDATE products SET stock = stock + ? WHERE product_id = ?";
         $stmt_restore = $pdo->prepare($sql_restore);
 
@@ -356,7 +364,7 @@ if ($action == 'return') {
             $stmt_restore->execute([$item['quantity'], $item['product_id']]);
         }
 
-      
+        // 更新订单状态
         $stmt_update = $pdo->prepare("UPDATE orders SET status = 'returned' WHERE order_id = ?");
         $stmt_update->execute([$order_id]);
 
@@ -374,7 +382,9 @@ if ($action == 'return') {
     }
 }
 
-
+// ============================================
+// 5. 默认重定向
+// ============================================
 if (isset($_SERVER["CONTENT_TYPE"]) && trim($_SERVER["CONTENT_TYPE"]) === "application/json") {
     echo json_encode(['success' => false, 'message' => 'Unknown action']);
 } else {

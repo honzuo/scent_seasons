@@ -2,34 +2,34 @@
 session_start();
 require '../../../config/database.php';
 require '../../../includes/functions.php';
-require_admin(); 
+require_admin(); // 必须是管理员
 
-
-$filter_user_id = 'all';
+// --- 1. 准备数据 ---
+$filter_user_id = 'all'; // 默认看全部
 $admins_list = [];
 
-
+// 如果是 Superadmin，先获取所有管理员名单（用于下拉菜单）
 if (is_superadmin()) {
     $stmt_users = $pdo->query("SELECT user_id, full_name, role FROM users WHERE role IN ('admin', 'superadmin') ORDER BY full_name ASC");
     $admins_list = $stmt_users->fetchAll();
 
-
+    // 检查是否有筛选请求
     if (isset($_GET['filter_user_id']) && $_GET['filter_user_id'] != '') {
         $filter_user_id = $_GET['filter_user_id'];
     }
 } else {
- 
+    // 普通 Admin 强制只能看自己
     $filter_user_id = $_SESSION['user_id'];
 }
 
-
+// --- 2. 构建查询 SQL ---
 $sql = "SELECT l.*, u.full_name, u.role 
         FROM activity_logs l 
         LEFT JOIN users u ON l.user_id = u.user_id";
 
 $params = [];
 
-
+// 筛选逻辑
 if ($filter_user_id != 'all') {
     $sql .= " WHERE l.user_id = ?";
     $params[] = $filter_user_id;

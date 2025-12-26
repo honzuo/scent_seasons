@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_SESSION['reset_email'];
     $otp = clean_input($_POST['otp']);
 
-   
+    // === 调试信息（测试完成后删除） ===
     error_log("=== OTP VERIFICATION DEBUG ===");
     error_log("Email from session: " . $email);
     error_log("OTP from form: " . $otp);
@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors['otp'] = "Invalid code format. Must be 6 digits.";
         error_log("OTP format validation failed");
     } else {
-       
+        // 查询数据库中的OTP
         $stmt = $pdo->prepare("
             SELECT * FROM password_resets 
             WHERE email = ?
@@ -35,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute([$email]);
         $reset = $stmt->fetch();
 
-       
+        // === 调试信息 ===
         if ($reset) {
             error_log("Database OTP: " . $reset['otp_code']);
             error_log("Database expires_at: " . $reset['expires_at']);
@@ -46,28 +46,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             error_log("No OTP record found in database");
         }
 
-       
+        // 先检查OTP是否存在
         if (!$reset) {
             $errors['otp'] = "No verification code found. Please request a new one.";
         }
-        
+        // 检查OTP是否匹配（注意：数据库存储的可能是字符串）
         elseif ($reset['otp_code'] != $otp) {
             $errors['otp'] = "Invalid verification code. Please check and try again.";
             error_log("OTP mismatch - DB: '" . $reset['otp_code'] . "' vs Input: '" . $otp . "'");
         }
-      
+        // 检查是否过期
         elseif (strtotime($reset['expires_at']) <= time()) {
             $errors['otp'] = "Verification code has expired. Please request a new one.";
             error_log("OTP expired");
         }
-       
+        // 验证成功
         else {
             error_log("OTP verification successful!");
             
-            
+            // 标记为已验证
             $_SESSION['reset_verified'] = true;
             
-           
+            // 删除已使用的OTP
             $stmt = $pdo->prepare("DELETE FROM password_resets WHERE email = ?");
             $stmt->execute([$email]);
 

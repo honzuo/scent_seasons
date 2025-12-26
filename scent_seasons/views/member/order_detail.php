@@ -30,14 +30,14 @@ $status = trim(strtolower($order['status']));
 
 $page_title = "Order Details #$order_id";
 $path = "../../";
-$extra_css = "shop.css"; 
+$extra_css = "shop.css"; // shop.css will be loaded first
 require $path . 'includes/header.php';
 ?>
 
-
+<!-- Load Order Modals CSS after header -->
 <link rel="stylesheet" href="<?php echo $path; ?>css/order_modals.css">
 
-
+<!-- Success/Cancel Messages -->
 <?php if (isset($_GET['msg'])): ?>
     <?php 
     $msg_type = ($_GET['msg'] == 'cancelled' || $_GET['msg'] == 'returned') ? 'warning' : 'success';
@@ -81,7 +81,7 @@ require $path . 'includes/header.php';
                 <p><strong>Date:</strong> <?php echo date('M d, Y H:i', strtotime($order['order_date'])); ?></p>
             </div>
             
-     
+            <!-- Action Buttons Based on Status -->
             <div class="action-buttons">
                 <?php if ($status == 'pending'): ?>
                     <button onclick="openCancelModal(<?php echo $order_id; ?>)" class="btn-red">
@@ -159,7 +159,7 @@ require $path . 'includes/header.php';
     </div>
 </div>
 
-
+<!-- Cancel Order Modal -->
 <div id="cancelModal" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
@@ -200,7 +200,7 @@ require $path . 'includes/header.php';
     </div>
 </div>
 
-
+<!-- Return Order Modal -->
 <div id="returnModal" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
@@ -252,23 +252,24 @@ require $path . 'includes/header.php';
 </div>
 
 <script>
-
+// Open Cancel Modal
 function openCancelModal(orderId) {
     document.getElementById('modal_order_id').value = orderId;
     document.getElementById('cancelModal').style.display = 'flex';
 }
 
+// Open Return Modal
 function openReturnModal(orderId) {
     document.getElementById('return_order_id').value = orderId;
     document.getElementById('returnModal').style.display = 'flex';
 }
 
-
+// Close Modal
 function closeModal(modalId) {
     document.getElementById(modalId).style.display = 'none';
 }
 
-
+// Toggle "Other" input for Cancel
 function toggleOther(select) {
     var otherInput = document.getElementById('other_input');
     if (select.value === 'Other') {
@@ -280,6 +281,7 @@ function toggleOther(select) {
     }
 }
 
+// Toggle "Other" input for Return
 function toggleReturnOther(select) {
     var otherInput = document.getElementById('return_other_input');
     if (select.value === 'Other') {
@@ -291,14 +293,14 @@ function toggleReturnOther(select) {
     }
 }
 
-
+// Close modal when clicking outside
 window.onclick = function(event) {
     if (event.target.classList.contains('modal-overlay')) {
         event.target.style.display = 'none';
     }
 }
 
-
+// ESC key to close modal
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         document.querySelectorAll('.modal-overlay').forEach(function(modal) {

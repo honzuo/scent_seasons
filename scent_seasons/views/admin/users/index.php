@@ -2,11 +2,11 @@
 session_start();
 require '../../../config/database.php';
 require '../../../includes/functions.php';
-require_superadmin(); 
+require_superadmin(); // 只有 Superadmin 能进
 
 $search = isset($_GET['search']) ? clean_input($_GET['search']) : '';
 
-
+// 只查询 role = 'admin'
 $sql = "SELECT * FROM users WHERE role = 'admin' AND (full_name LIKE ? OR email LIKE ?)";
 $stmt = $pdo->prepare($sql);
 $stmt->execute(["%$search%", "%$search%"]);

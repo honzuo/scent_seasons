@@ -3,7 +3,7 @@ session_start();
 require '../../config/database.php';
 require '../../includes/functions.php';
 
-
+// 强制登录检查
 if (!is_logged_in()) {
     header("Location: ../public/login.php");
     exit();
@@ -11,7 +11,7 @@ if (!is_logged_in()) {
 
 $user_id = $_SESSION['user_id'];
 
-
+// 获取购物车所有商品
 $sql = "SELECT c.quantity as cart_qty, p.* FROM cart c 
         JOIN products p ON c.product_id = p.product_id 
         WHERE c.user_id = ?";
@@ -155,7 +155,7 @@ require $path . 'includes/header.php';
                 let discountAmount = 0;
                 let discountInfo = null;
 
-              
+                // 1. 计算总价函数
                 function calculateTotal() {
                     let subtotal = 0;
                     let count = 0;
@@ -166,7 +166,7 @@ require $path . 'includes/header.php';
 
                     $('#display-subtotal').text(subtotal.toFixed(2));
 
-                  
+                    // Apply discount if promotion code is active
                     let finalTotal = subtotal;
                     if (currentPromoCode && discountInfo) {
                         discountAmount = parseFloat(discountInfo.discount);
@@ -185,7 +185,7 @@ require $path . 'includes/header.php';
                     return finalTotal;
                 }
 
-               
+                // Apply promotion code
                 $('#applyPromo').on('click', function () {
                     const code = $('#promoCode').val().trim().toUpperCase();
                     if (!code) {
@@ -222,7 +222,7 @@ require $path . 'includes/header.php';
                     });
                 });
 
-             
+                // Remove promotion code
                 $(document).on('click', '#removePromo', function () {
                     currentPromoCode = null;
                     discountInfo = null;
@@ -232,7 +232,7 @@ require $path . 'includes/header.php';
                     calculateTotal();
                 });
 
-               
+                // 监听复选框变化
                 $('.item-checkbox, #select-all').change(function () {
                     if (this.id === 'select-all') {
                         $('.item-checkbox').prop('checked', $(this).prop('checked'));
@@ -242,7 +242,7 @@ require $path . 'includes/header.php';
                     calculateTotal();
                 });
 
-              
+                // 监听地址单选框切换
                 $(document).on('change', '.addr-radio', function () {
                     if ($(this).val() === 'new') {
                         $('#new-address-input').slideDown();
@@ -251,17 +251,17 @@ require $path . 'includes/header.php';
                     }
                 });
 
-               
+                // 2. 初始化 PayPal 按钮
                 paypal.Buttons({
                     onInit: function (data, actions) {
-                       
+                        // 初始检查：如果购物车已有选中的商品，直接启用
                         if (calculateTotal() > 0) {
                             actions.enable();
                         } else {
                             actions.disable();
                         }
 
-                     
+                        // 监听勾选框实时切换按钮状态
                         $('.item-checkbox, #select-all').change(function () {
                             if (calculateTotal() > 0) {
                                 actions.enable();
@@ -274,7 +274,7 @@ require $path . 'includes/header.php';
                     onClick: function (data, actions) {
                         let address = '';
 
-                       
+                        // 逻辑：优先判断是否有选中的保存地址
                         const savedAddr = $('input[name="address_option"]:checked');
 
                         if (savedAddr.length > 0) {
@@ -284,7 +284,7 @@ require $path . 'includes/header.php';
                                 address = savedAddr.val().trim();
                             }
                         } else {
-                           
+                            // 如果没有 radio，直接读 textarea
                             address = $('#shipping-address').val().trim();
                         }
 
@@ -293,7 +293,7 @@ require $path . 'includes/header.php';
                             return actions.reject();
                         }
 
-                      
+                        // 存入全局变量供 onApprove 使用
                         window.finalAddress = address;
                     },
 
@@ -320,7 +320,7 @@ require $path . 'includes/header.php';
                                 },
                                 body: JSON.stringify({
                                     selected_items: selectedIds,
-                                    transaction_id: details.id, 
+                                    transaction_id: details.id, // PayPal 的交易号
                                     promotion_code: currentPromoCode || null,
                                     discount_amount: discountAmount || 0
                                 })

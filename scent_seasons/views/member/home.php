@@ -3,7 +3,7 @@ session_start();
 require '../../config/database.php';
 require '../../includes/functions.php';
 
-
+// Get popular products based on total quantity sold
 $check_orders_sql = "SELECT COUNT(*) as count FROM order_items";
 $stmt = $pdo->query($check_orders_sql);
 $has_orders = $stmt->fetch()['count'] > 0;
@@ -33,7 +33,7 @@ if (empty($hot_products)) {
     $hot_products = $stmt->fetchAll();
 }
 
-
+// Get recommended products
 $recommended_products = [];
 
 if (is_logged_in()) {
@@ -86,7 +86,7 @@ if (is_logged_in()) {
 
 $page_title = "Welcome - Scent Seasons";
 $path = "../../";
-$extra_css = "shop.css"; 
+$extra_css = "shop.css"; // This will be loaded first by header.php
 
 require $path . 'includes/header.php';
 ?>
@@ -137,7 +137,10 @@ require $path . 'includes/header.php';
 </div>
 
 <?php
+// 获取首页视频 (如果要强制指定视频，请把下面这行取消注释并填入ID)
+// $homeVideo = ['video_id' => 'JLpKktJPE7k'];
 
+// 默认逻辑：从数据库获取最新一条
 if (!isset($homeVideo)) {
     $stmt_home_video = $pdo->query("SELECT video_id FROM youtube_videos ORDER BY id DESC LIMIT 1");
     $homeVideo = $stmt_home_video->fetch();

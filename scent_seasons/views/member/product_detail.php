@@ -9,7 +9,7 @@ if (!isset($_GET['id'])) {
 }
 $id = intval($_GET['id']);
 
-
+// 1. 获取产品详情
 $stmt = $pdo->prepare("SELECT p.*, c.category_name FROM products p JOIN categories c ON p.category_id = c.category_id WHERE p.product_id = ?");
 $stmt->execute([$id]);
 $product = $stmt->fetch();
@@ -18,12 +18,12 @@ if (!$product) {
     die("Product not found");
 }
 
-
+// 1.5 获取相册图片 (Multiple Images)
 $stmt_imgs = $pdo->prepare("SELECT image_path FROM product_images WHERE product_id = ?");
 $stmt_imgs->execute([$id]);
 $gallery_rows = $stmt_imgs->fetchAll();
 
-
+// 合并图片数组 (主图 + 相册图)
 $all_images = [];
 if (!empty($product['image_path'])) {
     $all_images[] = $product['image_path'];
@@ -35,7 +35,7 @@ if (empty($all_images)) {
     $all_images[] = 'default_product.jpg';
 }
 
-
+// 2. 检查收藏夹
 $is_in_wishlist = false;
 if (is_logged_in()) {
     $stmt_wish = $pdo->prepare("SELECT wishlist_id FROM wishlist WHERE user_id = ? AND product_id = ?");
@@ -43,7 +43,7 @@ if (is_logged_in()) {
     $is_in_wishlist = ($stmt_wish->rowCount() > 0);
 }
 
-
+// 3. 获取评价
 $stmt_reviews = $pdo->prepare("SELECT r.*, u.full_name, u.profile_photo 
                                FROM reviews r 
                                JOIN users u ON r.user_id = u.user_id 
@@ -52,7 +52,7 @@ $stmt_reviews = $pdo->prepare("SELECT r.*, u.full_name, u.profile_photo
 $stmt_reviews->execute([$id]);
 $reviews = $stmt_reviews->fetchAll();
 
-
+// 4. 计算平均分
 $avg_rating = 0;
 $total_reviews = count($reviews);
 if ($total_reviews > 0) {
@@ -216,7 +216,7 @@ if (!empty($product['youtube_video_id'])) {
 </div>
 
 <script>
-    
+    // --- 图片轮播逻辑 (Vanilla JS) ---
     document.addEventListener('DOMContentLoaded', function() {
         const wrapper = document.getElementById('sliderWrapper');
         const slides = document.querySelectorAll('.slide');
@@ -228,38 +228,38 @@ if (!empty($product['youtube_video_id'])) {
         let currentIndex = 0;
         const totalSlides = slides.length;
 
-      
+        // 如果只有一张图，不需要轮播逻辑
         if (totalSlides <= 1) return;
 
         function updateSlider() {
-           
+            // 移动 wrapper
             wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
             
-          
+            // 更新 dots
             dots.forEach(dot => dot.classList.remove('active'));
             if(dots[currentIndex]) {
                 dots[currentIndex].classList.add('active');
             }
         }
 
-       
+        // 下一张
         function nextSlide() {
             currentIndex = (currentIndex + 1) % totalSlides;
             updateSlider();
         }
 
-      
+        // 上一张
         function prevSlide() {
             currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
             updateSlider();
         }
 
-        
+        // --- [新增] 自动播放逻辑 (2秒一次) ---
         let autoSlideInterval;
-        const autoDelay = 2000; 
+        const autoDelay = 2000; // 2000毫秒 = 2秒
 
         function startAutoSlide() {
-           
+            // 防止重复启动
             stopAutoSlide();
             autoSlideInterval = setInterval(nextSlide, autoDelay);
         }
@@ -268,14 +268,14 @@ if (!empty($product['youtube_video_id'])) {
             clearInterval(autoSlideInterval);
         }
 
-        
+        // 页面加载后启动
         startAutoSlide();
 
-       
+        // 鼠标悬停时暂停，移开后继续 (提升体验)
         sliderContainer.addEventListener('mouseenter', stopAutoSlide);
         sliderContainer.addEventListener('mouseleave', startAutoSlide);
 
-      
+        // 按钮事件 (点击后重置计时)
         if(nextBtn) nextBtn.addEventListener('click', () => {
             nextSlide();
             stopAutoSlide();
@@ -288,7 +288,7 @@ if (!empty($product['youtube_video_id'])) {
             startAutoSlide();
         });
 
-    
+        // Dot 点击事件
         dots.forEach(dot => {
             dot.addEventListener('click', function() {
                 currentIndex = parseInt(this.getAttribute('data-index'));
@@ -298,19 +298,19 @@ if (!empty($product['youtube_video_id'])) {
             });
         });
 
-    
+        // 触摸滑动支持
         let touchStartX = 0;
         let touchEndX = 0;
 
         sliderContainer.addEventListener('touchstart', e => {
             touchStartX = e.changedTouches[0].screenX;
-            stopAutoSlide();
+            stopAutoSlide(); // 触摸时暂停
         });
 
         sliderContainer.addEventListener('touchend', e => {
             touchEndX = e.changedTouches[0].screenX;
             handleSwipe();
-            startAutoSlide(); 
+            startAutoSlide(); // 触摸后恢复
         });
 
         function handleSwipe() {

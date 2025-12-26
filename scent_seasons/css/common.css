@@ -398,7 +398,7 @@ button:active,
     }
 }
 
-
+/* 修复 Cart 页面表格样式缺失的问题 (来自 admin.css) */
 .table-list {
     width: 100%;
     border-collapse: separate;
@@ -431,12 +431,18 @@ button:active,
     border-bottom: none;
 }
 
+/* css/common.css 末尾添加 */
 
+/* 通用缩略图样式 (修复订单详情页图片过大问题) */
 .thumbnail {
     width: 60px;
+    /* 限制宽度 */
     height: 60px;
+    /* 限制高度 */
     object-fit: cover;
+    /* 保持比例裁剪，防止变形 */
     border-radius: 8px;
+    /* 圆角 */
     display: inline-block;
     vertical-align: middle;
 }
@@ -455,7 +461,7 @@ button:active,
     letter-spacing: 8px;
 }
 
-
+/* 改进登录页面的链接样式 */
 .auth-links {
     display: flex;
     justify-content: space-between;
@@ -475,7 +481,7 @@ button:active,
     opacity: 0.7;
 }
 
-
+/* 验证码页面的说明文字 */
 .auth-box .text-muted {
     margin-bottom: 24px;
     line-height: 1.6;
@@ -486,7 +492,7 @@ button:active,
     font-weight: 600;
 }
 
-
+/* 重新发送链接样式 */
 .resend-link {
     display: inline-block;
     margin-top: 16px;
@@ -500,7 +506,7 @@ button:active,
     opacity: 0.7;
 }
 
-
+/* 响应式调整 */
 @media (max-width: 480px) {
     .otp-input {
         font-size: 24px;
@@ -520,11 +526,11 @@ button:active,
 }
 
 .password-wrapper input {
-    padding-right: 45px !important; 
+    padding-right: 45px !important; /* 为眼睛图标留出空间 */
     width: 100%;
 }
 
-
+/* 眼睛图标按钮 */
 .toggle-password {
     position: absolute;
     right: 12px;
@@ -558,7 +564,7 @@ button:active,
     user-select: none;
 }
 
-
+/* ========== 密码强度指示器 ========== */
 .password-strength-container {
     margin-top: 12px;
     margin-bottom: 0;
@@ -577,7 +583,7 @@ button:active,
     width: 0%;
     transition: all 0.3s ease;
     border-radius: 2px;
-    background: #d2d2d7;
+    background: #d2d2d7; /* 默认颜色 */
 }
 
 .password-strength-fill.weak {
@@ -599,7 +605,7 @@ button:active,
     font-size: 12px;
     font-weight: 500;
     margin-bottom: 8px;
-    min-height: 16px; 
+    min-height: 16px; /* 防止高度跳动 */
 }
 
 .password-strength-text.weak {
@@ -614,7 +620,7 @@ button:active,
     color: #30d158 !important;
 }
 
-
+/* ========== 密码要求列表 ========== */
 .password-requirements {
     background: #f5f5f7;
     padding: 16px;
@@ -674,7 +680,7 @@ button:active,
     color: #ff3b30 !important;
 }
 
-
+/* 实时错误提示 */
 .error-msg.realtime {
     display: block;
     color: #ff3b30;
@@ -682,7 +688,7 @@ button:active,
     margin-top: 6px;
 }
 
-
+/* ========== 响应式调整 ========== */
 @media (max-width: 480px) {
     .password-requirements {
         padding: 12px;

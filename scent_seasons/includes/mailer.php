@@ -1,5 +1,7 @@
 <?php
+// includes/mailer.php - 调试增强版
 
+// 引入 PHPMailer
 require_once __DIR__ . '/../PHPMailer/PHPMailer.php';
 require_once __DIR__ . '/../PHPMailer/SMTP.php';
 require_once __DIR__ . '/../PHPMailer/Exception.php';
@@ -8,7 +10,9 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-
+/**
+ * 发送订单收据邮件 - 增强调试版
+ */
 function send_order_receipt($to_email, $to_name, $order_data)
 {
     error_log("========================================");
@@ -21,8 +25,8 @@ function send_order_receipt($to_email, $to_name, $order_data)
     $mail = new PHPMailer(true);
 
     try {
-       
-        $mail->SMTPDebug = 2; 
+        // 服务器设置
+        $mail->SMTPDebug = 2; // 开启详细调试 (0=关闭, 1=客户端, 2=客户端+服务器)
         $mail->Debugoutput = function ($str, $level) {
             error_log("PHPMailer DEBUG [$level]: $str");
         };
@@ -38,15 +42,15 @@ function send_order_receipt($to_email, $to_name, $order_data)
 
         error_log("✓ SMTP configuration set");
 
-    
+        // 发件人
         $mail->setFrom('gansq-wm23@student.tarc.edu.my', 'Scent Seasons');
         error_log("✓ From address set");
 
-        
+        // 收件人
         $mail->addAddress($to_email, $to_name ?: 'Valued Customer');
         error_log("✓ Recipient added: $to_email");
 
-        
+        // 邮件内容
         $mail->isHTML(true);
         $mail->Subject = 'Payment Receipt - Order #' . $order_data['order_id'] . ' - Scent Seasons';
         error_log("✓ Subject set: " . $mail->Subject);
@@ -55,7 +59,7 @@ function send_order_receipt($to_email, $to_name, $order_data)
         $mail->AltBody = get_receipt_plain_text($to_name, $order_data);
         error_log("✓ Email body generated (HTML: " . strlen($mail->Body) . " chars)");
 
-      
+        // 尝试发送
         error_log("⏳ Attempting to send email...");
         $send_result = $mail->send();
 
@@ -79,13 +83,15 @@ function send_order_receipt($to_email, $to_name, $order_data)
     }
 }
 
-
+/**
+ * 发送 OTP 邮件
+ */
 function send_otp_email($to_email, $to_name, $otp_code)
 {
     $mail = new PHPMailer(true);
 
     try {
-       
+        // 服务器设置
         $mail->SMTPDebug = 0;
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
@@ -96,13 +102,13 @@ function send_otp_email($to_email, $to_name, $otp_code)
         $mail->Port       = 587;
         $mail->CharSet    = 'UTF-8';
 
-
+        // 发件人
         $mail->setFrom('gansq-wm23@student.tarc.edu.my', 'Scent Seasons');
 
-    
+        // 收件人
         $mail->addAddress($to_email, $to_name ?: 'User');
 
-      
+        // 邮件内容
         $mail->isHTML(true);
         $mail->Subject = 'Password Reset Verification Code - Scent Seasons';
         $mail->Body    = get_otp_email_template($to_name, $otp_code);
@@ -117,7 +123,9 @@ function send_otp_email($to_email, $to_name, $otp_code)
     }
 }
 
-
+/**
+ * OTP 邮件模板
+ */
 function get_otp_email_template($name, $otp)
 {
     if (empty($name)) {
@@ -231,17 +239,19 @@ function get_otp_email_template($name, $otp)
     ";
 }
 
-
+/**
+ * 生成收据邮件 HTML 模板
+ */
 function get_receipt_email_template($name, $order)
 {
     if (empty($name)) {
         $name = 'Valued Customer';
     }
 
- 
+    // 格式化日期
     $order_date = date('F d, Y', strtotime($order['order_date']));
 
-
+    // 生成商品列表 HTML
     $items_html = '';
     foreach ($order['items'] as $item) {
         $subtotal = $item['price_each'] * $item['quantity'];
@@ -262,7 +272,7 @@ function get_receipt_email_template($name, $order)
         </tr>";
     }
 
-   
+    // 支付方式显示
     $payment_method = !empty($order['transaction_id']) ?
         "PayPal (Transaction: " . htmlspecialchars($order['transaction_id']) . ")" :
         "Pending Payment";
@@ -488,7 +498,9 @@ function get_receipt_email_template($name, $order)
     ";
 }
 
-
+/**
+ * 生成纯文本版本收据
+ */
 function get_receipt_plain_text($name, $order)
 {
     $text = "SCENT SEASONS - PAYMENT RECEIPT\n";
