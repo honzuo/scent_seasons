@@ -79,8 +79,32 @@ require $path . 'includes/header.php';
         </tbody>
     </table>
 
-    <div class="cart-total">
-        Total Selected: $<span id="display-total">0.00</span>
+    <!-- Promotion Code Section -->
+    <div style="margin-top: 30px; padding: 20px; background: #f5f5f7; border-radius: 12px; max-width: 500px;">
+        <h3 style="margin-bottom: 15px; font-size: 18px;">Promotion Code</h3>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <div style="flex: 1;">
+                <input type="text" id="promoCode" placeholder="Enter promotion code" 
+                       style="width: 100%; padding: 10px; border: 1px solid #d2d2d7; border-radius: 8px; font-size: 14px;">
+                <div id="promoMessage" style="margin-top: 8px; font-size: 13px;"></div>
+            </div>
+            <button id="applyPromo" class="btn-blue" style="padding: 10px 20px; white-space: nowrap;">Apply</button>
+        </div>
+    </div>
+
+    <div class="cart-total" style="margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span>Subtotal:</span>
+            <span>$<span id="display-subtotal">0.00</span></span>
+        </div>
+        <div id="discount-row" style="display: none; justify-content: space-between; margin-bottom: 10px; color: #30d158;">
+            <span>Discount (<span id="discount-code-name"></span>):</span>
+            <span>-$<span id="display-discount">0.00</span> <button id="removePromo" style="margin-left: 10px; padding: 2px 8px; font-size: 11px; background: #ff3b30; color: white; border: none; border-radius: 4px; cursor: pointer;">Remove</button></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 20px; font-weight: 600; padding-top: 10px; border-top: 2px solid #e5e5e7;">
+            <span>Total:</span>
+            <span>$<span id="display-total">0.00</span></span>
+        </div>
     </div>
 
     <div style="text-align: right; margin-top: 30px; display: flex; justify-content: flex-end;">
@@ -91,18 +115,86 @@ require $path . 'includes/header.php';
 
     <script>
         $(document).ready(function() {
+            let currentPromoCode = null;
+            let discountAmount = 0;
+            let discountInfo = null;
 
             // 1. 计算总价函数
             function calculateTotal() {
-                let total = 0;
+                let subtotal = 0;
                 let count = 0;
                 $('.item-checkbox:checked').each(function() {
-                    total += parseFloat($(this).data('subtotal'));
+                    subtotal += parseFloat($(this).data('subtotal'));
                     count++;
                 });
-                $('#display-total').text(total.toFixed(2));
-                return total;
+                
+                $('#display-subtotal').text(subtotal.toFixed(2));
+                
+                // Apply discount if promotion code is active
+                let finalTotal = subtotal;
+                if (currentPromoCode && discountInfo) {
+                    discountAmount = parseFloat(discountInfo.discount);
+                    finalTotal = subtotal - discountAmount;
+                    if (finalTotal < 0) finalTotal = 0;
+                    
+                    $('#discount-row').css('display', 'flex');
+                    $('#display-discount').text(discountAmount.toFixed(2));
+                    $('#discount-code-name').text(currentPromoCode);
+                } else {
+                    $('#discount-row').hide();
+                    discountAmount = 0;
+                }
+                
+                $('#display-total').text(finalTotal.toFixed(2));
+                return finalTotal;
             }
+
+            // Apply promotion code
+            $('#applyPromo').on('click', function() {
+                const code = $('#promoCode').val().trim().toUpperCase();
+                if (!code) {
+                    $('#promoMessage').html('<span style="color: #ff3b30;">Please enter a promotion code</span>');
+                    return;
+                }
+                
+                const subtotal = parseFloat($('#display-subtotal').text()) || 0;
+                if (subtotal <= 0) {
+                    $('#promoMessage').html('<span style="color: #ff3b30;">Please select items first</span>');
+                    return;
+                }
+                
+                $.getJSON('../../controllers/promotion_controller.php', {
+                    action: 'validate',
+                    code: code,
+                    total: subtotal
+                }, function(res) {
+                    if (res.status === 'success') {
+                        currentPromoCode = code;
+                        discountInfo = res;
+                        $('#promoMessage').html('<span style="color: #30d158;">✓ Promotion code applied! Discount: $' + res.discount.toFixed(2) + '</span>');
+                        $('#promoCode').prop('disabled', true);
+                        $('#applyPromo').text('Applied').prop('disabled', true);
+                        calculateTotal();
+                    } else {
+                        currentPromoCode = null;
+                        discountInfo = null;
+                        $('#promoMessage').html('<span style="color: #ff3b30;">' + res.message + '</span>');
+                        calculateTotal();
+                    }
+                }).fail(function() {
+                    $('#promoMessage').html('<span style="color: #ff3b30;">Error validating promotion code</span>');
+                });
+            });
+
+            // Remove promotion code
+            $(document).on('click', '#removePromo', function() {
+                currentPromoCode = null;
+                discountInfo = null;
+                $('#promoCode').val('').prop('disabled', false);
+                $('#applyPromo').text('Apply').prop('disabled', false);
+                $('#promoMessage').html('');
+                calculateTotal();
+            });
 
             // 监听复选框变化
             $('.item-checkbox, #select-all').change(function() {
@@ -170,7 +262,9 @@ require $path . 'includes/header.php';
                                 },
                                 body: JSON.stringify({
                                     selected_items: selectedIds,
-                                    transaction_id: details.id // PayPal 的交易号
+                                    transaction_id: details.id, // PayPal 的交易号
+                                    promotion_code: currentPromoCode || null,
+                                    discount_amount: discountAmount || 0
                                 })
                             })
                             .then(response => response.json())
